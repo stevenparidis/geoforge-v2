@@ -262,6 +262,27 @@ RULES:
       window.__setSelected = (sel) => setSelected(sel);
       return () => { window.__setSelected = null; };
     }, [setSelected]);
+
+    // onDragChange: called from handle-layer.jsx drag controller on each drag frame.
+    const onDragChange = useCallback((featureKind, featureId, field, value, opts) => {
+      setModel((prev) => {
+        if (!prev) return prev;
+        const next = JSON.parse(JSON.stringify(prev));
+        let feature = null;
+        if (featureKind === 'layer') {
+          feature = (next.layers || []).find((L) => L.id === featureId);
+        } else if (featureKind === 'event') {
+          feature = (next.events || []).find((E) => E.id === featureId);
+        }
+        if (!feature) return prev;
+        feature[field] = value;
+        feature.manually_edited = true;
+        if (!feature.field_origin) feature.field_origin = {};
+        feature.field_origin[field] = 'stated';
+        return next;
+      });
+    }, [setModel]);
+
     useEffect(() => {
       // Allow smoke tests to directly call onDragChange to verify the drag→JSON pipeline.
       window.__testDragChange = onDragChange;
@@ -300,26 +321,6 @@ RULES:
         return cp;
       });
     };
-
-    // onDragChange: called from handle-layer.jsx drag controller on each drag frame.
-    const onDragChange = useCallback((featureKind, featureId, field, value, opts) => {
-      setModel((prev) => {
-        if (!prev) return prev;
-        const next = JSON.parse(JSON.stringify(prev));
-        let feature = null;
-        if (featureKind === 'layer') {
-          feature = (next.layers || []).find((L) => L.id === featureId);
-        } else if (featureKind === 'event') {
-          feature = (next.events || []).find((E) => E.id === featureId);
-        }
-        if (!feature) return prev;
-        feature[field] = value;
-        feature.manually_edited = true;
-        if (!feature.field_origin) feature.field_origin = {};
-        feature.field_origin[field] = 'stated';
-        return next;
-      });
-    }, [setModel]);
 
     // ---- JSON download / upload ----
     const downloadJSON = () => {

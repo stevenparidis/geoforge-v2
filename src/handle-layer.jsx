@@ -22,6 +22,10 @@
   // Drag preview label element (shared, one at a time)
   let dragPreviewEl = null;
 
+  // Reusable scratch vector for scaleHandles (lazily initialised to avoid
+  // referencing window.THREE before the library is available at parse time)
+  let _scaleScratch = null;
+
   function getOrCreateDragPreview(hostEl) {
     if (!dragPreviewEl) {
       dragPreviewEl = document.createElement('div');
@@ -490,6 +494,7 @@
 
     // Hover tooltip
     function onPointerOver(e) {
+      if (activeHandle) return; // suppress tooltip raycasting during drag
       const ndc = getMouseNDC(e);
       mouse.set(ndc.x, ndc.y);
       raycaster.setFromCamera(mouse, camera);
@@ -628,11 +633,11 @@
   // scaleHandles is called from scene.jsx's tick loop to keep handles screen-constant.
   function scaleHandles(handleRoot, camera) {
     if (!handleRoot || !camera) return;
+    if (!_scaleScratch) _scaleScratch = new window.THREE.Vector3();
     handleRoot.traverse((handle) => {
       if (handle.userData && handle.userData.isHandle) {
-        const d = handle.getWorldPosition(new window.THREE.Vector3()).distanceTo(camera.position);
-        const targetScale = d * 0.04;
-        handle.scale.setScalar(targetScale);
+        const d = handle.getWorldPosition(_scaleScratch).distanceTo(camera.position);
+        handle.scale.setScalar(d * 0.04);
       }
     });
   }
