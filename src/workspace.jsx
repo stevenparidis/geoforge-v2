@@ -44,6 +44,7 @@ SCHEMA:
       "sense":  "dextral"|"sinistral" (strike-slip only, optional),
       "rake":   0..90 (oblique only, optional),
       "dip_at_depth": number (listric only, optional),
+      "detachment_depth": number (listric only, optional — vertical depth to detachment),
       "axis_strike": 0..360 (folds only),
       "plunge":   0..90 (folds only),
       "plunge_direction": 0..360 (folds only),
@@ -83,7 +84,7 @@ DEFAULTS (use when a value is missing and mark it inferred):
 - Reverse fault dip = 45°
 - Thrust fault dip = 25°
 - Strike-slip fault dip = 90° (vertical)
-- Listric: dip = 70° at surface, dip_at_depth = 10°
+- Listric: dip = 70° at surface, dip_at_depth = 10°, detachment_depth = half of total layer thickness
 - Fold plunge = 0° (non-plunging)
 - Layer thickness when not stated = 1.0
 - Order events in the order they appear in the user's text.
@@ -131,6 +132,11 @@ RULES:
         if (E.dip_direction == null) { E.dip_direction = 90; E.field_origin.dip_direction = 'inferred'; }
         if (E.strike == null) { E.strike = (E.dip_direction + 90) % 360; E.field_origin.strike = 'inferred'; }
         if (E.subtype === 'strike-slip' && E.displacement == null) { E.displacement = 1.0; E.field_origin.displacement = 'inferred'; }
+        if (E.subtype === 'listric') {
+          const modelTotalHeight = (model.layers || []).reduce((s, L) => s + (L.thickness ?? 1.0), 0);
+          if (E.dip_at_depth == null) { E.dip_at_depth = 10; E.field_origin.dip_at_depth = 'inferred'; }
+          if (E.detachment_depth == null) { E.detachment_depth = modelTotalHeight / 2; E.field_origin.detachment_depth = 'inferred'; }
+        }
       }
       if (E.type === 'fold') {
         if (E.axis_strike == null) { E.axis_strike = 0; E.field_origin.axis_strike = 'inferred'; }

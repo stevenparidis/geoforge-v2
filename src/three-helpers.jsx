@@ -558,40 +558,39 @@
       const outline = solidLine([cornersF[0], cornersF[1], cornersF[2], cornersF[3], cornersF[0]], COLOR.fault, { opacity: 0.9 });
       meshes.add(outline);
     } else {
-      // ---- Listric: build a curved fault surface ----
-      const segments = 16;
-      const surfaceDip = dipDeg;
-      const deepDip = evt.dip_at_depth ?? 10;
-      const depthSpan = total * 1.5; // total vertical depth to render
-      // We trace the fault profile in the (X, Y) section (assuming strike along Z for simplicity here).
-      const profile = [];
-      // Use a quadratic that goes from surfaceDip at top to deepDip at bottom.
-      const horizFromSurface = total * 0.0; // anchor at origin
-      let xPrev = 0, yPrev = total / 2;
-      profile.push(new T.Vector3(xPrev, yPrev, 0));
-      const sN = bearingVec(dipDir).normalize();
-      for (let i = 1; i <= segments; i++) {
-        const t = i / segments;
-        const ang = surfaceDip + (deepDip - surfaceDip) * t;
-        const stepY = -depthSpan / segments;
-        const stepHoriz = -stepY / Math.tan(rad(ang) || 0.001);
-        xPrev += stepHoriz * sN.x;
-        yPrev += stepY;
-        const zPrev_z = sN.z * (xPrev / (sN.x || 1e-6));
-        profile.push(new T.Vector3(xPrev * sN.x + (xPrev * sN.z), yPrev, 0)); // simplified; we treat horizontal in dip-dir direction
-      }
-      // Extrude profile along strike
+      // ---- Listric: build a curved fault surface using circular-arc geometry ----
+      const surfaceDipDeg = dipDeg;
+      const dipAtDepthDeg = evt.dip_at_depth ?? 10;
+      const detachDepth = evt.detachment_depth ?? (total * 1.5);
+      const arcData = solveCircularArc(surfaceDipDeg, dipAtDepthDeg, detachDepth);
+      const { points2D, surfacePt, detachPt } = arcData;
+
+      // Convert 2D cross-section profile to 3D world coordinates.
+      // Cross-section: x = horizontal in dip direction, y = depth downward.
+      // 3D: dip-dir horizontal vector, depth maps to -Y (downward in scene).
+      const dipDirRad = rad(dipDir);
+      const dipDirVec3 = new T.Vector3(Math.sin(dipDirRad), 0, Math.cos(dipDirRad));
+
+      // Surface anchor: top-centre of the block (y = +total/2 in scene).
+      const surfaceY = total / 2;
+
+      // Build profile as 3D points (surface anchor + arc displacement).
+      const profile3D = points2D.map((p) =>
+        dipDirVec3.clone().multiplyScalar(p.x).add(new T.Vector3(0, surfaceY - p.y, 0))
+      );
+
+      // Extrude profile along strike.
       const strikeAxis = strikeVec(strike).normalize();
       const halfStrike = depth * 0.7;
       const verts = [];
       const idx = [];
-      for (let i = 0; i < profile.length; i++) {
-        const p = profile[i];
-        const left = p.clone().add(strikeAxis.clone().multiplyScalar(halfStrike));
-        const right = p.clone().add(strikeAxis.clone().multiplyScalar(-halfStrike));
+      for (let i = 0; i < profile3D.length; i++) {
+        const p = profile3D[i];
+        const left = p.clone().addScaledVector(strikeAxis, halfStrike);
+        const right = p.clone().addScaledVector(strikeAxis, -halfStrike);
         verts.push(left.x, left.y, left.z, right.x, right.y, right.z);
       }
-      for (let i = 0; i < profile.length - 1; i++) {
+      for (let i = 0; i < profile3D.length - 1; i++) {
         const a = i * 2, b = a + 1, c = a + 2, d = a + 3;
         idx.push(a, b, c, b, d, c);
       }
@@ -602,14 +601,16 @@
       const fpMesh = new T.Mesh(fg, new T.MeshBasicMaterial({ color: COLOR.fault, transparent: true, opacity: 0.25, side: T.DoubleSide, depthWrite: false }));
       fpMesh.renderOrder = 2;
       meshes.add(fpMesh);
-      // Profile line as overlay
-      const profPts = [];
-      for (let i = 0; i < profile.length; i++) {
-        profPts.push(profile[i].clone());
-      }
-      overlays.add(solidLine(profPts, COLOR.fault, { depthTest: false }));
-      // Dip-at-surface and dip-at-depth annotations
-      addListricDipAnnotations(overlays, labels, evt, total, depth);
+
+      // Profile trace line as overlay.
+      overlays.add(solidLine(profile3D, COLOR.fault, { depthTest: false }));
+
+      // Compute 3D surface and detachment points for overlays.
+      const surfacePt3D = dipDirVec3.clone().multiplyScalar(surfacePt.x).add(new T.Vector3(0, surfaceY - surfacePt.y, 0));
+      const detachPt3D  = dipDirVec3.clone().multiplyScalar(detachPt.x).add(new T.Vector3(0, surfaceY - detachPt.y, 0));
+
+      // Dip-at-surface and dip-at-depth overlays.
+      addListricDipAnnotations(overlays, labels, evt, total, depth, surfacePt3D, detachPt3D);
     }
 
     // ---- Overlays for the fault: dip / throw / heave / slip / strike ----
@@ -783,25 +784,117 @@
     overlays.add(sLbl);
   }
 
-  function addListricDipAnnotations(overlays, labels, evt, total, depth) {
+  // ---- Circular-arc solver for listric fault geometry ----
+  // Works in 2D cross-section: x = horizontal (dip direction), y = depth (positive downward).
+  // Returns { points2D, surfacePt, detachPt, R, Cx, Cy }.
+  function solveCircularArc(surfaceDipDeg, dipAtDepthDeg, detachDepth) {
+    const sd = rad(surfaceDipDeg);
+    const dd = rad(dipAtDepthDeg);
+
+    // Centre at surface: C = (0,0) + R * normal_at_surface
+    // Tangent at surface: (sin(sd), cos(sd))  [right + downward]
+    // Normal toward centre (left of travel): (-cos(sd), sin(sd))
+    // So C = (-R*cos(sd), R*sin(sd))
+    //
+    // At detachment, tangent = (sin(dd), cos(dd))
+    // Normal toward centre: (-cos(dd), sin(dd))
+    // P_d = C + R*(cos(dd), -sin(dd))  [centre + R*(−normal)]
+
+    let lo = 0.001, hi = 5000;
+
+    for (let iter = 0; iter < 80; iter++) {
+      const R = (lo + hi) / 2;
+      const Cx = -R * Math.cos(sd);
+      const Cy =  R * Math.sin(sd);
+      const Pdy = Cy - R * Math.sin(dd);
+      if (Pdy < detachDepth) {
+        hi = R;
+      } else {
+        lo = R;
+      }
+      if (Math.abs(Pdy - detachDepth) < 1e-6) break;
+    }
+
+    const R  = (lo + hi) / 2;
+    const Cx = -R * Math.cos(sd);
+    const Cy =  R * Math.sin(sd);
+    const Pdx = Cx + R * Math.cos(dd);
+    const Pdy = Cy - R * Math.sin(dd);
+
+    // Arc angles: atan2(point - centre)
+    const thetaStart = Math.atan2(0   - Cy, 0   - Cx);
+    const thetaEnd   = Math.atan2(Pdy - Cy, Pdx - Cx);
+
+    // Ensure we sweep in the correct direction (depth increases monotonically).
+    // If the arc sweeps backward, use the complementary angle.
+    let dTheta = thetaEnd - thetaStart;
+    // Normalise to [-2π, 2π]
+    while (dTheta >  Math.PI * 2) dTheta -= Math.PI * 2;
+    while (dTheta < -Math.PI * 2) dTheta += Math.PI * 2;
+    // We want the short arc going in the direction that increases y (depth).
+    // Check mid-arc y: if negative dTheta gives correct depth profile, use that.
+    const midTheta = thetaStart + dTheta / 2;
+    const midY = Cy + R * Math.sin(midTheta);
+    if (midY < 0) {
+      // Mid-arc is going up — take the complementary sweep direction.
+      dTheta = dTheta > 0 ? dTheta - Math.PI * 2 : dTheta + Math.PI * 2;
+    }
+
+    const N = 32;
+    const points2D = [];
+    for (let i = 0; i <= N; i++) {
+      const theta = thetaStart + (i / N) * dTheta;
+      points2D.push({ x: Cx + R * Math.cos(theta), y: Cy + R * Math.sin(theta) });
+    }
+
+    return { points2D, surfacePt: { x: 0, y: 0 }, detachPt: { x: Pdx, y: Pdy }, R, Cx, Cy };
+  }
+
+  function addListricDipAnnotations(overlays, labels, evt, total, depth, surfacePt3D, detachPt3D) {
     const surfaceDip = evt.dip;
     const deepDip = evt.dip_at_depth ?? 10;
     const dipDir = evt.dip_direction ?? 90;
-    // Surface vertex at origin, top of model
-    const v1 = new T.Vector3(0, total / 2, 0);
-    addDipOverlay(overlays, labels, {
-      vertex: v1, strike: evt.strike ?? 0, dipDeg: surfaceDip, dipDir, radius: 0.6,
-      inferred: { dip: evt.field_origin?.dip === 'inferred' },
-    });
-    // Annotate "Dip at depth"
-    const dirVec = bearingVec(dipDir);
-    const v2 = new T.Vector3(2.0 * dirVec.x, -total * 0.5, 2.0 * dirVec.z);
-    const a = arc3D(v2, dirVec, downDipVec(deepDip, dipDir).normalize(), 0.5, COLOR.overlay);
-    overlays.add(a.line);
-    overlays.add(arcWedge(v2, dirVec, downDipVec(deepDip, dipDir).normalize(), 0.5, COLOR.overlay, 0.18));
-    const lbl = makeValueLabel(`Dip @ depth ${fmtDeg(deepDip)}`, { inferred: evt.field_origin?.dip_at_depth === 'inferred' });
-    lbl.position.copy(a.midPoint);
-    overlays.add(lbl);
+    const fo = evt.field_origin || {};
+
+    // ---- Surface dip overlay ----
+    // Anchor at the surface point on the arc (top of section).
+    const v1 = surfacePt3D ? surfacePt3D.clone() : new T.Vector3(0, total / 2, 0);
+    // Horizontal reference disc at surface depth.
+    overlays.add(horizontalDisc(v1, 0.65, COLOR.horizon, 0.08));
+    // Dip arc: from horizontal down-dip direction to the down-dip vector.
+    const horizDir1 = bearingVec(dipDir);
+    const downDip1 = downDipVec(surfaceDip, dipDir).normalize();
+    const dipArc1 = arc3D(v1, horizDir1, downDip1, 0.55, COLOR.overlay);
+    overlays.add(dipArc1.line);
+    overlays.add(arcWedge(v1, horizDir1, downDip1, 0.55, COLOR.overlay, 0.16));
+    const dipLbl1 = makeValueLabel(`Dip ${fmtDeg(surfaceDip)}`, { inferred: fo.dip === 'inferred' });
+    dipLbl1.position.copy(dipArc1.midPoint);
+    overlays.add(dipLbl1);
+
+    // ---- Dip-at-depth overlay ----
+    // Anchor at the detachment point (bottom of arc).
+    const v2 = detachPt3D ? detachPt3D.clone() : new T.Vector3(2.0 * horizDir1.x, total / 2 - (evt.detachment_depth ?? total * 1.5), 2.0 * horizDir1.z);
+    // Horizontal reference disc at detachment depth.
+    overlays.add(horizontalDisc(v2, 0.55, COLOR.horizon, 0.08));
+    // Dip arc at depth.
+    const downDip2 = downDipVec(deepDip, dipDir).normalize();
+    const dipArc2 = arc3D(v2, horizDir1, downDip2, 0.45, COLOR.overlay);
+    overlays.add(dipArc2.line);
+    overlays.add(arcWedge(v2, horizDir1, downDip2, 0.45, COLOR.overlay, 0.18));
+    const dipLbl2 = makeValueLabel(`Dip @ depth ${fmtDeg(deepDip)}`, { inferred: fo.dip_at_depth === 'inferred' });
+    dipLbl2.position.copy(dipArc2.midPoint);
+    overlays.add(dipLbl2);
+
+    // ---- Vertical depth annotation ----
+    // Dashed vertical line from surface to detachment.
+    const v1Vert = v1.clone();
+    const v2Vert = new T.Vector3(v1.x, v2.y, v1.z); // same X/Z as surface, Y at detachment
+    overlays.add(dashedLine(v1Vert, v2Vert, COLOR.dashed, { dashSize: 0.07, gapSize: 0.05 }));
+    overlays.add(doubleArrow(v1Vert, v2Vert, COLOR.overlay, { headLength: 0.07, headWidth: 0.045 }));
+    const depthVal = detachPt3D ? parseFloat((total / 2 - detachPt3D.y).toFixed(2)) : (evt.detachment_depth ?? total * 1.5);
+    const depthLbl = makeValueLabel(`Detachment depth: ${depthVal} m`, { inferred: fo.detachment_depth === 'inferred' });
+    depthLbl.position.copy(v1Vert.clone().add(v2Vert).multiplyScalar(0.5).add(new T.Vector3(0.15, 0, 0)));
+    overlays.add(depthLbl);
   }
 
   // ---- Fold scene ----
