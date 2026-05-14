@@ -454,6 +454,14 @@
           preview.textContent = formatFieldValue(pendingField, newVal);
         }
 
+        // Co-update overlay in place (no full rebuild) during intermediate drags.
+        const st = stateRef.current || stateRef;
+        if (st && st.overlayUpdateMap) {
+          const key = `${pendingFeatureId}:${pendingField}`;
+          const updateFn = st.overlayUpdateMap[key];
+          if (updateFn) updateFn(newVal);
+        }
+
         onDragChange(pendingFeatureKind, pendingFeatureId, pendingField, newVal, { intermediate: true });
       });
     }

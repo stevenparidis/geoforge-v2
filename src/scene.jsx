@@ -230,6 +230,7 @@
       const built = window.GeoThree.buildSceneContents(model);
       st.modelRoot.add(built.root);
       st.overlayRoot.add(built.overlays);
+      st.overlayUpdateMap = built.overlayUpdateMap || {};
       st.chrome.add(window.GeoThree.makeGrid(10, 20));
       st.chrome.add(window.GeoThree.makeNorthArrow(new T.Vector3(0, -3 + 0.01, 0), 0.7));
 
