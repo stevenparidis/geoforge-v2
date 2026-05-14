@@ -198,6 +198,114 @@ quoting), behave identically to full mode.`;
     }
   }
 
+  async function interpretMerge(model, diff, setError) {
+    const changedSentences = [
+      ...diff.modified.map((m, i) => `${i + 1}. "${m.after.text}"`),
+      ...diff.added.map((a, i) => `${diff.modified.length + i + 1}. "${a.text}"`),
+    ].join('\n');
+
+    const removedSentences = diff.removed.map(r => `- "${r.text}"`).join('\n');
+
+    // Strip description_source from events not in scope to reduce prompt size
+    const contextModel = JSON.parse(JSON.stringify(model));
+    const changedFingerprints = new Set([
+      ...diff.modified.map(m => m.before.fingerprint),
+      ...diff.added.map(a => a.fingerprint),
+    ]);
+    (contextModel.events || []).forEach(e => {
+      const fp = window.GeoDiff.fingerprintSentence(e.description_source || '');
+      if (!changedFingerprints.has(fp)) delete e.description_source;
+    });
+
+    const userMessage = [
+      'Existing model:',
+      JSON.stringify(contextModel, null, 2),
+      '',
+      'Changed sentences:',
+      changedSentences,
+      removedSentences ? `\nRemoved sentences:\n${removedSentences}` : '',
+    ].filter(Boolean).join('\n');
+
+    try {
+      const result = await window.claude.complete({
+        messages: [{ role: 'user', content: userMessage }],
+        system: INTERPRETER_SYSTEM_PROMPT,
+      });
+      const json = JSON.parse(result.match(/\{[\s\S]*\}/)[0]);
+      if (!json.merge) throw new Error('Not a merge response');
+      return json;
+    } catch (err) {
+      setError('Merge interpretation failed: ' + err.message);
+      return null;
+    }
+  }
+
+  function mergeIntoModel(existingModel, mergeResp, diff) {
+    const next = JSON.parse(JSON.stringify(existingModel));
+
+    // Sentences whose originating event should be cleared of manual edits
+    const modifiedFingerprints = new Set(diff.modified.map(m => m.before.fingerprint));
+    const removedFingerprints = new Set(diff.removed.map(r => r.fingerprint));
+
+    // Remove events whose originating sentence was removed
+    next.events = (next.events || []).filter(e => {
+      const fp = window.GeoDiff.fingerprintSentence(e.description_source || '');
+      return !removedFingerprints.has(fp);
+    });
+
+    // Remove layers by id
+    (mergeResp.remove_layer_ids || []).forEach(id => {
+      next.layers = (next.layers || []).filter(l => l.id !== id);
+    });
+
+    // Upsert events
+    (mergeResp.upsert_events || []).forEach(upsertEvt => {
+      const existingIdx = (next.events || []).findIndex(e => e.id === upsertEvt.id);
+      if (existingIdx >= 0) {
+        const existing = next.events[existingIdx];
+        const fp = window.GeoDiff.fingerprintSentence(existing.description_source || '');
+        if (modifiedFingerprints.has(fp)) {
+          // Originating sentence was edited — new interpretation wins, clear manual edits
+          next.events[existingIdx] = upsertEvt;
+        } else {
+          // Preserve manually_edited fields whose values are unchanged
+          const merged = Object.assign({}, upsertEvt);
+          if (existing.manually_edited) {
+            merged.manually_edited = true;
+            merged.field_origin = merged.field_origin || {};
+            Object.keys(existing.field_origin || {}).forEach(field => {
+              if (existing.manually_edited && existing[field] === upsertEvt[field]) {
+                merged.field_origin[field] = existing.field_origin[field];
+              }
+            });
+          }
+          next.events[existingIdx] = merged;
+        }
+      } else {
+        next.events = next.events || [];
+        next.events.push(upsertEvt);
+      }
+    });
+
+    // Upsert layers
+    (mergeResp.upsert_layers || []).forEach(upsertLayer => {
+      const existingIdx = (next.layers || []).findIndex(l => l.id === upsertLayer.id);
+      if (existingIdx >= 0) {
+        next.layers[existingIdx] = upsertLayer;
+      } else {
+        next.layers = next.layers || [];
+        next.layers.push(upsertLayer);
+      }
+    });
+
+    // Run through applyDefaults to normalise
+    if (window.applyDefaults) {
+      next.events = (next.events || []).map(e => window.applyDefaults(e, next));
+    }
+
+    return next;
+  }
+
   // ---- Inspector helpers ----
   function FieldRow({ label, value, unit, inferred, onChange, source }) {
     return (
@@ -313,13 +421,36 @@ quoting), behave identically to full mode.`;
       if (!description.trim()) return;
       setInterpreting(true);
       setError(null);
-      const json = await interpret(description, setError);
+
+      const prevDesc = (model && model.meta && model.meta.last_parsed_description) || '';
+      const diff = window.GeoDiff
+        ? window.GeoDiff.diffDescriptions(prevDesc, description)
+        : { unchanged: [], added: [], removed: [], modified: [] };
+
+      // Nothing actually changed (whitespace/case only)
+      if (diff.added.length === 0 && diff.modified.length === 0 && diff.removed.length === 0 && prevDesc) {
+        setInterpreting(false);
+        return;
+      }
+
+      const useMerge = prevDesc && diff.unchanged.length > 0 && window.GeoDiff;
+
+      let json;
+      if (useMerge) {
+        const mergeResp = await interpretMerge(model, diff, setError);
+        json = mergeResp ? mergeIntoModel(model, mergeResp, diff) : null;
+      } else {
+        json = await interpret(description, setError);
+      }
+
       setInterpreting(false);
       if (json) {
+        json.meta = json.meta || {};
+        json.meta.last_parsed_description = description;
         setModel(json);
         setSelected(null);
       }
-    }, [description, setModel]);
+    }, [description, model, setModel]);
 
     const onSelectFeature = (data) => {
       setSelected(data);
@@ -624,8 +755,8 @@ quoting), behave identically to full mode.`;
           </>
         )}
         {feature.manually_edited && (
-          <div className="notice info" style={{ marginTop: 12 }}>
-            This feature has been manually edited. The original description above is preserved as a historical record.
+          <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
+            Manually edited — persists unless you change the originating sentence.
           </div>
         )}
       </div>
