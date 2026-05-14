@@ -48,13 +48,17 @@ There is no persistence: the description and model live entirely in memory. The 
 | File | Purpose |
 |---|---|
 | `index.html` | Shell, fonts, Three.js bootstrap, script load order |
-| `app.jsx` | Root component; tab routing; toolbar; tweaks panel |
-| `geo-data.jsx` | Lithology palette, periods, defaults, reference formation definitions |
-| `three-helpers.jsx` | All Three.js geometry + overlay primitives |
-| `scene.jsx` | `<GeoScene>` React wrapper + shared renderer surface |
-| `reference-view.jsx` | Formation reference glossary (Deliverable 2) |
-| `workspace.jsx` | Workspace pane (Deliverable 1) + interpreter wiring |
-| `tweaks-panel.jsx` | Tweaks UI primitives (shared component) |
+| `src/app.jsx` | Root component; tab routing; toolbar; tweaks panel |
+| `src/geo-data.jsx` | Lithology palette, periods, defaults, reference formation definitions |
+| `src/three-helpers.jsx` | All Three.js geometry + overlay primitives |
+| `src/scene.jsx` | `<GeoScene>` React wrapper + shared renderer surface |
+| `src/reference-view.jsx` | Formation reference glossary (Deliverable 2) |
+| `src/workspace.jsx` | Workspace pane (Deliverable 1) + interpreter wiring |
+| `src/tweaks-panel.jsx` | Tweaks UI primitives (shared component) |
+| `implementation/` | Phase plans, specs, reference docs, screenshots |
+| `tests/acceptance/` | Acceptance test suite (skeleton — populated in phase 0.2) |
+| `CHANGELOG.md` | Release changelog (populated in phase 0.2) |
+| `STATUS.md` | Current project status (populated in phase 0.2) |
 
 ## Acceptance criteria status (per `spec-v1.md` §11)
 
