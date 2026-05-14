@@ -97,6 +97,56 @@ const FIXTURE = {
 };
 
 // ---------------------------------------------------------------------------
+// Fault fixture — single normal fault for the drag-edit smoke test
+// ---------------------------------------------------------------------------
+// "A normal fault dips 60 degrees east."
+const FAULT_FIXTURE = {
+  meta: {
+    name: 'Normal Fault',
+    description: 'A normal fault dips 60 degrees east.',
+  },
+  layers: [
+    {
+      id: 'L1',
+      name: 'Shale',
+      lithology: 'shale',
+      thickness: 0.8,
+      order: 0,
+      description_source: 'A normal fault dips 60 degrees east.',
+      field_origin: { thickness: 'inferred', lithology: 'inferred' },
+    },
+    {
+      id: 'L2',
+      name: 'Sandstone',
+      lithology: 'sandstone',
+      thickness: 1.0,
+      order: 1,
+      description_source: 'A normal fault dips 60 degrees east.',
+      field_origin: { thickness: 'inferred', lithology: 'inferred' },
+    },
+  ],
+  events: [
+    {
+      id: 'E1',
+      type: 'fault',
+      subtype: 'normal',
+      strike: 0,
+      dip: 60,
+      dip_direction: 90,
+      throw: 0.5,
+      order: 0,
+      description_source: 'A normal fault dips 60 degrees east.',
+      field_origin: {
+        strike: 'inferred',
+        dip: 'stated',
+        dip_direction: 'inferred',
+        throw: 'inferred',
+      },
+    },
+  ],
+};
+
+// ---------------------------------------------------------------------------
 // Main test
 // ---------------------------------------------------------------------------
 
@@ -116,78 +166,205 @@ async function run() {
 
     // 2. Launch headless Chromium
     browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
-    const page = await context.newPage();
 
-    // Capture console output for debugging
-    page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
-    page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+    // -----------------------------------------------------------------------
+    // Test A: 2-layer layers-only model (baseline smoke test)
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test A: layers-only model ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
 
-    // 3. Inject stub BEFORE the page loads (addInitScript runs before any page scripts)
-    await page.addInitScript((fixtureJson) => {
-      window.claude = {
-        complete: async function (promptObj) {
-          // Test stub — returns a 2-layer fixture regardless of prompt content
-          console.log('[stub] window.claude.complete called — returning fixture');
-          return fixtureJson;
+      // Inject stub returning the layers-only fixture
+      await page.addInitScript((fixtureJson) => {
+        window.claude = {
+          complete: async function (promptObj) {
+            console.log('[stub] window.claude.complete called — returning layers fixture');
+            return fixtureJson;
+          },
+        };
+      }, JSON.stringify(FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+
+      console.log('Waiting for window.__threeReady...');
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      console.log('Three.js ready');
+
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+      console.log('React app mounted');
+
+      const description = 'A 1 m thick sandstone layer sits on top of a 0.8 m shale layer.';
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill(description);
+      console.log('Description typed');
+
+      const interpretBtn = page.locator('button.btn.primary');
+      await interpretBtn.click();
+      console.log('Interpret button clicked');
+
+      console.log('Waiting for model to appear in inspector...');
+      await page.waitForFunction(
+        () => {
+          const layersList = document.querySelector('.feat-list');
+          return layersList && layersList.querySelectorAll('.feat-item').length >= 2;
         },
-      };
-    }, JSON.stringify(FIXTURE));
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('Model appeared in inspector');
 
-    // Navigate to the app
-    await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
-
-    // 4. Wait for window.__threeReady === true (Three.js loads as an ES module)
-    console.log('Waiting for window.__threeReady...');
-    await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
-    console.log('Three.js ready');
-
-    // Also wait for the React app to mount — the Interpret button should appear
-    await page.waitForSelector('button.btn.primary', { timeout: 15000 });
-    console.log('React app mounted');
-
-    // 5. Type into the description textarea
-    const description = 'A 1 m thick sandstone layer sits on top of a 0.8 m shale layer.';
-    const textarea = page.locator('textarea.desc-area');
-    await textarea.click();
-    await textarea.fill(description);
-    console.log('Description typed');
-
-    // 6. Click the Interpret button
-    const interpretBtn = page.locator('button.btn.primary');
-    await interpretBtn.click();
-    console.log('Interpret button clicked');
-
-    // 7. Wait up to 15 seconds for the interpretation to complete.
-    //    We poll for .feat-item elements inside the inspector's feat-list,
-    //    which only appear after setModel() is called with the parsed fixture.
-    console.log('Waiting for model to appear in inspector...');
-    await page.waitForFunction(
-      () => {
+      const layerCount = await page.evaluate(() => {
         const layersList = document.querySelector('.feat-list');
-        return layersList && layersList.querySelectorAll('.feat-item').length >= 2;
-      },
-      { timeout: 15000, polling: 200 }
-    );
-    console.log('Model appeared in inspector');
+        return layersList ? layersList.querySelectorAll('.feat-item').length : 0;
+      });
 
-    // 8. Read window state / DOM to confirm layers.length === 2
-    const layerCount = await page.evaluate(() => {
-      // The first .feat-list in the inspector is the Layers list.
-      const layersList = document.querySelector('.feat-list');
-      return layersList ? layersList.querySelectorAll('.feat-item').length : 0;
-    });
+      console.log(`Layer items in DOM: ${layerCount}`);
+      if (layerCount !== 2) {
+        throw new Error(`[Test A] Expected 2 layer items in the inspector, got ${layerCount}`);
+      }
+      console.log('PASS [Test A]: 2 layers confirmed in the model');
 
-    console.log(`Layer items in DOM: ${layerCount}`);
-    if (layerCount !== 2) {
-      throw new Error(`Expected 2 layer items in the inspector, got ${layerCount}`);
+      const screenshotPath = path.join(screenshotDir, 'smoke-0.3.png');
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
     }
-    console.log('PASS: 2 layers confirmed in the model');
 
-    // 9. Take a screenshot
-    const screenshotPath = path.join(screenshotDir, 'smoke-0.3.png');
-    await page.screenshot({ path: screenshotPath, fullPage: false });
-    console.log(`Screenshot saved to ${screenshotPath}`);
+    // -----------------------------------------------------------------------
+    // Test B: drag-edit pipeline (Phase 1.4)
+    //   - Loads a normal-fault model (FAULT_FIXTURE)
+    //   - Sets selection to the fault event via window.__setSelected
+    //   - Directly calls window.__testDragChange to simulate a drag update
+    //   - Asserts: fault dip changed, manually_edited === true, field_origin.dip === 'stated'
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test B: drag-edit pipeline (Phase 1.4) ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      // Inject stub returning the fault fixture
+      await page.addInitScript((fixtureJson) => {
+        window.claude = {
+          complete: async function (promptObj) {
+            console.log('[stub] window.claude.complete called — returning fault fixture');
+            return fixtureJson;
+          },
+        };
+      }, JSON.stringify(FAULT_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+
+      console.log('Waiting for window.__threeReady...');
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      console.log('Three.js ready');
+
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+      console.log('React app mounted');
+
+      // Type fault description and interpret
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('A normal fault dips 60 degrees east.');
+      console.log('Description typed');
+
+      await page.locator('button.btn.primary').click();
+      console.log('Interpret button clicked');
+
+      // Wait for model with events to appear
+      console.log('Waiting for fault model to appear...');
+      await page.waitForFunction(
+        () => {
+          // The events feat-list is the second .feat-list in the inspector
+          const lists = document.querySelectorAll('.feat-list');
+          if (lists.length < 2) return false;
+          return lists[1].querySelectorAll('.feat-item').length >= 1;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('Fault model appeared in inspector');
+
+      // Wait for window.__setSelected and window.__testDragChange hooks to be set
+      await page.waitForFunction(
+        () => typeof window.__setSelected === 'function' && typeof window.__testDragChange === 'function',
+        { timeout: 5000 }
+      );
+      console.log('Test hooks available');
+
+      // Record the initial dip value
+      const initialDip = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.events || !m.events[0]) return null;
+        return m.events[0].dip;
+      });
+      console.log(`Initial fault dip: ${initialDip}°`);
+      if (initialDip === null) {
+        throw new Error('[Test B] Could not read initial dip from window.__lastModel');
+      }
+
+      // Simulate a drag: directly call window.__testDragChange with a new dip value
+      const newDip = 45;
+      await page.evaluate((args) => {
+        // Select the fault event
+        window.__setSelected({ kind: 'event', id: args.eventId });
+        // Call onDragChange with the new dip value (final drag)
+        window.__testDragChange('event', args.eventId, 'dip', args.newDip, { final: true });
+      }, { eventId: 'E1', newDip });
+      console.log(`Simulated drag: dip changed from ${initialDip}° to ${newDip}°`);
+
+      // Wait for the model to update
+      await page.waitForFunction(
+        (expectedDip) => {
+          const m = window.__lastModel;
+          if (!m || !m.events || !m.events[0]) return false;
+          return m.events[0].dip === expectedDip;
+        },
+        newDip,
+        { timeout: 5000, polling: 100 }
+      );
+      console.log('Model updated after drag');
+
+      // Read and verify the updated model
+      const result = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.events || !m.events[0]) return null;
+        const evt = m.events[0];
+        return {
+          dip: evt.dip,
+          manually_edited: evt.manually_edited,
+          field_origin_dip: evt.field_origin && evt.field_origin.dip,
+        };
+      });
+
+      console.log('Updated model event:', JSON.stringify(result));
+
+      if (!result) {
+        throw new Error('[Test B] Could not read updated model from window.__lastModel');
+      }
+      if (result.dip !== newDip) {
+        throw new Error(`[Test B] Expected dip ${newDip}, got ${result.dip}`);
+      }
+      if (!result.manually_edited) {
+        throw new Error('[Test B] Expected manually_edited === true after drag');
+      }
+      if (result.field_origin_dip !== 'stated') {
+        throw new Error(`[Test B] Expected field_origin.dip === 'stated', got '${result.field_origin_dip}'`);
+      }
+      console.log('PASS [Test B]: drag→JSON pipeline verified (dip changed, manually_edited=true, field_origin.dip=stated)');
+
+      const screenshotPath = path.join(screenshotDir, 'smoke-1.4-drag.png');
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
 
     // ---- Phase 3 extension: listric fault reference card ----
     // 10. Navigate to the Formation reference tab.
@@ -257,7 +434,7 @@ async function run() {
     if (server) server.close();
   }
 
-  // 10. Exit with appropriate code
+  // Exit with appropriate code
   process.exit(exitCode);
 }
 

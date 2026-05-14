@@ -253,6 +253,21 @@ RULES:
       return { phi: 1.1, theta: 0.4, dist: 11 };
     }, [model?.events?.[0]?.subtype]);
 
+    // Test hooks — expose current model and a way to set the selection from outside.
+    // These are used by smoke tests; they are no-ops in production (window.__ are undefined).
+    useEffect(() => {
+      window.__lastModel = model;
+    }, [model]);
+    useEffect(() => {
+      window.__setSelected = (sel) => setSelected(sel);
+      return () => { window.__setSelected = null; };
+    }, [setSelected]);
+    useEffect(() => {
+      // Allow smoke tests to directly call onDragChange to verify the drag→JSON pipeline.
+      window.__testDragChange = onDragChange;
+      return () => { window.__testDragChange = null; };
+    }, [onDragChange]);
+
     const onInterpret = useCallback(async () => {
       if (!description.trim()) return;
       setInterpreting(true);

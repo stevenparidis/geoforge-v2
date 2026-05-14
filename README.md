@@ -24,7 +24,8 @@ There is no persistence: the description and model live entirely in memory. The 
   - All three simple folds: anticline, syncline, monocline.
 - The full set of measurement-origin overlays from `spec.md` §3 / `spec-v1.md` §4: dip vertex+arc, strike line + compass, dip-direction compass + arc, layer thickness vectors, throw/heave reconstruction with pre-fault datum, slip-vector decomposition, fold hinge + axial plane + interlimb-angle arc + plunge arc.
 - The stated-vs-inferred contract: stated values render in white; inferred values in **amber with a dashed underline** (toolbar Tweaks can recolour the amber).
-- Inspector editing: every numeric field is editable; on commit, the JSON updates, the 3D view re-renders, and the field is reclassified as stated and `manually_edited: true`.
+- Inspector editing (path B): every numeric field is editable; on commit, the JSON updates, the 3D view re-renders, and the field is reclassified as stated and `manually_edited: true`.
+- Direct 3D drag editing (path C, Phase 1): eight cyan handle types (fault-dip, fault-strike, fault-throw, layer-thickness top/bot, fold-limb left/right, fold-hinge) appear when a feature is selected; dragging updates the JSON field in real-time with `manually_edited: true` and `field_origin: 'stated'`. Overlay arcs and labels co-update in-place during drags without a full scene rebuild.
 - Geological history playback: a timeline scrubber with play/pause, step ◀ ▶, and 0.5×/1×/2× speed. Snap-step transitions (no per-event animation in v1).
 - JSON download / upload via the inspector toolbar. No browser storage — refresh wipes state.
 - Toolbar toggles for **Labels**, **Overlays** and **Grid** — default to on per `spec-v1.md` §9.3.
@@ -39,7 +40,7 @@ There is no persistence: the description and model live entirely in memory. The 
 
 1. **Model name & token cap.** The spec asks for `claude-sonnet-4-20250514` with `max_tokens=1000` called directly via the Anthropic API. This sandbox only exposes Claude through `window.claude.complete`, which uses `claude-haiku-4-5` and a fixed 1024-token cap. The system prompt and JSON-extraction logic are otherwise identical to the spec.
 2. **No incremental re-parse.** The interpreter re-parses the whole description on each "Interpret" press. Sentence-level diffing is left for v1.1 (this is `spec-v1.md` open question §12.1).
-3. **Direct 3D manipulation (path C) is partial.** Path B (inspector edits) and path A (re-write description + interpret) write to the same JSON and produce consistent visuals. Click-to-select on a mesh routes to the inspector, but live drag-handles on fault planes / layer contacts / fold limbs were deferred — they would require a separate handle-mesh layer with custom drag projection. The inspector covers the same edit space numerically, and changing any value (e.g. dip from 60 → 70) updates both geometry and overlays in lockstep. This is the most significant deviation; the other two paths fully satisfy the acceptance criterion.
+3. ~~**Direct 3D manipulation (path C) is partial.**~~ **CLOSED in Phase 1.** All three editing paths (A: re-interpret, B: inspector numeric fields, C: 3D drag handles) now write to the same JSON. `src/handle-layer.jsx` adds 8 handle types: `fault-dip`, `fault-strike`, `fault-throw`, `layer-thickness-top`, `layer-thickness-bot`, `fold-limb-left`, `fold-limb-right`, `fold-hinge`. Each handle uses a projection-plane drag controller; dragged values update the model JSON live with `manually_edited: true` and `field_origin: 'stated'`. Overlay primitives are co-updated in-place during drags via `overlayUpdateMap`.
 4. ~~**Listric fault dip-at-depth overlay** approximates the curved profile with a quadratic interpolation between surface and depth dips, rendered as a profile line.~~ **CLOSED in Phase 3.** Replaced with a circular-arc solver that correctly respects surface dip and dip-at-depth as tangent constraints. Two dip overlays (at surface and at detachment depth) and a vertical depth annotation are now rendered.
 5. **Throw / displacement clamping.** The LLM occasionally returns metres-scale values (e.g. `throw: 30`) when our internal units are 0.3–2.0. `applyDefaults` clamps these into the model's local frame so the geometry stays viewable; the inspector still shows the value as supplied.
 
@@ -52,6 +53,7 @@ There is no persistence: the description and model live entirely in memory. The 
 | `src/geo-data.jsx` | Lithology palette, periods, defaults, reference formation definitions |
 | `src/three-helpers.jsx` | All Three.js geometry + overlay primitives |
 | `src/scene.jsx` | `<GeoScene>` React wrapper + shared renderer surface |
+| `src/handle-layer.jsx` | `window.GeoHandles` — 8 handle types, drag controller, overlay co-update (Phase 1) |
 | `src/reference-view.jsx` | Formation reference glossary (Deliverable 2) |
 | `src/workspace.jsx` | Workspace pane (Deliverable 1) + interpreter wiring |
 | `src/tweaks-panel.jsx` | Tweaks UI primitives (shared component) |
@@ -67,7 +69,7 @@ There is no persistence: the description and model live entirely in memory. The 
 | 1 | Plain-English → 3D model on Interpret | ✅ |
 | 2 | Every measurement displays with its geometric-origin overlay | ✅ (see Formation reference for full coverage) |
 | 3 | Every value indicates stated vs inferred | ✅ |
-| 4 | All three editing paths write to same JSON | ⚠ paths A & B fully wired; path C selection works, drag-handles deferred |
+| 4 | All three editing paths write to same JSON | ✅ paths A, B and C all wired; drag handles implemented in Phase 1 |
 | 5 | History playback applies events oldest → most recent | ✅ |
 | 6 | JSON download / upload restores both description and 3D state | ✅ |
 | 7 | Default startup shows labels + overlays on | ✅ |
