@@ -1,0 +1,2054 @@
+
+
+GeoForge
+
+Master Geological Reference
+
+Plain-English → 3D Annotated Model
+
+A comprehensive learning and specification document covering structural geology, lithology, stratigraphy, mineralisation, and the vocabulary needed to interpret natural-language site descriptions into a 3D geological model.
+
+
+
+How to use this document
+
+This is a single, comprehensive reference for the GeoForge project. It serves two purposes:
+
+
+As a learning tool — an experienced geology student can read through it to understand structural geology, stratigraphy, igneous and metamorphic processes, and the mineralisation styles that flow from them.
+
+
+As a feedable specification — every section provides the structured data that an AI interpreter needs to convert plain-English site descriptions into the GeoForge JSON schema and the 3D annotated model.
+
+Each formation entry includes: a clear definition, the stress regime or process that drives it, the geological factors that influence it, the exact label fields the 3D model should render, and the plain-English vocabulary that should trigger it in the AI interpreter.
+
+
+Convention used throughout: σ1 = maximum principal stress, σ2 = intermediate, σ3 = minimum. Dip is the angle a plane makes with horizontal (0-90°). Strike is the compass bearing of a horizontal line on that plane (0-360°).
+
+
+
+Contents
+
+
+1. Fundamentals — stress, strain, deformation
+
+
+2. Plate tectonic settings
+
+
+3. Stratigraphy and layering
+
+
+4. Lithology — rock types and visual mapping
+
+
+5. Geological timescale
+
+
+6. Folds
+
+
+7. Faults
+
+
+8. Joints, fractures and fabric
+
+
+9. Block structures and basins
+
+
+10. Igneous bodies
+
+
+11. Metamorphic features
+
+
+12. Surface and weathering features
+
+
+13. Fluid pathways and hydrogeology
+
+
+14. Mineralisation styles and ore deposits
+
+
+15. Standard geological symbols
+
+
+16. Plain-English trigger phrase library
+
+
+17. 3D annotation specification
+
+
+18. The GeoModel JSON schema cheat-sheet
+
+
+
+1. Fundamentals — stress, strain, deformation
+
+Every geological structure is a record of how rock responded to stress. Understanding these terms is essential because they are what the AI interpreter must read from plain English and convert into structural events in the model.
+
+
+Principal stress axes
+
+
+σ1 — maximum principal stress, the strongest compressive direction.
+
+
+σ2 — intermediate principal stress, perpendicular to both σ1 and σ3.
+
+
+σ3 — minimum principal stress; tensile fractures open perpendicular to this.
+
+
+Anderson's fault classification
+
+Anderson's theory links the orientation of σ1 to the type of fault produced. This is the bridge between stress and structure that the AI must understand.
+Fault type
+σ1 orientation
+σ3 orientation
+Result
+Normal
+Vertical
+Horizontal
+Extension; hanging wall drops
+Reverse / thrust
+Horizontal
+Vertical
+Shortening; hanging wall rises
+Strike-slip
+Horizontal
+Horizontal (perp.)
+Lateral movement, no vertical
+
+
+Brittle vs ductile deformation
+
+
+Brittle — rock fractures without flowing. Dominates at shallow depths (typically <10–15 km), low temperatures, fast strain rates. Produces faults and joints.
+
+
+Ductile — rock flows like very stiff putty. Dominates at depth, high temperatures, slow strain rates. Produces folds and shear zones.
+
+
+Brittle-ductile transition — the depth at which behaviour shifts; varies by lithology and geothermal gradient, but typically around 300–400 °C.
+
+
+Strain markers
+
+
+Elongation — lengthening of a line.
+
+
+Shortening % — how much a unit has been compressed.
+
+
+Finite strain ellipsoid — the shape that records total accumulated strain in three dimensions; axes are X (longest), Y (intermediate), Z (shortest).
+
+
+Pure shear — coaxial strain; no rotation.
+
+
+Simple shear — non-coaxial strain; produces rotation, typical of shear zones.
+
+
+Rheology controls
+
+Rheology is how a rock flows. The same stress produces different structures depending on these controls:
+
+
+Temperature — higher = more ductile.
+
+
+Pressure (confining) — higher = more ductile, suppresses fracturing.
+
+
+Strain rate — slower = more ductile.
+
+
+Mineralogy — quartz weakens at lower temp than feldspar; mica is very weak.
+
+
+Fluid pressure — high pore fluid pressure dramatically reduces effective stress and promotes faulting.
+
+
+Grain size — finer grain = more ductile in many regimes.
+
+
+Byerlee's Law: friction on faults is roughly constant (coefficient ~0.6–0.85) across most rocks, meaning faults reactivate at predictable shear-to-normal stress ratios regardless of rock type.
+
+
+2. Plate tectonic settings
+
+Tectonic setting is the master context that determines what suite of formations and deposits a user is likely describing. When the AI reads 'subduction zone' or 'passive margin', it should immediately load the expected formation suite below.
+Setting
+Stress style
+Typical structures
+Typical ore deposits
+Convergent (subduction)
+Compression
+Thrust faults, fold-thrust belts, accretionary prisms, stratovolcanoes
+Porphyry Cu-Mo-Au, epithermal Au-Ag
+Divergent (rift / MOR)
+Extension
+Normal faults, grabens, half-grabens, basalt flows
+VMS, sediment-hosted Cu, REEs
+Transform
+Shear
+Strike-slip faults, pull-apart basins, flower structures, en échelon fractures
+Geothermal, some epithermal
+Passive margin
+Subsidence + minor extension
+Growth faults, listric faults, deltas, salt diapirs, thick sediment wedge
+SEDEX, hydrocarbons, phosphorite
+Continental collision
+Intense compression
+Nappes, thrust sheets, recumbent folds, regional metamorphism
+Orogenic gold, tungsten, tin
+Intraplate / craton
+Stable / low stress
+Flat strata, kimberlite pipes, anorogenic granites
+Diamonds (kimberlite), MVT Zn-Pb, BIF iron
+Back-arc basin
+Extension behind arc
+Normal faults, marine sediments, bimodal volcanics
+VMS (Kuroko type)
+Foreland basin
+Compression-flexural
+Foreland fold-thrust belt, asymmetric basin fill
+Coal, hydrocarbons
+
+
+
+3. Stratigraphy and layering
+
+The base of every GeoForge model is a stack of layers. These are the fundamental building blocks before any structural events are applied.
+
+
+Stratigraphic principles
+
+
+Law of superposition — in an undisturbed sequence, older rocks lie below younger rocks.
+
+
+Original horizontality — sediments are deposited in horizontal layers; any tilt is from later tectonics.
+
+
+Lateral continuity — layers extend laterally until they thin, pinch out, or are eroded.
+
+
+Cross-cutting relationships — anything that cuts across a feature must be younger than that feature.
+
+
+Inclusions — a clast inside a rock is older than the rock containing it.
+
+
+Layer geometry types
+Type
+Description
+Driver
+Annotation fields
+Horizontal strata
+Flat-lying undeformed layers
+Quiescent deposition
+Name, age, thickness, lithology
+Dipping strata
+Tilted layers
+Tectonic rotation, block tilting
+Strike °, dip °, dip direction, true thickness
+Angular unconformity
+Tilted older strata cut by flat younger strata
+Uplift, erosion, then re-deposition
+Time gap (Ma), angular discordance °
+Disconformity
+Erosion surface between parallel beds
+Sea-level fall, hiatus
+Time gap (Ma), missing units
+Nonconformity
+Sedimentary rocks deposited on eroded igneous or metamorphic basement
+Deep erosion to basement
+Basement age, cover age, contact
+Paraconformity
+Subtle conformable-looking gap, only revealed by fossils/age dating
+Slow / non-deposition
+Time gap (Ma)
+Conformable sequence
+Continuous deposition, no gap
+Stable basin
+Total thickness, age range
+Cross-bedding
+Inclined laminations within a bed showing flow direction
+Current or wind transport
+Bed thickness, palaeocurrent direction
+Graded bedding
+Grain size decreases upward through a bed
+Waning current, turbidity flow
+Bed thickness, max grain size
+Channel fill
+Lenticular body cutting into underlying bed
+Fluvial / tidal channel
+Width, depth, orientation, fill lithology
+Lateral facies change
+Same age unit changes lithology sideways
+Different depositional environment
+Lithology zones, transition width
+
+
+
+4. Lithology — rock types and visual mapping
+
+Every layer has a rock type. The AI must convert a word like 'sandstone' or 'granite' into a layer with the correct colour, density, and economic significance. These default colours follow common geological convention; the user can override per layer.
+
+
+Sedimentary rocks
+Rock type
+Description
+Grain size
+Default colour
+Typical setting & significance
+Sandstone
+Cemented sand
+0.06–2 mm
+Pale tan #E8D8A8
+Fluvial, beach, dune; common reservoir rock
+Mudstone
+Cohesive mud
+<0.004 mm
+Grey-brown #6B5D4B
+Low-energy marine; seal rock
+Shale
+Fissile mudstone
+<0.004 mm
+Dark grey #4A4A4A
+Deep marine; hydrocarbon source
+Conglomerate
+Cemented gravel
+>2 mm
+Mixed brown #8C6E4A
+Alluvial fan, fluvial; basin margin
+Limestone
+Calcium carbonate
+Varies
+Light grey-blue #D8DCE0
+Reef, shallow marine; hosts MVT
+Chalk
+Fine-grained limestone
+Microscopic
+Off-white #F0EDE6
+Deep marine; Cretaceous typical
+Dolostone
+Mg-carbonate
+Varies
+Beige-grey #C8B8A0
+Diagenetic alteration of limestone
+Chert
+Microcrystalline silica
+Very fine
+Dark grey #3C4040
+Deep marine; resistant to weathering
+Coal
+Compressed plant matter
+N/A
+Black #1A1A1A
+Swampy lowlands; energy resource
+Evaporite (halite)
+Salt
+Crystalline
+White-pink #F5E6E0
+Hot arid restricted basin; salt diapirs
+Evaporite (gypsum)
+Hydrated Ca-sulphate
+Crystalline
+White #F0EDE6
+Restricted marine evaporation
+
+
+Igneous rocks
+Rock type
+Description
+Texture
+Default colour
+Typical setting & significance
+Granite
+Coarse felsic intrusive
+Phaneritic
+Pink-grey #D8C0B0
+Continental crust; hosts porphyry/lode Au
+Diorite
+Intermediate intrusive
+Phaneritic
+Speckled grey #7C7066
+Subduction-related plutons
+Gabbro
+Coarse mafic intrusive
+Phaneritic
+Dark grey-green #3C463C
+Layered mafic intrusions; Cr, PGE
+Rhyolite
+Fine felsic extrusive
+Aphanitic
+Pale pink #E8D0C8
+Continental volcanic arc; epithermal host
+Andesite
+Intermediate extrusive
+Aphanitic
+Grey-brown #6B5C50
+Subduction stratovolcanoes
+Basalt
+Fine mafic extrusive
+Aphanitic
+Black-grey #2C2C2C
+MORs, hot spots, flood basalts
+Obsidian
+Volcanic glass
+Glassy
+Black #0F0F0F
+Rapid cooling of felsic lava
+Tuff
+Volcanic ash deposit
+Pyroclastic
+Pale grey #BFB8A8
+Explosive volcanism
+Pumice
+Vesicular felsic glass
+Vesicular
+Pale tan #E0D0B8
+Explosive felsic eruption
+Pegmatite
+Very coarse late-stage
+Phaneritic
+Pink-white #ECD8C8
+Hosts rare elements: Li, Be, REE
+Kimberlite
+Ultramafic pipe rock
+Porphyritic
+Dark blue-green #2A4040
+Hosts diamonds, deep cratonic source
+
+
+Metamorphic rocks
+Rock type
+Description
+Foliation
+Default colour
+Setting & grade
+Slate
+Low-grade metashale
+Slaty cleavage
+Dark grey #3C4448
+Low grade, regional
+Phyllite
+Higher than slate
+Phyllitic sheen
+Silver-grey #6C7078
+Low–medium grade
+Schist
+Visible micas
+Schistosity
+Silver-brown #7C6C5C
+Medium grade
+Gneiss
+Banded high-grade
+Gneissic banding
+Pink-grey banded #B4A090
+High grade, regional
+Quartzite
+Metamorphosed sandstone
+Massive
+White-grey #DCD8CC
+Any grade, very hard
+Marble
+Metamorphosed limestone
+Massive
+White-cream #ECE4D0
+Any grade; skarn host
+Hornfels
+Contact metamorphic
+Massive
+Dark grey-blue #4C5060
+Contact aureole
+Migmatite
+Partially melted gneiss
+Mixed/lit-par-lit
+Pink-grey banded #C8A898
+Very high grade
+Mylonite
+Ductile shear rock
+Strong foliation
+Banded grey #6C7068
+Shear zones, any depth
+Eclogite
+Very high-P metabasalt
+Massive
+Green-red #506050
+Subduction zone, deep
+
+
+
+5. Geological timescale
+
+The standard International Commission on Stratigraphy (ICS) timescale gives every layer an age. When a user writes 'Jurassic' or 'Permian', the AI assigns the corresponding Ma range, era, and the standard ICS colour code for the period.
+
+
+Periods, ages, and ICS colours
+Period
+Era / Eon
+Ma top
+Ma base
+Typical rocks & mineralisation
+Quaternary
+Cenozoic / Phan.
+0
+2.58
+Alluvium, glacial till, placer Au
+Neogene
+Cenozoic / Phan.
+2.58
+23.0
+Marine sediments, porphyry Cu (e.g. Chile)
+Palaeogene
+Cenozoic / Phan.
+23.0
+66.0
+Coal, lignite, early hominid sediments
+Cretaceous
+Mesozoic / Phan.
+66.0
+145
+Chalk, hydrocarbons, late Au porphyries
+Jurassic
+Mesozoic / Phan.
+145
+201
+Limestone, oolite, hydrocarbons
+Triassic
+Mesozoic / Phan.
+201
+252
+Red beds, evaporites
+Permian
+Palaeozoic / Phan.
+252
+299
+Coal, evaporites, oil shale
+Carboniferous
+Palaeozoic / Phan.
+299
+359
+Coal, MVT Zn-Pb, limestones
+Devonian
+Palaeozoic / Phan.
+359
+419
+VMS, hydrocarbon source rocks
+Silurian
+Palaeozoic / Phan.
+419
+444
+Limestones, evaporites
+Ordovician
+Palaeozoic / Phan.
+444
+485
+Black shales, oil source
+Cambrian
+Palaeozoic / Phan.
+485
+541
+First abundant fossils, phosphorites
+Proterozoic
+Proterozoic
+541
+2500
+BIF, IOCG, anorogenic granites, kimberlites
+Archean
+Archean
+2500
+4000
+Greenstone belts, orogenic Au, komatiites
+Hadean
+Hadean
+4000
+4600
+No preserved rock; zircons only
+
+
+Memory aid for Phanerozoic order (oldest to youngest): Cambrian, Ordovician, Silurian, Devonian, Carboniferous, Permian, Triassic, Jurassic, Cretaceous, Palaeogene, Neogene, Quaternary. 'Cold Oysters Seldom Develop Carbuncles Permitting Them Just Career Progression Now Quickly.'
+
+
+
+6. Folds
+
+Folds form when rock layers bend rather than break. They are produced primarily by compressional stress in the ductile regime, but can also form in extensional or shear settings depending on geometry.
+
+
+Fold anatomy — terms every fold annotation needs
+
+
+Hinge — line of maximum curvature.
+
+
+Axial plane — surface that bisects the angle between the two limbs.
+
+
+Limbs — the two sides of the fold.
+
+
+Interlimb angle — the angle between the two limbs; defines fold tightness.
+
+
+Plunge — angle the hinge line makes with horizontal.
+
+
+Vergence — direction the fold is overturned; indicates transport direction.
+
+
+Wavelength — horizontal distance between successive hinges of the same type.
+
+
+Amplitude — vertical height from inflection line to hinge.
+
+
+Fold tightness classification
+Class
+Interlimb angle
+Meaning
+Gentle
+120–180°
+Low strain, low compression
+Open
+70–120°
+Moderate compression
+Close
+30–70°
+Significant shortening
+Tight
+10–30°
+Strong compression
+Isoclinal
+<10°
+Limbs parallel; very intense compression, often high grade
+
+
+Fold catalogue
+Fold
+Description
+Driver
+Influencing factors
+Anticline
+Arch fold; oldest rocks in core
+Compression
+Burial depth, ductility, temperature
+Syncline
+Trough fold; youngest rocks in core
+Compression
+Adjacent anticline geometry, lithology
+Monocline
+Single-sided flexure in flat strata
+Basement fault reactivation
+Cover ductility, fault throw below
+Recumbent fold
+Fold with horizontal axial plane
+High-strain compression
+Ductile flow, elevated temperature
+Overturned fold
+One limb past vertical
+Compression with vergence
+Asymmetric stress, transport direction
+Isoclinal fold
+Limbs parallel
+Intense compression
+High metamorphic grade
+Chevron fold
+Sharply angular hinge
+Compression on layered rock
+Strong competence contrast
+Box fold
+Flat crest, steep limbs
+Compression with detachment
+Layered competent units
+Kink band
+Narrow zone of rotated layering
+Compression on anisotropic rock
+Foliation orientation, stress angle
+Drag fold
+Small folds adjacent to fault
+Fault movement
+Slip direction, layer ductility
+Disharmonic fold
+Folds of different scale in same unit
+Variable competence
+Mixed lithology, decoupling layers
+Ptygmatic fold
+Highly irregular contorted fold
+High viscosity contrast
+Ductile matrix, competent vein
+Dome
+Circular upwarp; oldest in centre
+Diapirism, intrusion, inversion
+Salt, magma, basement uplift
+Structural basin
+Bowl-shaped downwarp; youngest centre
+Subsidence
+Sediment loading, thermal cooling
+Periclinal fold
+Doubly plunging anticline or syncline
+Localised compression
+Stress termination, lateral fade
+
+
+
+7. Faults
+
+Faults are brittle fractures with measurable displacement. They are the most important structures for both basin formation and mineralisation.
+
+
+Fault anatomy
+
+
+Fault plane — the surface along which movement occurs.
+
+
+Hanging wall — the block sitting above the fault plane.
+
+
+Footwall — the block sitting below the fault plane.
+
+
+Strike — compass bearing of a horizontal line on the fault plane.
+
+
+Dip — angle the fault plane makes with horizontal.
+
+
+Throw — the vertical component of displacement.
+
+
+Heave — the horizontal component of displacement.
+
+
+Net slip — the true distance and direction of movement on the fault plane.
+
+
+Rake (pitch) — angle between slip direction and the strike, measured on the fault plane.
+
+
+Fault zone components
+
+
+Fault core — the thin slip surface itself, often containing fault gouge.
+
+
+Fault gouge — fine clay-rich crushed rock from grinding; often impermeable.
+
+
+Fault breccia — angular fragments of rock cemented together; common ore host.
+
+
+Damage zone — fractured rock around the core; permeable and fluid-bearing.
+
+
+Slickenlines / slickensides — polished striated surfaces recording exact slip direction.
+
+
+Fault catalogue
+Fault
+Description
+Stress regime
+Setting / influence
+Normal fault
+Hanging wall drops; dip typically 60°
+Extensional
+Rifts, basins, passive margins
+Reverse fault
+Hanging wall up; dip > 45°
+Compressional
+Convergent margins, orogens
+Thrust fault
+Low-angle reverse; dip < 45°
+Compressional
+Fold-thrust belts, collisions
+Strike-slip (dextral)
+Right-lateral horizontal motion
+Shear
+Transforms, restraining/releasing bends
+Strike-slip (sinistral)
+Left-lateral horizontal motion
+Shear
+Transforms, wrench zones
+Oblique-slip
+Combined dip-slip + strike-slip
+Mixed
+Transpression, transtension
+Listric fault
+Curved; flattens at depth
+Extensional
+Basin formation, rollover folds
+Detachment fault
+Large low-angle normal fault
+Extensional
+Metamorphic core complexes
+Blind thrust
+Thrust that does not break surface
+Compressional
+Fold-thrust belts, hidden hazard
+Growth fault
+Active during sedimentation; thicker fill on downthrown side
+Extensional
+Passive margins, deltas
+Splay fault
+Branch fault off main
+Mixed
+Fault tip stress concentration
+Transfer fault
+Connects offset segments
+Mixed
+Rift relay zones
+Tear fault
+Strike-slip within a thrust sheet
+Compressional
+Differential thrust transport
+Reactivated fault
+Older fault re-slipping under new stress
+Variable
+Often hosts mineralisation
+
+
+Slickenlines and kinematic indicators
+
+These are the small-scale features that record exact movement direction on a fault. The 3D model should annotate them with slip vectors:
+
+
+Slickenfibres — mineral fibres grown in the slip direction.
+
+
+Riedel shears — small fractures at 15–30° to main fault, indicate sense of shear.
+
+
+Drag folds — bent layers near the fault, vergence indicates slip direction.
+
+
+Offset markers — any pre-existing feature cut by the fault; the offset gives both direction and magnitude.
+
+
+
+8. Joints, fractures and fabric
+
+Smaller-scale features that do not have measurable displacement (joints) or that record internal deformation of the rock (fabric).
+Feature
+Description
+Driver
+3D annotation fields
+Extension joint
+Opens perpendicular to σ3
+Tensile stress, uplift
+Strike °, dip °, aperture, spacing
+Shear joint
+Forms at angle to σ1
+Brittle shear failure
+Strike °, dip °, conjugate pair angle
+Release joint
+From unloading and exhumation
+Pressure release
+Strike °, dip °, depth at formation
+Hydraulic fracture
+Opened by fluid pressure
+High pore pressure
+Strike °, dip °, fluid type
+Columnar joint
+Polygonal cooling fractures
+Thermal contraction
+Column diameter, orientation
+En échelon array
+Offset parallel fractures
+Shear
+Array strike, individual strike, sense
+Conjugate joint set
+Two intersecting joint sets
+Shear failure
+Acute angle between sets, σ1 orientation
+Foliation
+Planar mineral alignment
+Compression in metamorphic rock
+Strike °, dip °, grade
+Cleavage
+Fine planar fabric in low-grade rock
+Compression
+Strike °, dip °, intensity
+Schistosity
+Coarse foliation with visible micas
+Medium-high grade
+Strike °, dip °, mica %
+Lineation
+Linear fabric on a foliation
+Stretching, mineral growth
+Plunge °, plunge direction
+Mylonitic foliation
+Foliation in ductile shear zone
+Shear
+Strike °, dip °, sense of shear
+S-C fabric
+Two intersecting foliations in shear zone
+Non-coaxial shear
+S and C orientations, sense
+Boudinage
+Stretched competent layer broken into segments
+Extension
+Boudin width, neck spacing
+Mullion
+Cylindrical structures from competent-incompetent interface
+Compression
+Axis orientation, wavelength
+Vein
+Mineral-filled fracture
+Fluid in tension fracture
+Strike °, dip °, width, mineral
+Stylolite
+Irregular dissolution surface
+Pressure solution
+Orientation, amplitude
+
+
+
+9. Block structures and basins
+
+Large-scale arrangements of fault-bounded blocks that define basins, ranges, and entire provinces. The 3D model renders these as fault-bounded geometric blocks.
+Structure
+Description
+Tectonic setting
+Influence on mineralisation
+Horst
+Uplifted block between normal faults
+Rifting, basin and range
+Often erosional source, oxidised cap
+Graben
+Downthrown block between normal faults
+Rifting
+Sediment-hosted deposits, hydrocarbons
+Half-graben
+Asymmetric graben, one master fault
+Extension with rotation
+Fluid trapping in rollover folds
+Tilt block
+Rotated block in extensional system
+Rifting, listric faulting
+Unconformity-related deposits
+Rift valley
+Linear graben system
+Continental rifting
+VMS, geothermal, hydrocarbons
+Foreland basin
+Asymmetric basin in front of thrust belt
+Compression, flexure
+Coal, hydrocarbons
+Foredeep
+Deepest part of foreland basin
+Loading by thrust sheet
+Source rocks for hydrocarbons
+Pull-apart basin
+Rhombic basin at releasing bend
+Strike-slip
+Geothermal, epithermal Au-Ag
+Flower structure (positive)
+Upward-fanning faults; transpression
+Strike-slip
+Often barren but fluid pathway
+Flower structure (negative)
+Downward-fanning faults; transtension
+Strike-slip
+Pull-apart style mineralisation
+Pop-up structure
+Compressional wedge between reverse faults
+Inversion, restraining bend
+Fluid focussing in fault corners
+Inverted basin
+Former basin now uplifted
+Tectonic inversion
+Petroleum traps disrupted, structural ore
+Salt diapir
+Vertically risen salt body
+Density contrast
+Caprock hydrocarbon traps, salt-related Cu
+
+
+
+10. Igneous bodies
+
+Crystallised magma bodies in two broad classes: intrusive (cooled at depth) and extrusive (erupted onto the surface).
+
+
+Intrusive bodies
+Body
+Description
+Setting
+Mineralisation
+Batholith
+Large discordant pluton > 100 km²
+Subduction or collision
+Hosts porphyry Cu-Mo, lode Au
+Stock
+Smaller pluton < 100 km²
+Same as batholith
+Often the actual porphyry source
+Dyke (dike)
+Discordant tabular sheet
+Any; follows σ3
+Fluid pathway, vein hosting
+Sill
+Concordant tabular sheet along bedding
+Shallow
+Layered mafic intrusions: Cr, PGE, Ni
+Laccolith
+Mushroom shape doming roof
+Shallow viscous magma
+Localised contact effects
+Lopolith
+Saucer shape sagging into crust
+Large mafic emplacement
+Bushveld-type PGE, Cr, V
+Phacolith
+Lens in fold hinge
+Syn-tectonic emplacement
+Variable
+Volcanic neck / pipe
+Cylindrical conduit of former volcano
+Eroded volcano
+Diatremes; kimberlite hosts diamond
+Pluton
+Generic term for any plutonic body
+Variable
+Variable
+Ring dyke
+Arcuate dyke around caldera
+Caldera collapse
+Sometimes Sn, W
+Cone sheet
+Inward-dipping dyke set above intrusion
+Forceful magma rise
+Geometric guide to source
+
+
+Extrusive features
+Feature
+Description
+Setting
+Notes
+Shield volcano
+Broad, low-slope basaltic edifice
+Hot spot, MOR
+Effusive eruptions
+Stratovolcano
+Steep composite cone of lava + ash
+Subduction zone
+Explosive, dangerous
+Cinder cone
+Small steep pyroclastic cone
+Strombolian eruption
+Gas-rich basalt
+Lava dome
+Steep pile of viscous lava
+Felsic eruption
+Hosts epithermal Au-Ag
+Caldera
+Large collapse depression
+Catastrophic eruption
+Resurgent doming, geothermal
+Maar
+Low-rim crater from phreatomagmatic blast
+Water-magma interaction
+Often shallow groundwater
+Tuff ring
+Pyroclastic ring around vent
+Shallow phreatomagmatic
+Volcaniclastic deposits
+Flood basalt / LIP
+Vast lava sheets
+Mantle plume
+Continental flood basalts
+Pillow basalt
+Bulbous lava cooled underwater
+Submarine eruption
+Ophiolite indicator
+Hyaloclastite
+Glassy fragmental volcanic
+Subaqueous lava brecciation
+VMS host
+
+
+
+11. Metamorphic features
+
+Metamorphic features record the temperature, pressure, and strain that rocks experience after burial or near intrusions.
+
+
+Metamorphic types
+
+
+Regional metamorphism — large areas affected by burial during orogeny. Produces foliated rocks (slate-phyllite-schist-gneiss sequence with grade).
+
+
+Contact (thermal) metamorphism — heating near an intrusion. Produces non-foliated hornfels and skarn.
+
+
+Dynamic (cataclastic) metamorphism — mechanical grinding in fault zones. Produces fault breccia, gouge, and mylonite.
+
+
+Burial metamorphism — low-grade alteration in deep sedimentary basins.
+
+
+Hydrothermal metamorphism — alteration by hot fluids; produces alteration halos around deposits.
+
+
+Impact metamorphism — shock from meteorite impact; produces shatter cones, suevite.
+
+
+Metamorphic grade & index minerals
+Grade
+Temperature
+Index mineral (in pelite)
+Diagnostic rocks
+Very low
+150–300 °C
+Zeolite, chlorite
+Slate
+Low
+300–450 °C
+Biotite
+Phyllite, low-grade schist
+Medium
+450–600 °C
+Garnet, staurolite
+Schist
+High
+600–750 °C
+Sillimanite, kyanite
+Gneiss
+Very high (granulite)
+>750 °C
+Orthopyroxene
+Granulite, migmatite
+
+
+Metamorphic features and zones
+Feature
+Description
+Driver
+3D annotation
+Contact aureole
+Baked zone around intrusion
+Thermal
+Aureole radius, peak temp, grade zones
+Shear zone
+Localised ductile deformation
+Shear
+Width, dip, sense of shear, mylonite zone
+Metamorphic core complex
+Domal exposure of deep ductile crust
+Extension
+Detachment surface, dome axis, exhumation depth
+Skarn
+Reactive calc-silicate at intrusion-carbonate contact
+Thermal + chemical
+Contact position, skarn front width, ore type
+Migmatite zone
+Partial melt zone
+Very high T
+Leucosome fraction, foliation
+Greenstone belt
+Low-grade metavolcanic-sedimentary belt
+Archean orogeny
+Belt boundaries, host of orogenic Au
+Isograd
+Line of constant metamorphic grade
+Regional gradient
+Map trace, mineral assemblage
+
+
+
+12. Surface and weathering features
+
+What happens to rock once it reaches the surface. Critical for ore enrichment (supergene processes) and for understanding what a mine site looks like in plan view.
+Feature
+Description
+Driver
+Influence on mineralisation
+Erosion surface
+Plane cutting across structure
+Uplift + erosion
+Truncates ore bodies; defines outcrop
+Regolith
+Loose weathered material
+Chemical + physical weathering
+Hosts secondary mineralisation
+Saprolite
+In-situ chemically weathered rock
+Tropical chemical weathering
+Preserves primary structure; Au, Ni
+Laterite
+Iron-rich weathering cap
+Tropical climate over time
+Supergene Ni, Au, Al (bauxite)
+Gossan
+Iron-oxide cap over sulphide ore
+Oxidation of sulphides
+Direct surface indicator of buried ore
+Oxide zone
+Above water table; oxidised
+Surface oxidation
+Leached Cu, Au upgrading
+Supergene blanket
+Re-precipitated metal below water table
+Downward leaching + reprecipitation
+Enriched Cu, Ag, Au zone
+Alluvial fan
+Fan at mountain front
+Flash floods, uplift
+Placer Au, Sn, gemstones
+Palaeochannel
+Buried ancient river
+Old drainage, then burial
+Placer Au, U (sandstone-hosted)
+Talus / scree
+Angular debris at cliff base
+Frost shattering, gravity
+Coarse debris field
+Soil horizon
+A, B, C horizons
+Bioclimatic
+Geochemical sampling target
+Karst
+Dissolution features in carbonate
+Acid groundwater
+Hosts MVT Zn-Pb deposits
+Glacial till
+Unsorted glacial deposit
+Ice transport
+Boulder tracing for ore
+Sand dune
+Wind-deposited sand
+Aeolian
+Heavy mineral sands (Ti, Zr, REE)
+
+
+
+13. Fluid pathways and hydrogeology
+
+Fluids carry metals. Understanding how fluids move through rock is the single biggest predictor of where ore forms. This section is critical for the mineralisation-prediction goal of the learning tool.
+
+
+Fluid pathway terminology
+
+
+Aquifer — permeable unit that transmits fluid (sandstone, fractured limestone).
+
+
+Aquitard / aquiclude — impermeable unit that blocks fluid flow (shale, fault gouge, evaporite).
+
+
+Hydraulic gradient — direction fluid flows; from high head to low head.
+
+
+Pore fluid pressure — pressure in pore spaces; high values reduce effective stress and trigger faulting.
+
+
+Lithostatic pressure — pressure from overlying rock weight; about 27 MPa per km.
+
+
+Hydrostatic pressure — pressure from a column of water; about 10 MPa per km.
+
+
+Overpressure — pore fluid pressure exceeding hydrostatic; common in compacting sediments.
+
+
+Hydrothermal system anatomy
+
+Every hydrothermal ore deposit needs five elements. The 3D model can label these as nodes in a flow diagram on the model:
+
+
+1. Heat source — magma, deep crust, or geothermal gradient.
+
+
+2. Fluid source — magmatic, meteoric, basinal brine, or metamorphic.
+
+
+3. Metal source — country rock, magma itself, or pre-existing deposits.
+
+
+4. Pathway — faults, fractures, permeable units; the structural plumbing.
+
+
+5. Trap / depositional site — where physical or chemical conditions cause metal to precipitate.
+
+
+Structural traps and fluid focussing sites
+Trap type
+Description
+Why metals precipitate here
+Dilational jog
+Step-over in strike-slip fault that opens
+Pressure drop causes fluid boiling, mineral drop-out
+Fault intersection
+Where two faults meet
+High permeability, fluid mixing
+Fold hinge
+Curved zone at top of anticline
+Open space, low pressure, fluid trap
+Lithology contact
+Reactive carbonate next to intrusion
+Chemical reaction drives precipitation
+Permeability contrast
+Permeable layer below impermeable
+Fluid pools and concentrates
+Boiling zone
+Where fluid pressure drops below boiling curve
+CO₂ and H₂S exsolve, metals drop
+Redox boundary
+Oxidised to reduced rock change
+Fe and other redox-sensitive metals precipitate
+Unconformity
+Surface separating permeable from impermeable units
+U, Au, REE deposit traps
+
+
+
+14. Mineralisation styles and ore deposits
+
+The synthesis chapter. Every ore deposit is the product of geological structure, fluid pathway, heat, and time. This is the section the learning tool ultimately points toward — understanding why minerals are where they are.
+
+
+Deposit classification by genetic class
+Class
+Genetic process
+Key examples
+Setting / structural control
+Magmatic
+Crystallisation in magma chamber
+PGE, Cr, Ni-Cu sulphide
+Layered mafic intrusions, conduits
+Magmatic-hydrothermal
+Fluids exsolved from magma
+Porphyry Cu-Mo-Au, skarn
+Around intrusions
+Volcanogenic
+Submarine volcanic fluids
+VMS Cu-Zn-Pb
+Submarine arc, rifts
+Orogenic / metamorphic
+Devolatilisation of metamorphic rock
+Orogenic Au (lode)
+Shear zones in greenstone belts
+Sedimentary exhalative
+Hot brines on seafloor
+SEDEX Zn-Pb-Ag
+Rift basins, growth faults
+Basinal brine
+Hot saline fluid flow through sediments
+MVT Zn-Pb, sediment-hosted Cu
+Carbonate platforms, redbeds
+Epithermal
+Shallow boiling hot springs
+Epithermal Au-Ag
+Volcanic arcs, calderas
+Supergene / weathering
+Surface oxidation + leaching
+Ni laterite, bauxite, supergene Cu
+Tropical climate, deep weathering
+Placer
+Mechanical concentration
+Au, diamond, Sn, REE sands
+River systems, beaches
+Residual
+In-situ enrichment by leaching
+Bauxite (Al), Ni laterite
+Stable cratons, tropical weathering
+
+
+Detailed deposit type catalogue
+
+
+Porphyry Cu-Mo-Au
+
+Disseminated and stockwork Cu/Mo/Au mineralisation in and around a felsic to intermediate stock.
+
+
+Structural control: Radial and concentric fracture systems around an intrusion. Often emplaced at shallow depths (1–5 km) in subduction-related arcs.
+
+
+Alteration: Concentric zonation: potassic (core), phyllic, argillic, propylitic (outer).
+
+
+Grade: 0.3–1.5 % Cu, 0.005–0.05 % Mo, 0.1–1 g/t Au.
+
+
+Examples: Bingham (Utah), El Teniente (Chile), Grasberg (Indonesia), Cadia (Australia).
+
+
+3D annotation: Stock outline, alteration shells (each as a coloured zone), grade contours, ore shell, depth markers.
+
+
+Orogenic gold (lode gold)
+
+Gold in quartz-carbonate veins within shear zones in metamorphic terranes.
+
+
+Structural control: Second-order shear zones off major crustal-scale structures, dilational jogs, fold hinges. Greenschist to amphibolite facies.
+
+
+Alteration: Carbonate, sericite, sulphide alteration envelope around veins.
+
+
+Grade: Typically 3–15 g/t Au, can be much higher in shoots.
+
+
+Examples: Kalgoorlie (Australia), Timmins (Canada), Ashanti (Ghana), Witwatersrand reefs are debated.
+
+
+3D annotation: Shear zone trace and width, vein sets (strike/dip), ore shoot plunge and direction, host lithology.
+
+
+VMS (volcanogenic massive sulphide)
+
+Stratiform massive sulphide lenses formed at submarine hydrothermal vents.
+
+
+Structural control: Syn-volcanic extensional faults, calderas in submarine arcs. Lenses sit at contacts between volcanic and sedimentary units.
+
+
+Alteration: Footwall stringer zone (alteration pipe) leading up to the massive sulphide lens.
+
+
+Grade: Polymetallic: 2–15 % Zn, 0.5–6 % Cu, 0.5–4 % Pb, 30–200 g/t Ag.
+
+
+Examples: Kuroko (Japan), Bathurst (Canada), Iberian Pyrite Belt.
+
+
+3D annotation: Massive sulphide lens shape, footwall stringer alteration pipe, syn-volcanic fault, host volcanics.
+
+
+SEDEX (sedimentary exhalative)
+
+Stratiform Zn-Pb-Ag mineralisation in fine-grained sediments, formed by hot brines venting onto the seafloor.
+
+
+Structural control: Growth faults along rifted basin margins, sub-basin depocentres.
+
+
+Alteration: Often subtle; silicification, chloritisation in feeder zones.
+
+
+Grade: 5–20 % combined Zn+Pb, 30–200 g/t Ag.
+
+
+Examples: Broken Hill (Australia), Mount Isa, Red Dog (Alaska), Sullivan (Canada).
+
+
+3D annotation: Stratiform ore horizon, bounding growth fault, basin geometry, feeder zone.
+
+
+MVT (Mississippi Valley type)
+
+Stratabound Zn-Pb in carbonate platforms, no direct igneous link.
+
+
+Structural control: Basinal brines migrating through carbonate aquifers, focused at faults, karst features, and unconformities.
+
+
+Alteration: Dolomitisation halo around ore.
+
+
+Grade: 5–10 % combined Zn+Pb.
+
+
+Examples: Mississippi Valley district (USA), Pine Point (Canada), Lennard Shelf (Australia).
+
+
+3D annotation: Host carbonate, dolomitised halo, fault pathway, karst cavities, unconformity surface.
+
+
+Skarn deposit
+
+Calc-silicate metasomatic deposit at contact of intrusion with carbonate rocks. Can host Cu, Fe, Au, W, Sn, Zn.
+
+
+Structural control: Intrusion-carbonate contact geometry; faults and bedding planes as fluid pathways.
+
+
+Alteration: Garnet-pyroxene-magnetite assemblage; prograde to retrograde zonation.
+
+
+Grade: Varies by metal; 1–5 % Cu typical for Cu skarn.
+
+
+Examples: Antamina (Peru, Cu-Zn), Bingham Cu skarn margins, MacTung (Canada, W).
+
+
+3D annotation: Intrusion contact, exoskarn vs endoskarn, calc-silicate zones, ore zone, host carbonate.
+
+
+Epithermal Au-Ag
+
+Shallow (<1.5 km), low-temperature (<300 °C) vein and breccia gold-silver deposits in volcanic terranes.
+
+
+Structural control: Normal faults, caldera ring faults, breccia pipes. Boiling level is critical.
+
+
+Alteration: Two main styles. High-sulphidation (HS): advanced argillic, vuggy silica. Low-sulphidation (LS): adularia-sericite, chalcedony.
+
+
+Grade: 1–30 g/t Au, often with high Ag.
+
+
+Examples: Yanacocha (Peru, HS), Hishikari (Japan, LS), Ladolam (PNG).
+
+
+3D annotation: Vein system, boiling level, alteration halo (HS or LS), host volcanic, ore shoot plunge.
+
+
+IOCG (iron oxide-copper-gold)
+
+Cu-Au with abundant Fe oxides (magnetite-hematite), sometimes with U, REE, Ag.
+
+
+Structural control: Deep crustal fault corridors, transpressional to extensional regimes. Often associated with anorogenic granites.
+
+
+Alteration: Sodic-calcic at depth, potassic-hematite at higher levels.
+
+
+Grade: 1–2 % Cu, 0.5–1 g/t Au.
+
+
+Examples: Olympic Dam (Australia), Candelaria (Chile), Salobo (Brazil).
+
+
+3D annotation: Breccia complex, Fe oxide zones (magnetite vs hematite), fault corridor, alteration zones.
+
+
+Layered mafic intrusion (PGE, Cr, Ni)
+
+Magmatic stratiform deposits in layered ultramafic-mafic intrusions.
+
+
+Structural control: Stratigraphic position within the intrusion. Specific PGE 'reefs' or chromitite layers.
+
+
+Alteration: Generally limited; primary magmatic textures preserved.
+
+
+Grade: PGE: 3–10 g/t. Cr: 30–45 % Cr2O3 in chromitite layers.
+
+
+Examples: Bushveld Complex (South Africa), Stillwater (USA), Great Dyke (Zimbabwe).
+
+
+3D annotation: Cumulate layers, reef position, chromitite layers, intrusion contact.
+
+
+Ni-Cu sulphide (magmatic)
+
+Ni-Cu-PGE sulphide accumulations at the base of mafic intrusions or in feeder conduits.
+
+
+Structural control: Footwall embayments, feeder dykes, conduit constrictions where sulphide settles.
+
+
+Alteration: Limited magmatic; some serpentinisation.
+
+
+Grade: 0.5–3 % Ni, 0.5–2 % Cu, modest PGE.
+
+
+Examples: Sudbury (Canada), Norilsk (Russia), Voisey's Bay (Canada).
+
+
+3D annotation: Conduit geometry, basal sulphide layer, host intrusion, country rock contact.
+
+
+Kimberlite-hosted diamond
+
+Diamonds carried from mantle in kimberlite or lamproite pipes.
+
+
+Structural control: Vertical pipes, deep cratonic settings, often along structural weaknesses in lithosphere.
+
+
+Alteration: Serpentinisation of olivine; carbonate alteration.
+
+
+Grade: Carats per hundred tonnes; varies hugely.
+
+
+Examples: Kimberley (South Africa), Argyle (Australia, lamproite), Diavik (Canada).
+
+
+3D annotation: Pipe outline, crater facies, diatreme facies, root zone, host craton.
+
+
+Uranium roll-front
+
+Crescent-shaped U deposits in permeable sandstones at redox boundaries.
+
+
+Structural control: Permeable sandstone aquifer, gentle dip, oxidising-to-reducing transition.
+
+
+Alteration: Oxidised tongue, reduced front, ore at the boundary.
+
+
+Grade: 0.05–0.3 % U3O8.
+
+
+Examples: Wyoming Powder River, Kazakhstan deposits.
+
+
+3D annotation: Permeable host, redox interface, ore roll, fluid flow direction.
+
+
+Bauxite (Al)
+
+Residual deposits of Al hydroxide minerals from extreme tropical weathering.
+
+
+Structural control: Stable cratonic plateaus, tropical climate, time. No structural control beyond palaeoclimate.
+
+
+Alteration: Leaching of all soluble elements; residual Al, Fe, Ti.
+
+
+Grade: 40–60 % Al2O3.
+
+
+Examples: Weipa (Australia), Jamaica, Guinea.
+
+
+3D annotation: Laterite profile zones, parent rock, water table position.
+
+
+Banded iron formation (BIF)
+
+Alternating Fe-rich and Si-rich layers; mostly Precambrian.
+
+
+Structural control: Stratiform; later structural deformation can enrich and remobilise.
+
+
+Alteration: Supergene enrichment removes silica, upgrades Fe.
+
+
+Grade: 30–35 % Fe (primary), 60+ % Fe (supergene enriched).
+
+
+Examples: Hamersley (Australia), Carajás (Brazil), Lake Superior (Canada/USA).
+
+
+3D annotation: Banded stratigraphy, weathering profile, enrichment zone, basin context.
+
+
+Placer (alluvial)
+
+Mechanical concentration of dense or hard minerals in stream beds, beaches, or palaeochannels.
+
+
+Structural control: Drainage geometry, gradient changes, traps such as pools and inside bends.
+
+
+Alteration: None; primary minerals.
+
+
+Grade: Variable; from sub-gram Au to high-grade gemstone deposits.
+
+
+Examples: Witwatersrand (palaeoplacer, debated), California, Yukon, beach REE sands.
+
+
+3D annotation: Channel geometry, palaeocurrent direction, gravel layer, bedrock topography.
+
+
+
+15. Standard geological symbols
+
+These are the symbols used on every geological map and cross-section. The 3D model should render them as floating overlays on the relevant feature, scaled appropriately to camera distance.
+Symbol
+Meaning
+Rendering notes
+Strike-and-dip (bedding)
+T-bar with number; long line = strike, short tick = dip direction, number = dip angle
+Floating overlay on bedding surface, perpendicular to camera
+Vertical bedding
+Cross symbol
+On vertical layers
+Horizontal bedding
+Cross with circle
+On flat-lying layers
+Overturned bedding
+Reversed T-bar with curved limb
+On overturned limb
+Strike-and-dip (foliation)
+Same as bedding but with double tick
+On metamorphic foliation
+Strike-and-dip (cleavage)
+Same with single dashed tick
+On cleavage planes
+Fold axis
+Arrow with plunge value
+Along hinge line
+Anticline axis
+Arrow with diverging half-arrows
+Along anticline hinge
+Syncline axis
+Arrow with converging half-arrows
+Along syncline hinge
+Normal fault
+Line with tick (ball) on downthrown side
+On fault trace at surface
+Reverse fault
+Line with triangles on hanging-wall side
+On thrust trace
+Thrust fault
+Bold line with filled triangles pointing in transport direction
+On thrust trace
+Strike-slip fault
+Line with paired half-arrows showing sense
+On strike-slip trace
+Lineation
+Arrow with plunge value on foliation plane
+On foliation surface
+Unconformity
+Wavy line
+Along erosion surface
+Vein
+Thin coloured line
+Strike and dip annotated
+Borehole
+Numbered circle with collar coordinates
+At surface intersection
+Mine working
+Hatched outline or pillar symbol
+On underground level
+
+
+
+16. Plain-English trigger phrase library
+
+This is the vocabulary mapping layer for the AI interpreter. When the user writes any phrase below in plain English, the AI should recognise it and generate the corresponding structural event or feature in the GeoModel JSON.
+
+
+This library is incomplete by design — it grows as the project evolves. Treat it as the seed list for the AI's system prompt, with room for synonyms and informal mining jargon.
+
+
+Faults
+
+
+Normal fault → "dropped down", "hanging wall fell", "down-thrown", "extensional fault", "rift fault", "basin-bounding fault", "the block subsided", "throw is down to the east"
+
+
+Reverse fault → "thrust up", "shortening fault", "compressional fault", "hanging wall is up", "reverse movement", "up-thrown"
+
+
+Thrust fault → "low-angle thrust", "overthrust", "nappe", "thrust sheet", "shallow-dipping reverse", "rooted in a décollement"
+
+
+Strike-slip (sinistral) → "left-lateral", "sinistral", "the east side moved south", "horizontal offset to the left"
+
+
+Strike-slip (dextral) → "right-lateral", "dextral", "the east side moved north", "horizontal offset to the right"
+
+
+Listric fault → "curved fault", "flattens at depth", "shovel-shaped fault", "rotational fault"
+
+
+Folds
+
+
+Anticline → "arches up", "upfold", "oldest rocks in the middle", "crest of an arch", "the layers dome up", "anticlinal closure"
+
+
+Syncline → "bowl-shaped fold", "downfold", "youngest rocks in the centre", "the layers dip toward each other", "trough"
+
+
+Recumbent fold → "lying down fold", "horizontal axial plane", "the fold is on its side", "overturned and flat"
+
+
+Isoclinal fold → "limbs are parallel", "very tight fold", "compressed fold", "high-grade fold"
+
+
+Monocline → "one-sided flexure", "step-like bend", "single dip panel", "flexure over a basement fault"
+
+
+Dome → "circular upwarp", "the rocks radiate outward", "oldest rocks at the centre", "salt dome", "upwarp"
+
+
+Layers and stratigraphy
+
+
+Horizontal strata → "flat-lying beds", "undeformed layers", "the bedding is horizontal", "layer cake stratigraphy"
+
+
+Dipping strata → "the beds dip", "layers tilted", "dipping at 30 degrees to the east", "inclined bedding"
+
+
+Angular unconformity → "tilted beds cut by horizontal beds", "angular discordance", "break in the record at an angle"
+
+
+Disconformity → "erosion surface between parallel beds", "time gap", "missing strata", "parallel unconformity"
+
+
+Nonconformity → "sediments resting on basement", "sediments on top of granite", "basement contact"
+
+
+Igneous bodies
+
+
+Dyke → "vertical intrusion", "crosscutting sheet", "discordant intrusion", "the granite cuts the layers"
+
+
+Sill → "flat intrusion", "intrusion parallel to bedding", "concordant sheet", "injected along bedding"
+
+
+Batholith → "large granite mass", "pluton", "big intrusive body", "the granite basement"
+
+
+Laccolith → "dome-roofed intrusion", "mushroom intrusion", "the intrusion pushed the layers up into a dome"
+
+
+Mineralisation
+
+
+Lode gold / orogenic gold → "gold in quartz veins", "shear-hosted gold", "reef", "lode", "vein gold"
+
+
+Porphyry → "disseminated Cu around a stock", "copper porphyry", "alteration halo", "stockwork mineralisation"
+
+
+VMS → "massive sulphide lens", "submarine volcanic Cu-Zn", "Kuroko-style", "volcanic-hosted massive sulphide"
+
+
+Skarn → "contact metamorphic ore", "limestone-intrusion contact mineralisation", "calc-silicate ore"
+
+
+Epithermal → "shallow gold vein", "hot springs gold", "low-sulphidation", "high-sulphidation", "bonanza veins"
+
+
+Supergene zone → "enriched zone", "oxide cap", "gossan", "weathering enrichment", "leached cap"
+
+
+
+17. 3D annotation specification
+
+The annotation system is the visual contract between the model and the student. It is how the model teaches. Every annotation should answer: what is this, and why is it here?
+
+
+Annotation rules
+
+
+Labels are always toggleable via a 'Show labels' button — clean view by default, full-annotation view on demand.
+
+
+Labels billboard toward the camera so they remain readable from any angle.
+
+
+Labels use leader lines (thin grey lines) from the label text to the feature.
+
+
+If two labels would overlap in the current view, the higher-priority label wins; the other fades or moves.
+
+
+Priority order: faults > unconformities > folds > major lithology contacts > minor features > rock type labels > grade contours.
+
+
+Numeric values use SI units by default (metres, degrees), with US units available as a setting.
+
+
+Each annotation should be clickable — clicking shows the original plain-English sentence that produced it.
+
+
+Annotation content per feature class
+Feature class
+Primary label
+Secondary fields (on hover/click)
+Layer
+Rock name + age
+Thickness, lithology code, age range (Ma), notes
+Fault
+Fault type + dip ° / dip direction
+Throw, heave, slip vector, sense, displacement (m)
+Fold
+Fold type + plunge ° / plunge direction
+Interlimb angle, axial plane orientation, wavelength
+Joint
+Joint type + strike °
+Aperture, spacing, set ID
+Vein
+Mineral name + strike ° / dip °
+Width, grade if known, vein generation
+Unconformity
+Type + time gap (Ma)
+Underlying / overlying ages, angular discordance
+Intrusion
+Rock type + body type
+Age, depth of emplacement, area
+Ore body
+Deposit type + grade
+Tonnage, ore minerals, structural control
+Alteration zone
+Alteration name
+Mineral assemblage, distance from source, intensity
+Tectonic setting
+Setting name
+Era of activity, principal stress orientation
+
+
+
+18. The GeoModel JSON schema cheat-sheet
+
+This is the contract between the AI interpreter and the 3D renderer. The interpreter writes this; the renderer reads it. Every field in this document should map cleanly to a JSON field below.
+
+
+Top-level structure
+Field
+Type
+Purpose
+version
+string
+Schema version, currently "1.0"
+meta
+object
+Name, description, site location, tectonic setting
+scale
+object
+Model dimensions and units
+layers
+array
+Ordered stack of stratigraphic units
+events
+array
+Structural events applied in sequence
+intrusions
+array
+Igneous bodies that cut layers
+mineralisation
+array
+Ore deposits and alteration
+view
+object
+Camera, lighting, grid display
+
+
+Layer object
+Field
+Type
+Purpose
+id
+string
+Unique ID, e.g. layer_001
+name
+string
+Display name (e.g. Chalk)
+lithology
+string
+Rock type code from §4
+thickness
+number
+Layer thickness in scale units
+color
+string
+Hex colour, default from §4 lithology table
+age.period
+string
+Geological period from §5
+age.ma_top / ma_base
+number
+Age range in Ma
+order
+number
+Position in stack, 0 = bottom
+notes
+string
+Free text from user description
+
+
+Event object
+Field
+Type
+Purpose
+id
+string
+Unique event ID
+type
+string
+fault | fold | tilt | erosion | intrusion
+subtype
+string
+e.g. normal, thrust, anticline, recumbent
+order
+number
+Sequence order, 0 = first applied
+strike
+number
+Strike in degrees (0–360)
+dip
+number
+Dip in degrees (0–90)
+dip_direction
+number
+Dip direction in degrees
+displacement
+number
+For faults; in scale units
+plunge
+number
+For folds; in degrees
+interlimb_angle
+number
+For folds; in degrees
+vergence
+string
+Compass direction
+description_source
+string
+The plain-English sentence that produced this event
+
+
+Mineralisation object
+Field
+Type
+Purpose
+id
+string
+Unique deposit ID
+type
+string
+Deposit class from §14
+host_layer_id
+string
+Reference to host layer
+host_event_id
+string
+Reference to host structural event (e.g. shear zone)
+geometry
+string
+tabular | lens | pipe | disseminated | stockwork | massive
+grade
+object
+Element + concentration pairs
+alteration_zones
+array
+Concentric zones with name + width
+structural_control
+string
+Why the ore is here (from §13)
+description_source
+string
+Plain-English origin
+
+
+
+
+End of document.
+
+GeoForge Master Geological Reference — v1.0
+
+

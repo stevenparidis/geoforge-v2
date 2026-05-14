@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Bash(./node_modules/.bin/*)",
+      "Bash(powershell*)",
+      "Bash(npm*)",
+      "Bash(npx*)",
+      "Bash(node*)"
+    ]
+  }
+}

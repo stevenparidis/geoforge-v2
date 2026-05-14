@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const pkg = require\\('./node_modules/three/package.json'\\); console.log\\(pkg.version\\); console.log\\(JSON.stringify\\(pkg.exports?.['./addons/*'], null, 2\\)\\)\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/three/package.json'\\); const exports = pkg.exports; Object.keys\\(exports\\).filter\\(k => k.includes\\('addons'\\)\\).forEach\\(k => console.log\\(k, '->', exports[k]\\)\\)\")",
+      "Bash(pkill -f \"vite\")",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(node -e \"const z = require\\('./node_modules/zustand/package.json'\\); console.log\\('zustand version:', z.version\\)\")",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(netstat -ano)"
+    ]
+  }
+}
