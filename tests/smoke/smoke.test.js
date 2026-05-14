@@ -366,7 +366,217 @@ async function run() {
       await context.close();
     }
 
-    // ---- Phase 3 extension: listric fault reference card ----
+    // -----------------------------------------------------------------------
+    // Test C: incremental re-parse preserves manual edits (Phase 2.5)
+    //
+    //   1. Load page with a two-sentence description stub
+    //   2. Interpret → get initial two-event model (E1: normal 60°, E2: reverse 45°)
+    //   3. Manually edit E1's dip to 70° via __testDragChange
+    //   4. Edit only the second sentence (change 45 → 55)
+    //   5. Interpret again → stub returns a merge response for the changed sentence only
+    //   6. Assert: E1 dip is still 70° (unchanged sentence → manual edit preserved)
+    //             E2 dip has changed (merge response updated it)
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test C: incremental re-parse preserves manual edits (Phase 2.5) ===');
+    {
+      const FAULT2_FIXTURE = {
+        meta: {
+          name: 'Two Faults',
+          description: 'A normal fault dips 60 degrees east. A reverse fault dips 45 degrees west.',
+          last_parsed_description: 'A normal fault dips 60 degrees east. A reverse fault dips 45 degrees west.',
+        },
+        layers: [],
+        events: [
+          {
+            id: 'E1', type: 'fault', subtype: 'normal',
+            strike: 0, dip: 60, dip_direction: 90, order: 0,
+            description_source: 'A normal fault dips 60 degrees east.',
+            field_origin: { strike: 'inferred', dip: 'stated', dip_direction: 'inferred' },
+          },
+          {
+            id: 'E2', type: 'fault', subtype: 'reverse',
+            strike: 0, dip: 45, dip_direction: 270, order: 1,
+            description_source: 'A reverse fault dips 45 degrees west.',
+            field_origin: { strike: 'inferred', dip: 'stated', dip_direction: 'inferred' },
+          },
+        ],
+      };
+
+      // Merge response: only E2 is updated (second sentence changed)
+      const MERGE_FIXTURE = {
+        merge: true,
+        upsert_layers: [],
+        upsert_events: [
+          {
+            id: 'E2', type: 'fault', subtype: 'reverse',
+            strike: 0, dip: 55, dip_direction: 270, order: 1,
+            description_source: 'A reverse fault dips 55 degrees west.',
+            field_origin: { strike: 'inferred', dip: 'stated', dip_direction: 'inferred' },
+          },
+        ],
+        remove_layer_ids: [],
+        remove_event_ids: [],
+      };
+
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      // Inject a smart stub: returns full model on first call, merge response on second
+      await page.addInitScript((fixtures) => {
+        let callCount = 0;
+        window.claude = {
+          complete: async function (promptObj) {
+            callCount++;
+            const userContent = (promptObj.messages && promptObj.messages[0] && promptObj.messages[0].content) || '';
+            // Detect merge mode: the user message contains "Changed sentences"
+            if (userContent.includes('Changed sentences')) {
+              console.log('[stub] merge call detected — returning merge fixture');
+              return JSON.stringify(fixtures.merge);
+            }
+            console.log('[stub] full parse call — returning two-fault fixture');
+            return JSON.stringify(fixtures.full);
+          },
+        };
+      }, { full: FAULT2_FIXTURE, merge: MERGE_FIXTURE });
+
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+
+      console.log('Waiting for window.__threeReady...');
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      console.log('Three.js ready');
+
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+      console.log('React app mounted');
+
+      // Step 1: Type two-sentence description
+      const desc1 = 'A normal fault dips 60 degrees east. A reverse fault dips 45 degrees west.';
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill(desc1);
+      console.log('Initial description typed');
+
+      // Step 2: Interpret → get full 2-event model
+      await page.locator('button.btn.primary').click();
+      console.log('First Interpret clicked');
+
+      // Wait for two events in the model
+      await page.waitForFunction(
+        () => {
+          const m = window.__lastModel;
+          return m && m.events && m.events.length >= 2;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('Initial 2-event model received');
+
+      // Wait for test hooks
+      await page.waitForFunction(
+        () => typeof window.__testDragChange === 'function',
+        { timeout: 5000 }
+      );
+
+      // Step 3: Manually edit E1's dip to 70° via __testDragChange
+      await page.evaluate(() => {
+        window.__testDragChange('event', 'E1', 'dip', 70, { final: true });
+      });
+      console.log('Manually edited E1 dip to 70°');
+
+      // Wait for model update
+      await page.waitForFunction(
+        () => {
+          const m = window.__lastModel;
+          if (!m || !m.events) return false;
+          const e1 = m.events.find(e => e.id === 'E1');
+          return e1 && e1.dip === 70 && e1.manually_edited === true;
+        },
+        { timeout: 5000, polling: 100 }
+      );
+      console.log('E1 manually-edited dip confirmed: 70°');
+
+      // Step 4: Edit only the second sentence in the textarea (change 45 → 55)
+      const desc2 = 'A normal fault dips 60 degrees east. A reverse fault dips 55 degrees west.';
+      await textarea.fill(desc2);
+      console.log('Updated description typed (second sentence only changed)');
+
+      // Step 5: Interpret again — should trigger merge path
+      await page.locator('button.btn.primary').click();
+      console.log('Second Interpret clicked (expecting merge path)');
+
+      // Wait for E2's dip to update to 55
+      await page.waitForFunction(
+        () => {
+          const m = window.__lastModel;
+          if (!m || !m.events) return false;
+          const e2 = m.events.find(e => e.id === 'E2');
+          return e2 && e2.dip === 55;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('E2 dip updated to 55 after merge');
+
+      // Step 6: Assert both conditions
+      const finalState = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.events) return null;
+        const e1 = m.events.find(e => e.id === 'E1');
+        const e2 = m.events.find(e => e.id === 'E2');
+        return {
+          e1Dip: e1 ? e1.dip : null,
+          e1ManuallyEdited: e1 ? e1.manually_edited : null,
+          e2Dip: e2 ? e2.dip : null,
+        };
+      });
+
+      console.log('Final state:', JSON.stringify(finalState));
+
+      if (!finalState) {
+        throw new Error('[Test C] Could not read final model state');
+      }
+      if (finalState.e1Dip !== 70) {
+        throw new Error(`[Test C] E1 dip should still be 70 (manually edited, sentence unchanged), got ${finalState.e1Dip}`);
+      }
+      if (!finalState.e1ManuallyEdited) {
+        throw new Error('[Test C] E1 manually_edited should still be true');
+      }
+      if (finalState.e2Dip !== 55) {
+        throw new Error(`[Test C] E2 dip should be 55 (merge updated it), got ${finalState.e2Dip}`);
+      }
+      console.log('PASS [Test C]: manual edits preserved on unchanged sentence; changed sentence updated correctly');
+
+      const screenshotPath = path.join(screenshotDir, 'smoke-2.5-merge.png');
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 3 extension: listric fault reference card
+    // -----------------------------------------------------------------------
+    console.log('\n=== Phase 3 extension: listric fault reference card ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      // Inject stub (not used in this test but required for the app to mount)
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+
+      console.log('Waiting for window.__threeReady...');
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      console.log('Three.js ready');
+
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+      console.log('React app mounted');
+
     // 10. Navigate to the Formation reference tab.
     const refTabBtn = page.locator('button.tab', { hasText: 'Formation reference' });
     await refTabBtn.click();
@@ -425,6 +635,10 @@ async function run() {
       throw new Error(`overlayRoot should have at least 10 descendants, got ${overlayChildCount}`);
     }
     console.log('PASS: overlayRoot has geometry children');
+
+      await page.close();
+      await context.close();
+    }
 
   } catch (err) {
     console.error(`FAIL: ${err.message}`);
