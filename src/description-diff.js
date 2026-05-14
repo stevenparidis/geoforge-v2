@@ -1,6 +1,6 @@
 /**
  * GeoForge — sentence-level description differ
- * Exported as window.GeoDiff (plain ES5-compatible; no React, no THREE, no other dependencies).
+ * Exported as window.GeoDiff (ES6-compatible; no JSX, React, or module syntax).
  *
  * API:
  *   GeoDiff.splitSentences(text)           → string[]
@@ -190,31 +190,36 @@
     var prevSentences = splitSentences(prev || '');
     var nextSentences = splitSentences(next || '');
 
-    // Build fingerprint maps
     var prevEntries = prevSentences.map(function (t) { return { fingerprint: fingerprintSentence(t), text: t }; });
     var nextEntries = nextSentences.map(function (t) { return { fingerprint: fingerprintSentence(t), text: t }; });
 
-    var prevFpSet = Object.create(null);
-    prevEntries.forEach(function (e) { prevFpSet[e.fingerprint] = e; });
-
-    var nextFpSet = Object.create(null);
-    nextEntries.forEach(function (e) { nextFpSet[e.fingerprint] = e; });
+    // Build reference-count maps so duplicate sentences are handled correctly.
+    // drainedNext is decremented as prev entries claim "unchanged" slots.
+    // drainedPrev is decremented as next entries confirm those slots were consumed.
+    var drainedPrev = Object.create(null);
+    prevEntries.forEach(function (e) { drainedPrev[e.fingerprint] = (drainedPrev[e.fingerprint] || 0) + 1; });
+    var drainedNext = Object.create(null);
+    nextEntries.forEach(function (e) { drainedNext[e.fingerprint] = (drainedNext[e.fingerprint] || 0) + 1; });
 
     var unchanged = [];
     var candidateRemoved = [];
     var candidateAdded = [];
 
-    // Unchanged: same fingerprint in both
+    // Walk prev: consume a slot in next if available (unchanged), else removed
     prevEntries.forEach(function (e) {
-      if (nextFpSet[e.fingerprint]) {
+      if ((drainedNext[e.fingerprint] || 0) > 0) {
         unchanged.push(e);
+        drainedNext[e.fingerprint]--;
       } else {
         candidateRemoved.push(e);
       }
     });
 
+    // Walk next: consume a slot in prev if available (already counted as unchanged), else added
     nextEntries.forEach(function (e) {
-      if (!prevFpSet[e.fingerprint]) {
+      if ((drainedPrev[e.fingerprint] || 0) > 0) {
+        drainedPrev[e.fingerprint]--;
+      } else {
         candidateAdded.push(e);
       }
     });
@@ -222,7 +227,6 @@
     // Pair removed+added as "modified" if character similarity > 0.5
     var modified = [];
     var usedAdded = new Array(candidateAdded.length).fill(false);
-
     var removed = [];
 
     for (var ri = 0; ri < candidateRemoved.length; ri++) {

@@ -31,6 +31,19 @@ function runTests() {
   console.assert(mockMergeResponse.upsert_events[0].dip === 70, 'new dip value from changed sentence');
   console.assert(Array.isArray(mockMergeResponse.remove_event_ids), 'remove_event_ids must be array');
 
+  // Test 2: remove path — sentence B deleted
+  const mockRemoveResponse = {
+    merge: true,
+    upsert_layers: [],
+    upsert_events: [],
+    remove_layer_ids: [],
+    remove_event_ids: ['E2']
+  };
+
+  console.assert(mockRemoveResponse.remove_event_ids.length === 1, 'remove path: one event removed');
+  console.assert(mockRemoveResponse.remove_event_ids[0] === 'E2', 'remove path: correct id');
+  console.log('PASS: interpreter-merge remove-path test');
+
   console.log('PASS: interpreter-merge tests');
 }
 

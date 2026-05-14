@@ -16,7 +16,7 @@ const path = require('path');
 global.window = global;
 eval(fs.readFileSync(path.join(__dirname, '../../src/description-diff.js'), 'utf8'));
 
-const { diffDescriptions } = window.GeoDiff;
+const { diffDescriptions, splitSentences } = window.GeoDiff;
 
 let passed = 0;
 let failed = 0;
@@ -151,6 +151,38 @@ console.log('\nTest 5: completely rewritten sentences — all removed (similarit
     'modified.length === 0 (texts are completely unrelated — below 0.5 similarity)');
   assert(result.removed.length === 3, 'removed.length === 3');
   assert(result.added.length === 3,   'added.length === 3');
+}
+
+// ---------------------------------------------------------------------------
+// Test 6 — abbreviation non-split
+// ---------------------------------------------------------------------------
+console.log('\nTest 6: abbreviation should not split sentence');
+{
+  var result = splitSentences('The fault dips at approx. 60 degrees east.');
+  assert(result.length === 1, 'abbreviation should not split sentence: got ' + result.length);
+}
+
+// ---------------------------------------------------------------------------
+// Test 7 — decimal non-split
+// ---------------------------------------------------------------------------
+console.log('\nTest 7: decimal should not split sentence');
+{
+  var result2 = splitSentences('The dip is 45.5 degrees.');
+  assert(result2.length === 1, 'decimal should not split sentence: got ' + result2.length);
+}
+
+// ---------------------------------------------------------------------------
+// Test 8 — duplicate sentence handling (multiset fix)
+// ---------------------------------------------------------------------------
+console.log('\nTest 8: duplicate sentences — prev has two, next has one');
+{
+  var dupDiff = diffDescriptions(
+    'A normal fault dips east. A normal fault dips east.',
+    'A normal fault dips east.'
+  );
+  assert(dupDiff.unchanged.length === 1, 'duplicate: unchanged should be 1');
+  assert(dupDiff.removed.length === 1,   'duplicate: removed should be 1');
+  assert(dupDiff.added.length === 0,     'duplicate: added should be 0');
 }
 
 // ---------------------------------------------------------------------------
