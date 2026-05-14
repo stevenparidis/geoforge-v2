@@ -96,7 +96,27 @@ RULES:
 - "the layers tip down to the east at 30°" → tilt.dip = 30, dip_direction = 90.
 - For every field, set field_origin to "stated" if the user said the number explicitly, otherwise "inferred".
 - description_source must quote the original sentence verbatim.
-- Output ONLY the JSON.`;
+- Output ONLY the JSON.
+
+MERGE MODE:
+When the user message contains "Changed sentences", you must return ONLY the
+layers and events derived from those changed sentences, plus any layers/events
+that need to be removed (listed by id).
+
+Output shape in merge mode:
+{
+  "merge": true,
+  "upsert_layers": [...],
+  "upsert_events": [...],
+  "remove_layer_ids": [...],
+  "remove_event_ids": [...]
+}
+
+Match modified sentences by their description_source to find the existing id
+to reuse. Added sentences get fresh ids.
+
+In all other respects (defaults, field_origin flags, description_source
+quoting), behave identically to full mode.`;
 
   function applyDefaults(model) {
     // Patch any missing required fields with sensible defaults.
