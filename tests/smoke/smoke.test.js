@@ -164,8 +164,8 @@ async function run() {
     console.log('Waiting for model to appear in inspector...');
     await page.waitForFunction(
       () => {
-        const items = document.querySelectorAll('.feat-item');
-        return items.length >= 2;
+        const layersList = document.querySelector('.feat-list');
+        return layersList && layersList.querySelectorAll('.feat-item').length >= 2;
       },
       { timeout: 15000, polling: 200 }
     );
@@ -173,11 +173,9 @@ async function run() {
 
     // 8. Read window state / DOM to confirm layers.length === 2
     const layerCount = await page.evaluate(() => {
-      // The feat-list in the inspector shows one .feat-item per layer in the
-      // "Layers" section, then events below. For this 2-layer / 0-event fixture
-      // we expect exactly 2 items. We confirm by checking the feat-items.
-      const items = document.querySelectorAll('.feat-item');
-      return items.length;
+      // The first .feat-list in the inspector is the Layers list.
+      const layersList = document.querySelector('.feat-list');
+      return layersList ? layersList.querySelectorAll('.feat-item').length : 0;
     });
 
     console.log(`Layer items in DOM: ${layerCount}`);
