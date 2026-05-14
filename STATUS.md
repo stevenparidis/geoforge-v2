@@ -1,13 +1,13 @@
 # GeoForge — Status
 
 **Last updated:** 2026-05-14
-**Current phase:** 0 — Repository hygiene and baseline
-**Current sub-phase:** 0.2 (in progress — parallel with 0.3 and 0.4)
+**Current phase:** Phase 0 complete; Phase 1 ready to start
+**Current sub-phase:** —
 **Blockers:** none
 
 ## Phase completion
 
-- [ ] Phase 0 — Repository hygiene and baseline
+- [x] Phase 0 — Repository hygiene and baseline
 - [ ] Phase 1 — Direct 3D manipulation (edit path C)
 - [ ] Phase 2 — Incremental re-parse and conflict rule
 - [ ] Phase 3 — Listric fault correctness
