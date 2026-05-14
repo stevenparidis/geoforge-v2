@@ -189,6 +189,66 @@ async function run() {
     await page.screenshot({ path: screenshotPath, fullPage: false });
     console.log(`Screenshot saved to ${screenshotPath}`);
 
+    // ---- Phase 3 extension: listric fault reference card ----
+    // 10. Navigate to the Formation reference tab.
+    const refTabBtn = page.locator('button.tab', { hasText: 'Formation reference' });
+    await refTabBtn.click();
+    console.log('Navigated to Formation reference tab');
+
+    // 11. Wait for the listric fault card to appear.
+    await page.waitForFunction(
+      () => {
+        const titles = document.querySelectorAll('.ref-card-title');
+        for (const t of titles) {
+          if (t.textContent && t.textContent.toLowerCase().includes('listric')) return true;
+        }
+        return false;
+      },
+      { timeout: 15000, polling: 200 }
+    );
+    console.log('Listric fault card found in Formation reference');
+
+    // 12. Screenshot the formation reference page.
+    const listricScreenshot = path.join(screenshotDir, 'listric-fault.png');
+    await page.screenshot({ path: listricScreenshot, fullPage: false });
+    console.log(`Listric fault screenshot saved to ${listricScreenshot}`);
+
+    // 13. Verify the listric fault card has the expected overlay labels in the DOM.
+    const listricOverlays = await page.evaluate(() => {
+      const cards = document.querySelectorAll('.ref-card');
+      for (const card of cards) {
+        const title = card.querySelector('.ref-card-title');
+        if (title && title.textContent.toLowerCase().includes('listric')) {
+          const overlayText = card.querySelector('.ref-card-overlays');
+          return overlayText ? overlayText.textContent : '';
+        }
+      }
+      return '';
+    });
+    console.log(`Listric card overlays text: ${listricOverlays}`);
+    if (!listricOverlays.includes('surface dip') || !listricOverlays.includes('dip at depth') || !listricOverlays.includes('detachment depth')) {
+      throw new Error(`Listric fault card missing expected overlay labels. Got: "${listricOverlays}"`);
+    }
+    console.log('PASS: Listric fault card overlay labels confirmed');
+
+    // 14. Verify via window.__lastGeoScene that the overlay group has children.
+    //     Allow extra time for all reference cards to finish rendering.
+    await page.waitForTimeout(1500);
+    const overlayChildCount = await page.evaluate(() => {
+      const ref = window.__lastGeoScene;
+      if (!ref || !ref.current) return -1;
+      const overlayRoot = ref.current.overlayRoot;
+      if (!overlayRoot) return -1;
+      let count = 0;
+      overlayRoot.traverse(() => { count++; });
+      return count;
+    });
+    console.log(`Last GeoScene overlayRoot descendant count: ${overlayChildCount}`);
+    if (overlayChildCount < 1) {
+      throw new Error(`Expected overlayRoot to have children, got ${overlayChildCount}`);
+    }
+    console.log('PASS: overlayRoot has geometry children');
+
   } catch (err) {
     console.error(`FAIL: ${err.message}`);
     exitCode = 1;

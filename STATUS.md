@@ -1,7 +1,7 @@
 # GeoForge — Status
 
-**Last updated:** 2026-05-14
-**Current phase:** Phase 0 complete; Phase 1 ready to start
+**Last updated:** 2026-05-15
+**Current phase:** Phase 3 complete
 **Current sub-phase:** —
 **Blockers:** none
 
@@ -10,12 +10,18 @@
 - [x] Phase 0 — Repository hygiene and baseline
 - [ ] Phase 1 — Direct 3D manipulation (edit path C)
 - [ ] Phase 2 — Incremental re-parse and conflict rule
-- [ ] Phase 3 — Listric fault correctness
+- [x] Phase 3 — Listric fault correctness
 - [ ] Phase 4 — Polish, error handling, performance
 - [ ] Phase 5 — Acceptance testing and v1 release
 - [ ] Phase 6 — Scope expansion: intrusions and unconformities
 - [ ] Phase 7 — Mineralisation and ore deposits
 - [ ] Phase 8 — Prediction, persistence, collaboration
+
+## Phase 3 — Listric fault correctness
+- [x] 3.1 Listric geometry rebuild
+- [x] 3.2 Overlay system
+- [x] 3.3 Reference card update and smoke test
+- README "Deviations from the spec" entry #4 marked closed.
 
 ## Open spec questions
 
