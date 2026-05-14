@@ -62,7 +62,7 @@ if (rect.bottom < -200 || rect.top > window.innerHeight + 200) continue;
 
 ## 2. The `window` namespacing pattern
 
-Babel Standalone compiles JSX in `<script type="text/babel">` tags, but it does not give those scripts access to ES module `import`/`export` syntax. Every file is therefore wrapped in an IIFE and attaches its public API to `window`:
+Babel Standalone compiles JSX in `<script type="text/babel">` tags, but it does not give those scripts access to ES module `import`/`export` syntax. Most files are wrapped in an IIFE; `tweaks-panel.jsx` exports via `Object.assign(window, ...)` directly without a wrapper. Each file attaches its public API to `window`:
 
 | File | Export |
 |---|---|
@@ -134,9 +134,8 @@ Every layer object and every event object carries a `field_origin` dictionary ma
 |---|---|
 | `"stated"` | The student's description explicitly mentioned this number. |
 | `"inferred"` | The LLM or `applyDefaults` guessed the value because it was absent. |
-| `"default"` | (Used in reference formation data in `geo-data.jsx` for the same concept.) |
 
-In practice the live workspace uses `"stated"` and `"inferred"`; the static `REFERENCE_FORMATIONS` data in `geo-data.jsx` also uses `"inferred"` to mark fields that are pedagogically interesting to highlight.
+Both the live workspace and the static `REFERENCE_FORMATIONS` data in `geo-data.jsx` use `"stated"` and `"inferred"` — `"inferred"` marks fields that are pedagogically interesting to highlight.
 
 ### How it propagates
 
@@ -293,7 +292,7 @@ Also in `three-helpers.jsx`. Each builder returns `{ meshes, overlays, labels }`
 | Builder | Handles |
 |---|---|
 | `buildLayersOnly(model)` | Flat or tilted layer cake; thickness arrows; strike/dip overlays if tilted |
-| `buildFaultScene(model)` | All seven fault subtypes; clips layers with `THREE.Plane`; adds dip, throw/heave, strike-slip, or listric overlays |
+| `buildFaultScene(model)` | All six fault subtypes; clips layers with `THREE.Plane`; adds dip, throw/heave, strike-slip, or listric overlays |
 | `buildFoldScene(model)` | Anticline, syncline, monocline; tessellated surface; hinge, axial plane, interlimb arc, plunge overlays |
 
 `addDipOverlay` is a composable helper called by both `buildLayersOnly` and `buildFaultScene` — it draws the horizontal reference disc, compass rose, strike line, dip-direction arrow+arc, and dip arc as a single unit.
