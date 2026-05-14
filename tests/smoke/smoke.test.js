@@ -244,8 +244,8 @@ async function run() {
       return count;
     });
     console.log(`Last GeoScene overlayRoot descendant count: ${overlayChildCount}`);
-    if (overlayChildCount < 1) {
-      throw new Error(`Expected overlayRoot to have children, got ${overlayChildCount}`);
+    if (overlayChildCount < 10) {
+      throw new Error(`overlayRoot should have at least 10 descendants, got ${overlayChildCount}`);
     }
     console.log('PASS: overlayRoot has geometry children');
 

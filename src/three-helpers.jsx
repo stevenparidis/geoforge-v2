@@ -561,7 +561,7 @@
       // ---- Listric: build a curved fault surface using circular-arc geometry ----
       const surfaceDipDeg = dipDeg;
       const dipAtDepthDeg = evt.dip_at_depth ?? 10;
-      const detachDepth = evt.detachment_depth ?? (total * 1.5);
+      const detachDepth = evt.detachment_depth ?? (total / 2); // applyDefaults always sets this; fallback matches workspace.jsx
       const arcData = solveCircularArc(surfaceDipDeg, dipAtDepthDeg, detachDepth);
       const { points2D, surfacePt, detachPt } = arcData;
 
@@ -808,9 +808,9 @@
       const Cy =  R * Math.sin(sd);
       const Pdy = Cy - R * Math.sin(dd);
       if (Pdy < detachDepth) {
-        hi = R;
-      } else {
         lo = R;
+      } else {
+        hi = R;
       }
       if (Math.abs(Pdy - detachDepth) < 1e-6) break;
     }

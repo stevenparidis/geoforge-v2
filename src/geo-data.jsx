@@ -261,9 +261,9 @@ const REFERENCE_FORMATIONS = [
     cameraHint: { phi: 1.05, theta: 0.0, dist: 10 },
     model: {
       layers: [
-        { id: 'L1', name: 'Upper unit',  lithology: 'sandstone', thickness: 1.0, colour: '#c8a96e', order: 0 },
-        { id: 'L2', name: 'Middle unit', lithology: 'shale',     thickness: 1.0, colour: '#8c9aa0', order: 1 },
-        { id: 'L3', name: 'Lower unit',  lithology: 'limestone', thickness: 1.5, colour: '#b0c4b1', order: 2 },
+        { id: 'L1', name: 'Upper unit',  lithology: 'sandstone', thickness: 1.0, color: '#c8a96e', order: 0 },
+        { id: 'L2', name: 'Middle unit', lithology: 'shale',     thickness: 1.0, color: '#8c9aa0', order: 1 },
+        { id: 'L3', name: 'Lower unit',  lithology: 'limestone', thickness: 1.5, color: '#b0c4b1', order: 2 },
       ],
       events: [{
         id: 'E1',
@@ -278,6 +278,7 @@ const REFERENCE_FORMATIONS = [
         order: 0,
         description_source: 'A listric normal fault dips 70° east at surface, flattens to 10° at a detachment 3 m down, with 1 m of throw.',
         field_origin: {
+          strike: 'stated',
           dip: 'stated',
           dip_direction: 'stated',
           dip_at_depth: 'stated',
