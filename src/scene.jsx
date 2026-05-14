@@ -67,6 +67,10 @@
         }
         if (entry.controls) entry.controls.update();
         r.render(entry.scene, entry.camera);
+        // Scale handles to constant screen size
+        if (window.GeoHandles && entry.handleRoot) {
+          window.GeoHandles.scaleHandles(entry.handleRoot, entry.camera);
+        }
         // Copy to card's 2D canvas
         const ctx2d = entry.ctx2d;
         ctx2d.clearRect(0, 0, entry.canvas2d.width, entry.canvas2d.height);
@@ -86,6 +90,8 @@
       cameraHint = { phi: 1.05, theta: 0.5, dist: 9 },
       interactive = true,
       onSelect,
+      selected,
+      onDragChange,
       className = '',
       style = {},
     } = props;
@@ -157,8 +163,10 @@
       scene.add(modelRoot);
       const overlayRoot = new T.Group();
       scene.add(overlayRoot);
+      const handleRoot = new T.Group();
+      scene.add(handleRoot);
 
-      const entry = { host, scene, camera, controls, labelRenderer, canvas2d, ctx2d, chrome, modelRoot, overlayRoot };
+      const entry = { host, scene, camera, controls, labelRenderer, canvas2d, ctx2d, chrome, modelRoot, overlayRoot, handleRoot };
       stateRef.current = { T, ...entry };
       window.__lastGeoScene = stateRef;
       Surface.addScene(entry);
@@ -222,6 +230,7 @@
       const built = window.GeoThree.buildSceneContents(model);
       st.modelRoot.add(built.root);
       st.overlayRoot.add(built.overlays);
+      st.overlayUpdateMap = built.overlayUpdateMap || {};
       st.chrome.add(window.GeoThree.makeGrid(10, 20));
       st.chrome.add(window.GeoThree.makeNorthArrow(new T.Vector3(0, -3 + 0.01, 0), 0.7));
 
@@ -256,6 +265,15 @@
       st.modelRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showLabels; });
       st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
     }, [showLabels, showOverlays, showGrid]);
+
+    // Attach / re-attach handle layer when selection or model changes.
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st || !window.GeoHandles) return;
+      const cb = onDragChange || (() => {});
+      const cleanup = window.GeoHandles.attachToScene(st, selected, model, cb);
+      return cleanup;
+    }, [selected, model, onDragChange]);
 
     return (
       <div

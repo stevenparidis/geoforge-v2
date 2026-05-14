@@ -1171,9 +1171,12 @@
     const root = new T.Group();
     const overlays = new T.Group();
     const labels = [];
+    // overlayUpdateMap: keyed "featureId:fieldName" -> (newValue) -> void
+    // Update functions mutate overlay geometry in place without triggering a full rebuild.
+    const overlayUpdateMap = {};
 
     if (!model || !model.layers || model.layers.length === 0) {
-      return { root, overlays, labels, bounds: new T.Box3(new T.Vector3(-1,-1,-1), new T.Vector3(1,1,1)) };
+      return { root, overlays, labels, overlayUpdateMap, bounds: new T.Box3(new T.Vector3(-1,-1,-1), new T.Vector3(1,1,1)) };
     }
 
     // Decide which builder to use based on event types
@@ -1192,8 +1195,204 @@
     overlays.add(res.overlays);
     labels.push(...res.labels);
 
+    // Build overlay update functions for the first event (if any).
+    // These let the drag controller co-update overlays without a full scene rebuild.
+    if (firstEvent && firstEvent.id) {
+      const evtId = firstEvent.id;
+      const evtOverlays = res.overlays; // THREE.Group holding the built overlays
+
+      if (firstEvent.type === 'fault') {
+        const strike = firstEvent.strike ?? 0;
+        const dipDeg = firstEvent.dip ?? 60;
+        const dipDir = firstEvent.dip_direction ?? 90;
+        const total = model.layers.reduce((s, L) => s + L.thickness, 0);
+        const vertex = new T.Vector3(0, total / 2, 0);
+        const radius = 0.85;
+
+        // Helper: find (or create) a tagged sub-group inside a group.
+        function getTagGroup(parent, tag) {
+          for (const c of parent.children) {
+            if (c.userData && c.userData.overlayTag === tag) return c;
+          }
+          const g = new T.Group();
+          g.userData.overlayTag = tag;
+          parent.add(g);
+          return g;
+        }
+
+        function disposeGroup(g) {
+          g.traverse((n) => {
+            if (n.geometry) n.geometry.dispose?.();
+            if (n.material) {
+              const m = n.material;
+              if (Array.isArray(m)) m.forEach(mm => mm.dispose?.());
+              else m.dispose?.();
+            }
+            if (n.isCSS2DObject && n.element && n.element.parentNode) {
+              n.element.parentNode.removeChild(n.element);
+            }
+          });
+          while (g.children.length) g.remove(g.children[0]);
+        }
+
+        // dip update: rebuild the dip arc and its label
+        overlayUpdateMap[`${evtId}:dip`] = (newDip) => {
+          const grp = getTagGroup(evtOverlays, `${evtId}:dip`);
+          disposeGroup(grp);
+          const horizDir = bearingVec(dipDir);
+          const downDipN = downDipVec(newDip, dipDir).normalize();
+          const dipArcR = arc3D(vertex, horizDir, downDipN, radius, COLOR.overlay);
+          grp.add(dipArcR.line);
+          grp.add(arcWedge(vertex, horizDir, downDipN, radius, COLOR.overlay, 0.16));
+          const lbl = makeValueLabel(`Dip ${fmtDeg(newDip)}`, { inferred: false });
+          lbl.position.copy(dipArcR.midPoint);
+          grp.add(lbl);
+        };
+
+        // strike update: rebuild the strike line and its label
+        overlayUpdateMap[`${evtId}:strike`] = (newStrike) => {
+          const grp = getTagGroup(evtOverlays, `${evtId}:strike`);
+          disposeGroup(grp);
+          const strikeAxis = strikeVec(newStrike);
+          const sP1 = vertex.clone().add(strikeAxis.clone().multiplyScalar(radius * 1.4));
+          const sP2 = vertex.clone().add(strikeAxis.clone().multiplyScalar(-radius * 1.4));
+          grp.add(solidLine([sP1, sP2], COLOR.overlay, { depthTest: false, opacity: 0.85 }));
+          const strikeLbl = makeValueLabel(`Strike ${fmtBearing(newStrike)}`, { inferred: false });
+          strikeLbl.position.copy(sP1.clone().add(new T.Vector3(0, 0.1, 0)));
+          grp.add(strikeLbl);
+        };
+
+        // throw update: rebuild throw line and label
+        overlayUpdateMap[`${evtId}:throw`] = (newThrow) => {
+          const grp = getTagGroup(evtOverlays, `${evtId}:throw`);
+          disposeGroup(grp);
+          // Throw label near the fault plane midpoint
+          const throwLbl = makeValueLabel(`Throw ${Math.abs(newThrow).toFixed(2)} u`, { inferred: false });
+          throwLbl.position.copy(vertex.clone().add(new T.Vector3(0.2, -total / 4, 0)));
+          grp.add(throwLbl);
+        };
+      }
+
+      if (firstEvent.type === 'fold') {
+        const axisStrike = firstEvent.axis_strike ?? 0;
+        const plunge = firstEvent.plunge ?? 0;
+        const plungeDir = firstEvent.plunge_direction ?? axisStrike;
+        const amplitude = firstEvent.amplitude ?? 1.0;
+        const wavelength = firstEvent.wavelength ?? 4.0;
+        const subtype = firstEvent.subtype;
+        const total = model.layers.reduce((s, L) => s + L.thickness, 0);
+        const sign = subtype === 'syncline' ? -1 : 1;
+
+        function foldHeight0() { return amplitude * sign * Math.cos(0); }
+        const bearing = bearingVec(plungeDir);
+        const axisTarget = new T.Vector3(
+          bearing.x * Math.cos(rad(plunge)),
+          -Math.sin(rad(plunge)),
+          bearing.z * Math.cos(rad(plunge)),
+        ).normalize();
+        const q0 = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 0, 1), axisTarget);
+
+        function getTagGroup(parent, tag) {
+          for (const c of parent.children) {
+            if (c.userData && c.userData.overlayTag === tag) return c;
+          }
+          const g = new T.Group();
+          g.userData.overlayTag = tag;
+          parent.add(g);
+          return g;
+        }
+        function disposeGroup(g) {
+          g.traverse((n) => {
+            if (n.geometry) n.geometry.dispose?.();
+            if (n.material) {
+              const m = n.material;
+              if (Array.isArray(m)) m.forEach(mm => mm.dispose?.());
+              else m.dispose?.();
+            }
+            if (n.isCSS2DObject && n.element && n.element.parentNode) {
+              n.element.parentNode.removeChild(n.element);
+            }
+          });
+          while (g.children.length) g.remove(g.children[0]);
+        }
+
+        // interlimb_angle update: rebuild the interlimb arc
+        overlayUpdateMap[`${evtId}:interlimb_angle`] = (newAngle) => {
+          if (subtype === 'monocline') return;
+          const grp = getTagGroup(evtOverlays, `${evtId}:interlimb_angle`);
+          disposeGroup(grp);
+          const vertexLocal = new T.Vector3(0, total / 2 + foldHeight0() + 0.02, 0);
+          const vertex = vertexLocal.clone().applyQuaternion(q0);
+          // Recompute limb vectors from new interlimb angle
+          const halfAngle = newAngle / 2;
+          const limbL = new T.Vector3(-Math.cos(rad(halfAngle)), sign * Math.sin(rad(halfAngle)), 0).normalize();
+          const limbR = new T.Vector3(Math.cos(rad(halfAngle)), sign * Math.sin(rad(halfAngle)), 0).normalize();
+          const limbLw = limbL.clone().applyQuaternion(q0);
+          const limbRw = limbR.clone().applyQuaternion(q0);
+          const a = arc3D(vertex, limbLw, limbRw, 0.7, COLOR.overlay);
+          grp.add(a.line);
+          grp.add(arcWedge(vertex, limbLw, limbRw, 0.7, COLOR.overlay, 0.18));
+          const lbl = makeValueLabel(`Interlimb ${fmtDeg(newAngle)}`, { inferred: false });
+          lbl.position.copy(a.midPoint);
+          grp.add(lbl);
+        };
+
+        // plunge update: rebuild the plunge arc
+        overlayUpdateMap[`${evtId}:plunge`] = (newPlunge) => {
+          if (subtype === 'monocline' || newPlunge <= 0.01) return;
+          const grp = getTagGroup(evtOverlays, `${evtId}:plunge`);
+          disposeGroup(grp);
+          const bearingP = bearingVec(plungeDir);
+          const newAxisTarget = new T.Vector3(
+            bearingP.x * Math.cos(rad(newPlunge)),
+            -Math.sin(rad(newPlunge)),
+            bearingP.z * Math.cos(rad(newPlunge)),
+          ).normalize();
+          const vertexLocal = new T.Vector3(0, total / 2 + foldHeight0() + 0.02, 0);
+          const vertex = vertexLocal.clone().applyQuaternion(q0);
+          const horizProj = new T.Vector3(bearingP.x, 0, bearingP.z).normalize().multiplyScalar(1.2);
+          const tilted = newAxisTarget.clone().multiplyScalar(1.2);
+          const a = arc3D(vertex, horizProj.clone().normalize(), tilted.clone().normalize(), 0.65, COLOR.overlay);
+          grp.add(a.line);
+          grp.add(arcWedge(vertex, horizProj.clone().normalize(), tilted.clone().normalize(), 0.65, COLOR.overlay, 0.18));
+          const lbl = makeValueLabel(`Plunge ${fmtDeg(newPlunge)} → ${fmtBearing(plungeDir)}`, { inferred: false });
+          lbl.position.copy(a.midPoint);
+          grp.add(lbl);
+        };
+      }
+    }
+
+    // Build overlay update functions for layers (thickness arrows).
+    for (const layer of (model.layers || [])) {
+      const lid = layer.id;
+      const layers = (model.layers || []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const total = layers.reduce((s, L) => s + (L.thickness || 1.0), 0);
+      let yBottom = -total / 2;
+      let slabBottom = yBottom, slabTop = yBottom;
+      for (const l of layers) {
+        yBottom += l.thickness || 1.0;
+        if (l.id === lid) {
+          slabTop = yBottom;
+          slabBottom = yBottom - (l.thickness || 1.0);
+          break;
+        }
+      }
+
+      // Capture per-slab positions for the closure
+      const capturedBottom = slabBottom;
+      const capturedTop = slabTop;
+
+      overlayUpdateMap[`${lid}:thickness`] = (newThickness) => {
+        // Can't update thickness arrow in-place without knowing the tilt matrix.
+        // Thickness is a full-rebuild case — leave as no-op here and let the
+        // React model update trigger the full scene rebuild on pointerup.
+        // (intermediate drags on thickness handles still update the preview label
+        // via onDragChange, but the 3D arrow will catch up on final.)
+      };
+    }
+
     const bounds = new T.Box3().setFromObject(root);
-    return { root, overlays, labels, bounds };
+    return { root, overlays, labels, overlayUpdateMap, bounds };
   }
 
   function capitalise(s) { return (s || '').replace(/(^|[-\s])([a-z])/g, (_, p1, p2) => p1 + p2.toUpperCase()); }

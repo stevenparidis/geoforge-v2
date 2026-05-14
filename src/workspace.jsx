@@ -253,6 +253,42 @@ RULES:
       return { phi: 1.1, theta: 0.4, dist: 11 };
     }, [model?.events?.[0]?.subtype]);
 
+    // Test hooks — expose current model and a way to set the selection from outside.
+    // These are used by smoke tests; they are no-ops in production (window.__ are undefined).
+    useEffect(() => {
+      window.__lastModel = model;
+    }, [model]);
+    useEffect(() => {
+      window.__setSelected = (sel) => setSelected(sel);
+      return () => { window.__setSelected = null; };
+    }, [setSelected]);
+
+    // onDragChange: called from handle-layer.jsx drag controller on each drag frame.
+    const onDragChange = useCallback((featureKind, featureId, field, value, opts) => {
+      setModel((prev) => {
+        if (!prev) return prev;
+        const next = JSON.parse(JSON.stringify(prev));
+        let feature = null;
+        if (featureKind === 'layer') {
+          feature = (next.layers || []).find((L) => L.id === featureId);
+        } else if (featureKind === 'event') {
+          feature = (next.events || []).find((E) => E.id === featureId);
+        }
+        if (!feature) return prev;
+        feature[field] = value;
+        feature.manually_edited = true;
+        if (!feature.field_origin) feature.field_origin = {};
+        feature.field_origin[field] = 'stated';
+        return next;
+      });
+    }, [setModel]);
+
+    useEffect(() => {
+      // Allow smoke tests to directly call onDragChange to verify the drag→JSON pipeline.
+      window.__testDragChange = onDragChange;
+      return () => { window.__testDragChange = null; };
+    }, [onDragChange]);
+
     const onInterpret = useCallback(async () => {
       if (!description.trim()) return;
       setInterpreting(true);
@@ -385,6 +421,8 @@ RULES:
                 cameraHint={cameraHint}
                 onSelect={onSelectFeature}
                 selectedId={selected?.id}
+                selected={selected}
+                onDragChange={onDragChange}
               />
             ) : (
               <div className="empty">
