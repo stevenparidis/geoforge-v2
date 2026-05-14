@@ -1,7 +1,7 @@
 # GeoForge — Status
 
 **Last updated:** 2026-05-15
-**Current phase:** Phase 1 and Phase 3 complete; Phase 2 in progress
+**Current phase:** Phase 1, 2, and 3 complete
 **Current sub-phase:** —
 **Blockers:** none
 
@@ -9,7 +9,7 @@
 
 - [x] Phase 0 — Repository hygiene and baseline
 - [x] Phase 1 — Direct 3D manipulation (edit path C)
-- [ ] Phase 2 — Incremental re-parse and conflict rule
+- [x] Phase 2 — Incremental re-parse and conflict rule
 - [x] Phase 3 — Listric fault correctness
 - [ ] Phase 4 — Polish, error handling, performance
 - [ ] Phase 5 — Acceptance testing and v1 release
@@ -25,6 +25,15 @@
 - [x] 1.4 Acceptance and smoke-test extension
 - README "Deviations from the spec" entry #3 marked closed.
 - Acceptance-criteria table in README: row 4 updated to ✅ for path C.
+
+## Phase 2 — Incremental re-parse
+- [x] 2.1 Conflict rule draft
+- [x] 2.2 Rule sign-off (user agreed on 2026-05-15)
+- [x] 2.3 Description differ module (window.GeoDiff)
+- [x] 2.4 Merge-mode interpreter prompt
+- [x] 2.5 Workspace rewire (diff-aware onInterpret, mergeIntoModel)
+- [x] 2.6 Tests (unit + smoke)
+- README "Deviations from the spec" entry #2 marked closed.
 
 ## Phase 3 — Listric fault correctness
 - [x] 3.1 Listric geometry rebuild
