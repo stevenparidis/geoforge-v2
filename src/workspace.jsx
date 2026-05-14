@@ -272,10 +272,13 @@ quoting), behave identically to full mode.`;
           const merged = Object.assign({}, upsertEvt);
           if (existing.manually_edited) {
             merged.manually_edited = true;
-            merged.field_origin = merged.field_origin || {};
-            Object.keys(existing.field_origin || {}).forEach(field => {
-              if (existing.manually_edited && existing[field] === upsertEvt[field]) {
-                merged.field_origin[field] = existing.field_origin[field];
+            // Restore the values of manually-edited fields from the existing event
+            const fieldOrigin = existing.field_origin || {};
+            Object.keys(fieldOrigin).forEach(field => {
+              if (fieldOrigin[field] === 'stated' && existing.manually_edited) {
+                merged[field] = existing[field];
+                if (!merged.field_origin) merged.field_origin = {};
+                merged.field_origin[field] = 'stated';
               }
             });
           }
@@ -298,12 +301,7 @@ quoting), behave identically to full mode.`;
       }
     });
 
-    // Run through applyDefaults to normalise
-    if (window.applyDefaults) {
-      next.events = (next.events || []).map(e => window.applyDefaults(e, next));
-    }
-
-    return next;
+    return applyDefaults(next);
   }
 
   // ---- Inspector helpers ----
@@ -755,7 +753,7 @@ quoting), behave identically to full mode.`;
           </>
         )}
         {feature.manually_edited && (
-          <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '2px' }}>
+          <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '8px' }}>
             Manually edited — persists unless you change the originating sentence.
           </div>
         )}

@@ -3,11 +3,13 @@
 //
 // mergeIntoModel is a module-level function inside the IIFE in workspace.jsx.
 // We copy its logic here as a local function (acceptable for unit-testing a
-// non-exported pure function) and test three key behaviours:
+// non-exported pure function) and test four key behaviours:
 //
 //   1. Unchanged events preserve manual edits (including the manually-edited dip).
 //   2. A modified originating sentence clears manual edits.
 //   3. A removed originating sentence drops the event entirely.
+//   4. Preserve path restores hand-tuned field values when the LLM returns a
+//      different value for an unchanged event.
 
 'use strict';
 
@@ -22,7 +24,7 @@ function fingerprintSentence(text) {
 // ---------------------------------------------------------------------------
 // mergeIntoModel — verbatim copy of the function from workspace.jsx
 // (with window.GeoDiff.fingerprintSentence replaced by local fingerprintSentence,
-//  and window.applyDefaults replaced by a no-op since we test the merge logic only)
+//  and applyDefaults replaced by a no-op since we test the merge logic only)
 // ---------------------------------------------------------------------------
 function mergeIntoModel(existingModel, mergeResp, diff) {
   const next = JSON.parse(JSON.stringify(existingModel));
@@ -55,10 +57,13 @@ function mergeIntoModel(existingModel, mergeResp, diff) {
         const merged = Object.assign({}, upsertEvt);
         if (existing.manually_edited) {
           merged.manually_edited = true;
-          merged.field_origin = merged.field_origin || {};
-          Object.keys(existing.field_origin || {}).forEach(field => {
-            if (existing.manually_edited && existing[field] === upsertEvt[field]) {
-              merged.field_origin[field] = existing.field_origin[field];
+          // Restore the values of manually-edited fields from the existing event
+          const fieldOrigin = existing.field_origin || {};
+          Object.keys(fieldOrigin).forEach(field => {
+            if (fieldOrigin[field] === 'stated' && existing.manually_edited) {
+              merged[field] = existing[field];
+              if (!merged.field_origin) merged.field_origin = {};
+              merged.field_origin[field] = 'stated';
             }
           });
         }
@@ -94,6 +99,15 @@ let failed = 0;
 function assert(condition, message) {
   if (!condition) {
     console.error(`  FAIL: ${message}`);
+    failed++;
+  } else {
+    passed++;
+  }
+}
+
+function assertEqual(actual, expected, message) {
+  if (actual !== expected) {
+    console.error(`  FAIL: ${message} (expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)})`);
     failed++;
   } else {
     passed++;
@@ -325,6 +339,64 @@ test('removed sentence drops event', () => {
   assert(e1.id === 'E1', 'remaining event is E1');
   assert(e1.dip === 60, 'E1 dip unchanged');
   assert(!result.events.find(e => e.id === 'E2'), 'E2 is gone');
+
+  console.log('  PASS');
+});
+
+// ---------------------------------------------------------------------------
+// Test 4 — preserve path restores manually-edited field value over LLM value
+// ---------------------------------------------------------------------------
+// E1 (sentence A, dip manually edited to 60 with field_origin.dip = 'stated')
+// Diff: A unchanged (in unchanged list)
+// Merge response: LLM mistakenly returns E1 in upsert_events with dip=45
+// Expected: E1's dip stays 60 (hand-tuned value restored); manually_edited=true preserved
+// ---------------------------------------------------------------------------
+test('preserve path restores manually-edited field value over LLM value', () => {
+  const sentA = 'A normal fault dips 60 degrees east.';
+
+  const existingModel = {
+    meta: {},
+    layers: [],
+    events: [
+      {
+        id: 'E1', type: 'fault', subtype: 'normal', dip: 60,
+        description_source: sentA,
+        field_origin: { dip: 'stated' },
+        manually_edited: true,
+      },
+    ],
+  };
+
+  const diff = {
+    unchanged: [
+      { fingerprint: fingerprintSentence(sentA), text: sentA },
+    ],
+    added: [],
+    removed: [],
+    modified: [],
+  };
+
+  // Simulate LLM mistakenly returning E1 in upsert_events with a different dip
+  const mergeResp = {
+    merge: true,
+    upsert_events: [
+      {
+        id: 'E1', type: 'fault', subtype: 'normal', dip: 45,
+        description_source: sentA,
+        field_origin: { dip: 'inferred' },
+      },
+    ],
+    upsert_layers: [],
+    remove_layer_ids: [],
+    remove_event_ids: [],
+  };
+
+  const result = mergeIntoModel(existingModel, mergeResp, diff);
+
+  assert(result.events.length === 1, 'Test 4: still 1 event');
+  // The manually-edited dip (60) should be restored over the LLM's value (45)
+  assertEqual(result.events[0].dip, 60, 'Test 4: manually-edited dip should be preserved');
+  assertEqual(result.events[0].manually_edited, true, 'Test 4: manually_edited flag preserved');
 
   console.log('  PASS');
 });
