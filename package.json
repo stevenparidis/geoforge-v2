@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "smoke": "node tests/smoke/smoke.test.js",
-    "perf": "node tests/smoke/perf.test.js"
+    "perf": "node tests/smoke/perf.test.js",
+    "acceptance": "node tests/acceptance/run-all.js"
   },
   "devDependencies": {
     "playwright": "^1.44.0"
