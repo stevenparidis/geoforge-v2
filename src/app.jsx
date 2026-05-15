@@ -22,6 +22,29 @@
       if (t.amber) document.documentElement.style.setProperty('--inferred', t.amber);
     }, [t.amber]);
 
+    const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+    useEffect(() => {
+      const handler = () => setViewportWidth(window.innerWidth);
+      window.addEventListener('resize', handler);
+      return () => window.removeEventListener('resize', handler);
+    }, []);
+
+    if (viewportWidth < 900) {
+      return (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          minHeight: '100vh', padding: 32, textAlign: 'center',
+          background: 'var(--bg-1, #181825)', color: 'var(--fg-2, #a6adc8)',
+          fontFamily: 'var(--sans, sans-serif)', fontSize: 16, lineHeight: 1.6,
+        }}>
+          <div>
+            <div style={{ fontSize: 32, marginBottom: 16 }}>⚠</div>
+            <p>GeoForge is desktop-only in v1. Open this page on a screen at least 1024px wide for the full experience.</p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="app">
         <div className="topbar">
