@@ -15,7 +15,7 @@
 - [x] Phase 5 — Acceptance testing and v1 release
 - [x] Phase 6 — Scope expansion: intrusions and unconformities
 - [x] Phase 7 — Mineralisation and ore deposits
-- [ ] Phase 8 — Prediction, persistence, collaboration
+- [ ] Phase 8 — Prediction, persistence, collaboration (8.2 complete)
 
 ## Phase 5 — Acceptance testing and v1 release
 
@@ -98,7 +98,7 @@
 
 ## Phase 8 — Prediction, persistence, collaboration
 
-- [x] 8.1 Browser localStorage persistence (auto-save/restore) — PR #XX
-- [ ] 8.2 Prediction mode
+- [x] 8.1 Browser localStorage persistence (auto-save/restore) — PR #28
+- [x] 8.2 Prediction mode (Predict button; model.predictions[]; rendered as purple wireframe) — PR #31
 - [ ] 8.3 Share via URL
 - [ ] 8.4 Export PNG
