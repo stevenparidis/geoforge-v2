@@ -9,7 +9,7 @@
  */
 
 (function () {
-  const { useEffect, useLayoutEffect, useRef } = React;
+  const { useEffect, useRef } = React;
 
   // ---------- Shared surface ----------
   const Surface = {
@@ -213,6 +213,7 @@
             const m = n.material; if (Array.isArray(m)) m.forEach(mm => mm.dispose?.()); else m.dispose?.();
           }
         });
+        stateRef.current.applyVisibility = null;
       };
     }, [window.__threeReady]);
 
@@ -270,10 +271,7 @@
       st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
     }, [model]);
 
-    // Use useLayoutEffect so overlay/label/grid visibility is applied synchronously
-    // after React commits — avoiding the async scheduling delay of useEffect which
-    // caused the overlay toggle to exceed the 200 ms threshold on large models.
-    useLayoutEffect(() => {
+    useEffect(() => {
       const st = stateRef.current;
       if (!st) return;
       st.overlayRoot.visible = showOverlays;
