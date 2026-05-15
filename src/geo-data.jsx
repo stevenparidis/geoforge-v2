@@ -356,12 +356,160 @@ const REFERENCE_FORMATIONS = [
       ],
     },
   },
+
+  // -------- Intrusions --------
+  {
+    id: 'dyke-basalt',
+    section: 'intrusions',
+    title: 'Basalt Dyke',
+    blurb: 'A near-vertical discordant sheet of basalt cutting across bedding planes.',
+    overlays: ['strike line', 'dip arc', 'thickness label'],
+    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    model: {
+      meta: { name: 'Basalt Dyke', description: 'A vertical basalt dyke cuts across sandstone-shale-limestone stratigraphy.' },
+      layers: [
+        { id: 'L1', name: 'Limestone', lithology: 'limestone', thickness: 1.0, order: 0, description_source: 'limestone base', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Shale',     lithology: 'shale',     thickness: 1.0, order: 1, description_source: 'shale middle', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Sandstone', lithology: 'sandstone', thickness: 1.0, order: 2, description_source: 'sandstone top', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      intrusions: [
+        { id: 'I1', subtype: 'dyke', rock_type: 'basalt', strike: 0, dip: 90, thickness: 0.4, description_source: 'A basalt dyke cuts across the layers.', field_origin: { strike: 'stated', dip: 'stated', thickness: 'stated', rock_type: 'stated' } },
+      ],
+    },
+  },
+  {
+    id: 'sill-basalt',
+    section: 'intrusions',
+    title: 'Basalt Sill',
+    blurb: 'A concordant tabular sheet of basalt injected parallel to bedding planes.',
+    overlays: ['thickness label', 'feature label'],
+    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    model: {
+      meta: { name: 'Basalt Sill', description: 'A horizontal basalt sill injected along bedding.' },
+      layers: [
+        { id: 'L1', name: 'Limestone', lithology: 'limestone', thickness: 1.0, order: 0, description_source: 'limestone base', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Shale',     lithology: 'shale',     thickness: 1.0, order: 1, description_source: 'shale middle', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Sandstone', lithology: 'sandstone', thickness: 1.0, order: 2, description_source: 'sandstone top', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      intrusions: [
+        { id: 'I1', subtype: 'sill', rock_type: 'basalt', strike: 0, dip: 0, thickness: 0.3, description_source: 'A basalt sill was injected along the bedding.', field_origin: { strike: 'inferred', dip: 'inferred', thickness: 'stated', rock_type: 'stated' } },
+      ],
+    },
+  },
+  {
+    id: 'batholith-granite',
+    section: 'intrusions',
+    title: 'Granite Batholith',
+    blurb: 'A large discordant granitic pluton underlying the sedimentary sequence.',
+    overlays: ['depth label', 'feature label'],
+    cameraHint: { distance: 7, azimuth: 30, elevation: 20 },
+    model: {
+      meta: { name: 'Granite Batholith', description: 'A large granite batholith underlies the sedimentary layers.' },
+      layers: [
+        { id: 'L1', name: 'Shale',      lithology: 'shale',      thickness: 1.0, order: 0, description_source: 'shale', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Sandstone',  lithology: 'sandstone',  thickness: 1.2, order: 1, description_source: 'sandstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Limestone',  lithology: 'limestone',  thickness: 0.8, order: 2, description_source: 'limestone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      intrusions: [
+        { id: 'I1', subtype: 'batholith', rock_type: 'granite', depth: 3.0, description_source: 'A large granite batholith underlies the sequence.', field_origin: { rock_type: 'stated', depth: 'stated' } },
+      ],
+    },
+  },
+  {
+    id: 'laccolith-granite',
+    section: 'intrusions',
+    title: 'Granite Laccolith',
+    blurb: 'A dome-roofed intrusion that pushed overlying strata into an arch.',
+    overlays: ['depth label', 'feature label'],
+    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    model: {
+      meta: { name: 'Granite Laccolith', description: 'A granite laccolith domed the overlying strata upward.' },
+      layers: [
+        { id: 'L1', name: 'Shale',     lithology: 'shale',     thickness: 1.0, order: 0, description_source: 'shale', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Sandstone', lithology: 'sandstone', thickness: 1.0, order: 1, description_source: 'sandstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Limestone', lithology: 'limestone', thickness: 1.0, order: 2, description_source: 'limestone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      intrusions: [
+        { id: 'I1', subtype: 'laccolith', rock_type: 'granite', depth: 1.5, description_source: 'A granite laccolith pushed the layers into a dome.', field_origin: { rock_type: 'stated', depth: 'stated' } },
+      ],
+    },
+  },
+
+  // -------- Unconformities --------
+  {
+    id: 'angular-unconformity',
+    section: 'unconformities',
+    title: 'Angular Unconformity',
+    blurb: 'Tilted older strata erosionally cut by flat-lying younger strata — records uplift, tilting, erosion, and resubmergence.',
+    overlays: ['time gap', 'angular discordance arc'],
+    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    model: {
+      meta: { name: 'Angular Unconformity', description: 'Tilted older beds cut by younger horizontal beds — 25 Ma time gap.' },
+      layers: [
+        { id: 'L1', name: 'Old Shale',      lithology: 'shale',      thickness: 0.8, order: 0, description_source: 'old shale', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Old Sandstone',  lithology: 'sandstone',  thickness: 0.8, order: 1, description_source: 'old sandstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Young Limestone',lithology: 'limestone',  thickness: 0.8, order: 2, description_source: 'young limestone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L4', name: 'Young Sandstone',lithology: 'sandstone',  thickness: 0.8, order: 3, description_source: 'young sandstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      unconformities: [
+        { id: 'U1', subtype: 'angular', above_layer_id: 'L3', below_layer_id: 'L2', time_gap_ma: 25, angular_discordance: 35, description_source: 'Tilted beds cut by horizontal beds at 25 Ma time gap.', field_origin: { time_gap_ma: 'stated', angular_discordance: 'stated' } },
+      ],
+    },
+  },
+  {
+    id: 'disconformity',
+    section: 'unconformities',
+    title: 'Disconformity',
+    blurb: 'An erosion surface between parallel strata — the beds above and below are parallel but a time gap is missing.',
+    overlays: ['time gap'],
+    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    model: {
+      meta: { name: 'Disconformity', description: 'An erosion surface between parallel shale and limestone beds — 15 Ma time gap.' },
+      layers: [
+        { id: 'L1', name: 'Lower Shale',    lithology: 'shale',     thickness: 1.0, order: 0, description_source: 'lower shale', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Lower Sandstone',lithology: 'sandstone', thickness: 0.8, order: 1, description_source: 'lower sandstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Upper Limestone',lithology: 'limestone', thickness: 0.8, order: 2, description_source: 'upper limestone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L4', name: 'Upper Shale',    lithology: 'shale',     thickness: 1.0, order: 3, description_source: 'upper shale', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      unconformities: [
+        { id: 'U1', subtype: 'disconformity', above_layer_id: 'L3', below_layer_id: 'L2', time_gap_ma: 15, description_source: 'An erosion surface between the parallel beds, 15 Ma gap.', field_origin: { time_gap_ma: 'stated' } },
+      ],
+    },
+  },
+  {
+    id: 'nonconformity',
+    section: 'unconformities',
+    title: 'Nonconformity',
+    blurb: 'Sedimentary rocks deposited directly on eroded igneous or metamorphic basement rock.',
+    overlays: ['time gap'],
+    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    model: {
+      meta: { name: 'Nonconformity', description: 'Sandstone deposited directly on granite basement — 200 Ma time gap.' },
+      layers: [
+        { id: 'L1', name: 'Granite Basement', lithology: 'granite',    thickness: 1.5, order: 0, description_source: 'granite basement', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Sandstone',         lithology: 'sandstone', thickness: 1.0, order: 1, description_source: 'sandstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Shale',             lithology: 'shale',     thickness: 1.0, order: 2, description_source: 'shale', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      unconformities: [
+        { id: 'U1', subtype: 'nonconformity', above_layer_id: 'L2', below_layer_id: 'L1', time_gap_ma: 200, description_source: 'Sediments rest directly on granite basement — 200 Ma gap.', field_origin: { time_gap_ma: 'stated' } },
+      ],
+    },
+  },
 ];
 
 const REFERENCE_SECTIONS = [
-  { id: 'layers',  num: '01', title: 'Layers & stratigraphy', blurb: 'Strike, dip and thickness — the three measurements every layer carries.' },
-  { id: 'faults',  num: '02', title: 'Faults — all seven v1 types', blurb: 'Dip-angle vertex+arc, throw, heave, slip vector, and datum reconstruction.' },
-  { id: 'folds',   num: '03', title: 'Folds — simple', blurb: 'Hinge line, axial plane, interlimb angle and plunge.' },
+  { id: 'layers',        num: '01', title: 'Layers & stratigraphy', blurb: 'Strike, dip and thickness — the three measurements every layer carries.' },
+  { id: 'faults',        num: '02', title: 'Faults — all seven v1 types', blurb: 'Dip-angle vertex+arc, throw, heave, slip vector, and datum reconstruction.' },
+  { id: 'folds',         num: '03', title: 'Folds — simple', blurb: 'Hinge line, axial plane, interlimb angle and plunge.' },
+  { id: 'intrusions',    num: '04', title: 'Intrusions', blurb: 'Igneous bodies that cut or inject into the host stratigraphy — dykes, sills, batholiths, and laccoliths.' },
+  { id: 'unconformities',num: '05', title: 'Unconformities', blurb: 'Erosion surfaces recording missing time — angular, parallel, and basement contacts.' },
 ];
 
 // ---- Sample descriptions for the workspace empty state ----
