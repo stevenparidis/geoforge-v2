@@ -182,6 +182,12 @@
         st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
       };
 
+      stateRef.current.captureFrame = () => {
+        const st = stateRef.current;
+        if (!st || !st.canvas2d) return null;
+        return st.canvas2d.toDataURL('image/png');
+      };
+
       Surface.addScene(entry);
 
       // Picking
@@ -214,6 +220,7 @@
           }
         });
         stateRef.current.applyVisibility = null;
+        stateRef.current.captureFrame = null;
       };
     }, [window.__threeReady]);
 

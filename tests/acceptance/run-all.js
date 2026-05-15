@@ -15,6 +15,7 @@ const tests = [
   'ac-11-persistence.test.js',
   'ac-12-prediction.test.js',
   'ac-13-share.test.js',
+  'ac-14-export.test.js',
 ];
 let failed = 0;
 for (const t of tests) {

@@ -105,4 +105,4 @@
 - [x] 8.1 Browser localStorage persistence (auto-save/restore) — PR #28
 - [x] 8.2 Prediction mode (Predict button; model.predictions[]; rendered as purple wireframe) — PR #31
 - [x] 8.3 Share via URL (Share button; base64 URL fragment; toast confirmation) — PR #29
-- [ ] 8.4 Export PNG
+- [x] 8.4 Export PNG (Export PNG button; canvas2d.toDataURL capture; file download) — PR #30
