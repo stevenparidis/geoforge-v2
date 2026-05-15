@@ -198,6 +198,21 @@ quoting), behave identically to full mode.`;
     }
   }
 
+  function Toast({ message, onDismiss }) {
+    return (
+      <div style={{
+        position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+        background: 'var(--bg-2, #1e1e2e)', color: 'var(--fg-1, #cdd6f4)',
+        border: '1px solid var(--red, #f38ba8)', borderRadius: 8,
+        padding: '10px 16px', zIndex: 9999, display: 'flex', gap: 12, alignItems: 'center',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.5)', maxWidth: 480, fontSize: 13,
+      }}>
+        <span style={{ flex: 1 }}>{message}</span>
+        <button onClick={onDismiss} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, fontSize: 16, lineHeight: 1 }}>✕</button>
+      </div>
+    );
+  }
+
   async function interpretMerge(model, diff, setError) {
     const changedSentences = [
       ...diff.modified.map((m, i) => `${i + 1}. "${m.after.text}"`),
@@ -235,7 +250,7 @@ quoting), behave identically to full mode.`;
       if (!json.merge) throw new Error('Not a merge response');
       return json;
     } catch (err) {
-      setError('Merge interpretation failed: ' + err.message);
+      setError('Interpreter couldn\'t read that. Try again, or rephrase.');
       return null;
     }
   }
@@ -415,6 +430,12 @@ quoting), behave identically to full mode.`;
       return () => { window.__testDragChange = null; };
     }, [onDragChange]);
 
+    useEffect(() => {
+      if (!error) return;
+      const t = setTimeout(() => setError(null), 6000);
+      return () => clearTimeout(t);
+    }, [error]);
+
     const onInterpret = useCallback(async () => {
       if (!description.trim()) return;
       setInterpreting(true);
@@ -438,7 +459,7 @@ quoting), behave identically to full mode.`;
         const mergeResp = await interpretMerge(model, diff, setError);
         json = mergeResp ? mergeIntoModel(model, mergeResp, diff) : null;
       } else {
-        json = await interpret(description, setError);
+        json = await interpret(description, (msg) => setError('Interpreter couldn\'t read that. Try again, or rephrase.'));
       }
 
       setInterpreting(false);
@@ -492,11 +513,15 @@ quoting), behave identically to full mode.`;
       r.onload = () => {
         try {
           const json = JSON.parse(String(r.result));
+          if (!json.version && !json.layers && !json.events && !json.model) {
+            setError('This file isn\'t a valid GeoForge model. Check it was downloaded from this app.');
+            return;
+          }
           if (json.description) setDescription(json.description);
           if (json.model) setModel(applyDefaults(json.model));
           else if (json.layers || json.events) setModel(applyDefaults(json));
         } catch (err) {
-          setError('Could not parse JSON: ' + err.message);
+          setError('This file isn\'t a valid GeoForge model. Check it was downloaded from this app.');
         }
       };
       r.readAsText(f);
@@ -525,7 +550,9 @@ quoting), behave identically to full mode.`;
     }, [model]);
 
     return (
-      <div className={'workspace' + (inspectorOpen ? '' : ' no-inspector')}>
+      <React.Fragment>
+        {error && <Toast message={error} onDismiss={() => setError(null)} />}
+        <div className={'workspace' + (inspectorOpen ? '' : ' no-inspector')}>
         {/* ============== LEFT — Description ============== */}
         <div className="panel">
           <div className="panel-header">
@@ -629,11 +656,6 @@ quoting), behave identically to full mode.`;
             </div>
           )}
 
-          {error && (
-            <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 6, maxWidth: 320 }}>
-              <div className="notice error">{error}</div>
-            </div>
-          )}
         </div>
 
         {/* ============== RIGHT — Inspector ============== */}
@@ -703,6 +725,7 @@ quoting), behave identically to full mode.`;
         </div>
         )}
       </div>
+      </React.Fragment>
     );
   }
 
