@@ -9,6 +9,8 @@ const tests = [
   'ac-5-history-playback.test.js',
   'ac-6-json-roundtrip.test.js',
   'ac-7-default-state.test.js',
+  'ac-8-intrusions.test.js',
+  'ac-9-unconformities.test.js',
 ];
 let failed = 0;
 for (const t of tests) {
