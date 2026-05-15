@@ -22,7 +22,7 @@
 - [x] 5.1 Acceptance test suite (7 tests, all pass)
 - [x] 5.2 Fix-its (no fixes needed — all 7 tests passed first run)
 - [x] 5.3 Version tag and release notes
-- [ ] 5.4 User sign-off (pending)
+- [x] 5.4 User sign-off (granted 2026-05-15)
 
 ## Phase 4 — Polish, error handling, performance
 
