@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "smoke": "node tests/smoke/smoke.test.js"
+    "smoke": "node tests/smoke/smoke.test.js",
+    "perf": "node tests/smoke/perf.test.js"
   },
   "devDependencies": {
     "playwright": "^1.44.0"
