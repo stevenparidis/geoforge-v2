@@ -303,13 +303,8 @@ async function run() {
         console.log('PASS Path B: inspector numeric input updated model correctly');
         pathBPassed = true;
       } catch (e) {
-        // Path B is known to be potentially tricky — React controlled inputs
-        // sometimes don't fire onChange via programmatic DOM events alone.
-        // In that case, Path C (drag) is the reliable programmatic edit path.
-        const msg = `AC4 Path B: inspector numeric input did not update model — ${e.message}. ` +
-          'NOTE: React controlled inputs may require UI interaction rather than programmatic events. ' +
-          'Path B failure is expected; sub-phase 5.2 will resolve.';
-        console.warn(`WARN: ${msg}`);
+        const msg = `AC4 Path B: inspector numeric input did not update model — ${e.message}`;
+        console.error(`FAIL: ${msg}`);
         failures.push(msg);
       }
 
@@ -400,22 +395,13 @@ async function run() {
     if (server) server.close();
   }
 
-  // Filter out Path B (soft failure) from hard failures
-  const hardFailures = failures.filter(f => !f.includes('Path B'));
-  if (hardFailures.length > 0) {
-    for (const f of hardFailures) console.error(`FAIL: ${f}`);
-    exitCode = 1;
-  }
-  const softFailures = failures.filter(f => f.includes('Path B'));
-  if (softFailures.length > 0) {
-    console.warn('\nSOFT FAILURES (Path B — known issue, see Phase 5.2):');
-    for (const f of softFailures) console.warn(`  WARN: ${f}`);
-  }
-  if (hardFailures.length === 0) {
-    console.log('\nPASS AC4: all hard edit paths verified (Path B may have soft warning)');
+  if (failures.length > 0) {
+    for (const f of failures) console.error(`FAIL: ${f}`);
+  } else {
+    console.log('\nPASS AC4: all three edit paths verified');
   }
 
-  const exitCode = hardFailures.length > 0 ? 1 : 0;
+  const exitCode = failures.length > 0 ? 1 : 0;
   process.exit(exitCode);
 }
 
