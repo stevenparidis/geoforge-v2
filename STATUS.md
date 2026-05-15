@@ -1,7 +1,7 @@
 # GeoForge — Status
 
 **Last updated:** 2026-05-15
-**Current phase:** v1.0 released
+**Current phase:** Phase 6 complete
 **Current sub-phase:** —
 **Blockers:** none
 
@@ -13,7 +13,7 @@
 - [x] Phase 3 — Listric fault correctness
 - [x] Phase 4 — Polish, error handling, performance
 - [x] Phase 5 — Acceptance testing and v1 release
-- [ ] Phase 6 — Scope expansion: intrusions and unconformities
+- [x] Phase 6 — Scope expansion: intrusions and unconformities
 - [ ] Phase 7 — Mineralisation and ore deposits
 - [ ] Phase 8 — Prediction, persistence, collaboration
 
@@ -69,4 +69,16 @@
 
 ---
 
-**v1.0 released 2026-05-15** — all seven acceptance criteria pass.
+## Phase 6 — Scope expansion: intrusions and unconformities
+
+- [x] 6.1 Schema extension (intrusions + unconformities arrays, prompt, applyDefaults) — PR #15
+- [x] 6.2 Intrusion renderers (dyke, sill, batholith, laccolith) — PR #16
+- [x] 6.4 Unconformity renderers (wavy-line trace, angular/disconformity/nonconformity) — PR #17
+- [x] 6.3 Intrusion overlays (strike/dip, thickness, depth, feature labels) — PR #18
+- [x] 6.5 Unconformity overlays (time gap, type label, angular discordance arc) — PR #19
+- [x] 6.6 Reference view extension (7 cards: 4 intrusions, 3 unconformities) — PR #20
+- [x] 6.7 Trigger phrase tests (AC8 intrusions, AC9 unconformities — 9/9 pass) — PR #21
+
+---
+
+**v1.0 released 2026-05-15** — all nine acceptance criteria pass (AC1–AC9).
