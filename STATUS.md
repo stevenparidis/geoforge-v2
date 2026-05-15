@@ -1,7 +1,7 @@
 # GeoForge — Status
 
 **Last updated:** 2026-05-15
-**Current phase:** Phase 6 complete
+**Current phase:** Phase 7 complete
 **Current sub-phase:** —
 **Blockers:** none
 
@@ -14,7 +14,7 @@
 - [x] Phase 4 — Polish, error handling, performance
 - [x] Phase 5 — Acceptance testing and v1 release
 - [x] Phase 6 — Scope expansion: intrusions and unconformities
-- [ ] Phase 7 — Mineralisation and ore deposits
+- [x] Phase 7 — Mineralisation and ore deposits
 - [ ] Phase 8 — Prediction, persistence, collaboration
 
 ## Phase 5 — Acceptance testing and v1 release
@@ -81,4 +81,15 @@
 
 ---
 
-**v1.0 released 2026-05-15** — all nine acceptance criteria pass (AC1–AC9).
+## Phase 7 — Mineralisation and ore deposits
+
+- [x] 7.1 Mineralisation schema (mineralisation array, prompt extension, applyDefaults) — PR #22
+- [x] 7.2 Mineralisation renderers (porphyry, skarn, VMS, orogenic gold, epithermal) — PR #23
+- [x] 7.3 Hydrothermal annotation (five-elements panel, alteration halo) — PR #24
+- [x] 7.4 Mineralisation overlays (grade, alteration radius, metal labels) — PR #25
+- [x] 7.5 Reference view extension (mineralisation deposit-type cards) — PR #26
+- [x] 7.6 Acceptance test AC10 (mineralisation — 10/10 pass) — PR #27
+
+---
+
+**v1.1 released 2026-05-15** — all ten acceptance criteria pass (AC1–AC10).
