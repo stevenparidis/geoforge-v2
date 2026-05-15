@@ -1314,7 +1314,7 @@
 
     // Angular subtype: discordance arc showing the angle between upper and lower beds
     if (unconformity.subtype === 'angular') {
-      const discordance = unconformity.angular_discordance ?? 30;
+      const discordance = Math.max(1, unconformity.angular_discordance ?? 30);
       const centre = new T.Vector3(-1.5, contactY, 0);
       const dipRad = rad(discordance);
       // Upper beds are horizontal; lower beds dip at discordance degrees
