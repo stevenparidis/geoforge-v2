@@ -93,6 +93,19 @@
       setTimeout(() => setShareToast(false), 3000);
     };
 
+    const handleExport = () => {
+      const sceneRef = window.__lastGeoScene;
+      if (!sceneRef || !sceneRef.current || !sceneRef.current.captureFrame) return;
+      const dataUrl = sceneRef.current.captureFrame();
+      if (!dataUrl) return;
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = 'geoforge-export.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+
     return (
       <div className="app">
         <div className="topbar">
@@ -126,6 +139,14 @@
                 style={{ fontSize: 13, padding: '4px 10px', background: 'var(--blue, #89b4fa)', color: '#11111b', border: 'none', borderRadius: 4, cursor: 'pointer', marginLeft: 8 }}
               >
                 Share
+              </button>
+            )}
+            {model && (
+              <button
+                onClick={handleExport}
+                style={{ fontSize: 13, padding: '4px 10px', background: 'var(--surface1, #313244)', color: 'var(--fg-1, #cdd6f4)', border: '1px solid var(--overlay0, #6c7086)', borderRadius: 4, cursor: 'pointer', marginLeft: 8 }}
+              >
+                Export PNG
               </button>
             )}
           </div>
