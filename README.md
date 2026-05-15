@@ -29,6 +29,10 @@ There is no persistence: the description and model live entirely in memory. The 
 - Geological history playback: a timeline scrubber with play/pause, step ◀ ▶, and 0.5×/1×/2× speed. Snap-step transitions (no per-event animation in v1).
 - JSON download / upload via the inspector toolbar. No browser storage — refresh wipes state.
 - Toolbar toggles for **Labels**, **Overlays** and **Grid** — default to on per `spec-v1.md` §9.3.
+- **Empty-state demo flow**: clicking the description textarea when empty fills it with a one-sentence example that produces a recognisable model; Interpret then runs in one click — two clicks to first model.
+- **Toast error notifications**: LLM failures and invalid JSON uploads surface as auto-dismissing floating toasts (6-second timeout, manual ✕ dismiss). Drag edge-cases (dip near 90°) remain silently clamped.
+- **Mobile-width fallback**: viewports narrower than 900 px render a full-screen notice ("GeoForge is desktop-only in v1…") instead of the 3D workspace.
+- **Performance**: stress-tested against 10 layers, 5 faults (one of each subtype), and 2 folds. Thresholds: initial render < 2 s, drag ≥ 30 fps, overlay toggle < 200 ms. `npm run perf` runs the Playwright stress suite.
 
 ## Architecture notes
 
@@ -59,6 +63,7 @@ There is no persistence: the description and model live entirely in memory. The 
 | `src/tweaks-panel.jsx` | Tweaks UI primitives (shared component) |
 | `implementation/` | Phase plans, specs, reference docs, screenshots |
 | `tests/acceptance/` | Acceptance test suite (skeleton — populated in phase 0.2) |
+| `tests/smoke/perf.test.js` | Playwright performance stress test (10 layers, 5 faults, 2 folds); three threshold assertions |
 | `CHANGELOG.md` | Release changelog (populated in phase 0.2) |
 | `STATUS.md` | Current project status (populated in phase 0.2) |
 
