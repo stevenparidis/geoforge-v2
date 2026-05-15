@@ -1,7 +1,7 @@
 # GeoForge — Status
 
 **Last updated:** 2026-05-15
-**Current phase:** Phase 4 complete
+**Current phase:** v1.0 released
 **Current sub-phase:** —
 **Blockers:** none
 
@@ -12,10 +12,17 @@
 - [x] Phase 2 — Incremental re-parse and conflict rule
 - [x] Phase 3 — Listric fault correctness
 - [x] Phase 4 — Polish, error handling, performance
-- [ ] Phase 5 — Acceptance testing and v1 release
+- [x] Phase 5 — Acceptance testing and v1 release
 - [ ] Phase 6 — Scope expansion: intrusions and unconformities
 - [ ] Phase 7 — Mineralisation and ore deposits
 - [ ] Phase 8 — Prediction, persistence, collaboration
+
+## Phase 5 — Acceptance testing and v1 release
+
+- [x] 5.1 Acceptance test suite (7 tests, all pass)
+- [x] 5.2 Fix-its (no fixes needed — all 7 tests passed first run)
+- [x] 5.3 Version tag and release notes
+- [ ] 5.4 User sign-off (pending)
 
 ## Phase 4 — Polish, error handling, performance
 
@@ -59,3 +66,7 @@
 
 1. **Model name & token cap.** The spec asks for `claude-sonnet-4-20250514` with `max_tokens=1000` called directly via the Anthropic API. The sandbox only exposes Claude through `window.claude.complete`, which uses `claude-haiku-4-5` and a fixed 1024-token cap.
 5. **Throw / displacement clamping.** `applyDefaults` clamps LLM-returned metres-scale values into the model's local frame.
+
+---
+
+**v1.0 released 2026-05-15** — all seven acceptance criteria pass.

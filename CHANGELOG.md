@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0] — Phase 5 — 2026-05-15
+
+### Added
+- `tests/acceptance/` — 7 Playwright acceptance tests covering all v1 acceptance criteria (AC1–AC7)
+- `tests/acceptance/run-all.js` — sequential runner for the acceptance suite
+- `npm run acceptance` script in `package.json`
+- `RELEASE_NOTES_v1.md` — v1.0 release notes
+
+### Changed
+- `src/app.jsx` — version string updated from `v1 · prototype` to `v1.0`
+- `STATUS.md` — updated to v1 released
+
 ## [0.4.0] — Phase 4 — 2026-05-15
 
 ### Added
