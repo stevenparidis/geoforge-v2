@@ -93,3 +93,12 @@
 ---
 
 **v1.1 released 2026-05-15** — all ten acceptance criteria pass (AC1–AC10).
+
+---
+
+## Phase 8 — Prediction, persistence, collaboration
+
+- [x] 8.1 Browser localStorage persistence (auto-save/restore) — PR #XX
+- [ ] 8.2 Prediction mode
+- [ ] 8.3 Share via URL
+- [ ] 8.4 Export PNG
