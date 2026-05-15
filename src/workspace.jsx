@@ -62,7 +62,32 @@ SCHEMA:
   "tilt": {
     "strike": 0..360, "dip": 0..90, "dip_direction": 0..360,
     "field_origin": { ... }
-  }  // optional; only if the layer cake itself is tilted (e.g. "the beds dip 20° east")
+  },  // optional; only if the layer cake itself is tilted (e.g. "the beds dip 20° east")
+  "intrusions": [   // optional; omit if none mentioned
+    {
+      "id": string,
+      "subtype": one of [dyke, sill, batholith, laccolith],
+      "rock_type": one of [granite, diorite, gabbro, basalt, rhyolite] (default basalt for mafic, granite for felsic),
+      "strike": 0..360 (dyke/sill orientation; omit for batholith/laccolith),
+      "dip": 0..90 (dyke ~90, sill ~0; omit for batholith/laccolith),
+      "thickness": number (apparent width in model units, default 0.5),
+      "depth": number (emplacement depth below surface in model units; for batholith/laccolith),
+      "description_source": string,
+      "field_origin": { fieldName: "stated"|"inferred" }
+    }, ...
+  ],
+  "unconformities": [   // optional; omit if none mentioned
+    {
+      "id": string,
+      "subtype": one of [angular, disconformity, nonconformity],
+      "above_layer_id": string (id of the layer immediately above the surface; match a layer id),
+      "below_layer_id": string (id of the layer immediately below the surface; match a layer id),
+      "time_gap_ma": number (millions of years; default 10 if not stated),
+      "angular_discordance": number (degrees difference in dip between layers; for angular type only; default 30 if not stated),
+      "description_source": string,
+      "field_origin": { fieldName: "stated"|"inferred" }
+    }, ...
+  ]
 }
 
 TRIGGER PHRASE LIBRARY (for classification — incomplete by design):
@@ -78,6 +103,13 @@ TRIGGER PHRASE LIBRARY (for classification — incomplete by design):
 - Monocline: "one-sided flexure", "step-like bend", "single dip panel", "flexure"
 - Horizontal strata: "flat-lying beds", "undeformed layers", "horizontal bedding"
 - Dipping strata: "beds dip", "tilted layers", "inclined bedding"
+- Dyke: "vertical intrusion", "crosscutting sheet", "discordant intrusion", "the granite cuts the layers", "intrudes across bedding"
+- Sill: "flat intrusion", "intrusion parallel to bedding", "concordant sheet", "injected along bedding", "horizontal intrusion"
+- Batholith: "large granite mass", "pluton", "big intrusive body", "the granite basement", "granitoid body"
+- Laccolith: "dome-roofed intrusion", "mushroom intrusion", "the intrusion pushed the layers up into a dome", "doming intrusion"
+- Angular unconformity: "tilted beds cut by horizontal beds", "angular discordance", "break in the record at an angle", "dipping strata overlain by flat strata"
+- Disconformity: "erosion surface between parallel beds", "time gap", "missing strata", "parallel unconformity", "hiatus between parallel layers"
+- Nonconformity: "sediments resting on basement", "sediments on top of granite", "basement contact", "sediments deposited on igneous rock"
 
 DEFAULTS (use when a value is missing and mark it inferred):
 - Normal fault dip = 60°
@@ -88,6 +120,11 @@ DEFAULTS (use when a value is missing and mark it inferred):
 - Fold plunge = 0° (non-plunging)
 - Layer thickness when not stated = 1.0
 - Order events in the order they appear in the user's text.
+- Dyke dip = 90° (vertical), thickness = 0.5, rock_type = basalt if not specified
+- Sill dip = 0° (horizontal), thickness = 0.3, rock_type = basalt if not specified
+- Batholith: no strike/dip (it is a pluton), rock_type = granite if not specified, depth = total_layer_thickness
+- Laccolith: no strike/dip, rock_type = granite if not specified, depth = total_layer_thickness / 2
+- Unconformity time_gap_ma = 10 if not stated; angular_discordance = 30 for angular type if not stated
 
 RULES:
 - Be SILENT — never ask the user, never include caveats. Best-guess and flag inferred.
@@ -123,6 +160,8 @@ quoting), behave identically to full mode.`;
     if (!model.meta) model.meta = { name: 'Untitled', description: '' };
     if (!model.layers) model.layers = [];
     if (!model.events) model.events = [];
+    if (!model.intrusions) model.intrusions = [];
+    if (!model.unconformities) model.unconformities = [];
     model.layers.forEach((L, i) => {
       L.id = L.id || `L${i + 1}`;
       L.order = L.order ?? i;
@@ -171,6 +210,37 @@ quoting), behave identically to full mode.`;
           if (E.flexure_width == null) { E.flexure_width = 1.2; E.field_origin.flexure_width = 'inferred'; }
           if (E.step_height == null) { E.step_height = 0.8; E.field_origin.step_height = 'inferred'; }
         }
+      }
+    });
+    const totalLayerHeight = (model.layers || []).reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+    model.intrusions.forEach((I, i) => {
+      I.id = I.id || `I${i + 1}`;
+      I.field_origin = I.field_origin || {};
+      if (I.thickness == null) { I.thickness = I.subtype === 'sill' ? 0.3 : 0.5; I.field_origin.thickness = 'inferred'; }
+      if (I.subtype === 'dyke') {
+        if (I.dip == null) { I.dip = 90; I.field_origin.dip = 'inferred'; }
+        if (I.strike == null) { I.strike = 0; I.field_origin.strike = 'inferred'; }
+        if (I.rock_type == null) { I.rock_type = 'basalt'; I.field_origin.rock_type = 'inferred'; }
+      }
+      if (I.subtype === 'sill') {
+        if (I.dip == null) { I.dip = 0; I.field_origin.dip = 'inferred'; }
+        if (I.strike == null) { I.strike = 0; I.field_origin.strike = 'inferred'; }
+        if (I.rock_type == null) { I.rock_type = 'basalt'; I.field_origin.rock_type = 'inferred'; }
+      }
+      if (I.subtype === 'batholith' || I.subtype === 'laccolith') {
+        if (I.rock_type == null) { I.rock_type = 'granite'; I.field_origin.rock_type = 'inferred'; }
+        if (I.depth == null) {
+          I.depth = I.subtype === 'batholith' ? totalLayerHeight : totalLayerHeight / 2;
+          I.field_origin.depth = 'inferred';
+        }
+      }
+    });
+    model.unconformities.forEach((U, i) => {
+      U.id = U.id || `U${i + 1}`;
+      U.field_origin = U.field_origin || {};
+      if (U.time_gap_ma == null) { U.time_gap_ma = 10; U.field_origin.time_gap_ma = 'inferred'; }
+      if (U.subtype === 'angular' && U.angular_discordance == null) {
+        U.angular_discordance = 30; U.field_origin.angular_discordance = 'inferred';
       }
     });
     return model;
