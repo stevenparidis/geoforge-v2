@@ -87,6 +87,26 @@ SCHEMA:
       "description_source": string,
       "field_origin": { fieldName: "stated"|"inferred" }
     }, ...
+  ],
+  "mineralisation": [   // optional; omit if none mentioned
+    {
+      "id": string,
+      "subtype": one of [porphyry, orogenic_gold, vms, skarn, epithermal],
+      "metals": string (primary commodities e.g. "Cu-Au", "Au", "Zn-Pb-Cu", "Au-Ag"; inferred from subtype if not stated),
+      "grade": number or null (g/t Au for gold types, % for base metals; omit if not stated),
+      "structural_control_event_id": string (optional; id of the fault, fold, or intrusion that controls the deposit geometry; match an existing id),
+      "depth_top": number (depth from surface to top of mineralisation in model units; optional),
+      "alteration_radius": number (radius of alteration halo in model units; inferred from subtype if not stated),
+      "five_elements": {
+        "heat_source": string,
+        "fluid_source": string,
+        "metal_source": string,
+        "pathway": string,
+        "trap": string
+      },
+      "description_source": string,
+      "field_origin": { fieldName: "stated"|"inferred" }
+    }, ...
   ]
 }
 
@@ -110,6 +130,11 @@ TRIGGER PHRASE LIBRARY (for classification — incomplete by design):
 - Angular unconformity: "tilted beds cut by horizontal beds", "angular discordance", "break in the record at an angle", "dipping strata overlain by flat strata"
 - Disconformity: "erosion surface between parallel beds", "time gap", "missing strata", "parallel unconformity", "hiatus between parallel layers"
 - Nonconformity: "sediments resting on basement", "sediments on top of granite", "basement contact", "sediments deposited on igneous rock"
+- Porphyry: "porphyry copper", "porphyry gold", "Cu-Au porphyry", "porphyritic intrusion with ore", "concentric alteration zones", "stockwork mineralisation"
+- Orogenic gold: "orogenic gold", "gold in quartz veins", "lode gold", "mesothermal gold", "gold in shear zone", "gold-bearing veins"
+- VMS: "volcanic-hosted massive sulphide", "VMS deposit", "submarine massive sulphide", "seafloor sulphide", "kuroko-type"
+- Skarn: "skarn", "contact metasomatic", "garnet-pyroxene ore zone", "ore at igneous contact", "calc-silicate deposit"
+- Epithermal: "epithermal gold", "epithermal silver", "low-sulphidation", "high-sulphidation", "hot spring gold", "shallow volcanic gold"
 
 DEFAULTS (use when a value is missing and mark it inferred):
 - Normal fault dip = 60°
@@ -125,6 +150,12 @@ DEFAULTS (use when a value is missing and mark it inferred):
 - Batholith: no strike/dip (it is a pluton), rock_type = granite if not specified, depth = total_layer_thickness
 - Laccolith: no strike/dip, rock_type = granite if not specified, depth = total_layer_thickness / 2
 - Unconformity time_gap_ma = 10 if not stated; angular_discordance = 30 for angular type if not stated
+- Porphyry: metals = "Cu-Au", alteration_radius = 1.0
+- Orogenic gold: metals = "Au", alteration_radius = 0.3
+- VMS: metals = "Zn-Pb-Cu", alteration_radius = 0.5
+- Skarn: metals = "Fe-Cu", alteration_radius = 0.4
+- Epithermal: metals = "Au-Ag", alteration_radius = 0.5
+- five_elements: all five fields inferred generically from subtype when not stated
 
 RULES:
 - Be SILENT — never ask the user, never include caveats. Best-guess and flag inferred.
@@ -162,6 +193,7 @@ quoting), behave identically to full mode.`;
     if (!model.events) model.events = [];
     if (!model.intrusions) model.intrusions = [];
     if (!model.unconformities) model.unconformities = [];
+    if (!model.mineralisation) model.mineralisation = [];
     model.layers.forEach((L, i) => {
       L.id = L.id || `L${i + 1}`;
       L.order = L.order ?? i;
@@ -241,6 +273,41 @@ quoting), behave identically to full mode.`;
       if (U.time_gap_ma == null) { U.time_gap_ma = 10; U.field_origin.time_gap_ma = 'inferred'; }
       if (U.subtype === 'angular' && U.angular_discordance == null) {
         U.angular_discordance = 30; U.field_origin.angular_discordance = 'inferred';
+      }
+    });
+    const MINERAL_DEFAULTS = {
+      porphyry:      { metals: 'Cu-Au',    alteration_radius: 1.0 },
+      orogenic_gold: { metals: 'Au',       alteration_radius: 0.3 },
+      vms:           { metals: 'Zn-Pb-Cu', alteration_radius: 0.5 },
+      skarn:         { metals: 'Fe-Cu',    alteration_radius: 0.4 },
+      epithermal:    { metals: 'Au-Ag',    alteration_radius: 0.5 },
+    };
+    const FIVE_ELEMENTS_DEFAULTS = {
+      porphyry:      { heat_source: 'Porphyritic intrusion', fluid_source: 'Magmatic + meteoric water', metal_source: 'Magmatic source', pathway: 'Stockwork fractures', trap: 'Cooling and boiling zone' },
+      orogenic_gold: { heat_source: 'Metamorphic heat', fluid_source: 'Metamorphic fluids', metal_source: 'Crustal source', pathway: 'Shear zones and veins', trap: 'Pressure-temperature drop' },
+      vms:           { heat_source: 'Seafloor volcanism', fluid_source: 'Seawater + magmatic', metal_source: 'Volcanic rocks', pathway: 'Hydrothermal vents', trap: 'Seafloor interface' },
+      skarn:         { heat_source: 'Intrusive body', fluid_source: 'Magmatic fluids', metal_source: 'Intrusion and carbonate', pathway: 'Contact zone fractures', trap: 'Reactive carbonate host' },
+      epithermal:    { heat_source: 'Shallow magma body', fluid_source: 'Meteoric + magmatic water', metal_source: 'Hydrothermal fluids', pathway: 'Fault and vein systems', trap: 'Boiling zone' },
+    };
+    model.mineralisation.forEach((M, i) => {
+      M.id = M.id || `M${i + 1}`;
+      M.field_origin = M.field_origin || {};
+      const mDef = MINERAL_DEFAULTS[M.subtype] || {};
+      if (M.alteration_radius == null) {
+        M.alteration_radius = mDef.alteration_radius || 0.5;
+        M.field_origin.alteration_radius = 'inferred';
+      }
+      if (M.metals == null) {
+        M.metals = mDef.metals || 'Au';
+        M.field_origin.metals = 'inferred';
+      }
+      if (!M.five_elements || Object.keys(M.five_elements).length === 0) {
+        const feDef = FIVE_ELEMENTS_DEFAULTS[M.subtype] || {};
+        M.five_elements = {};
+        for (const key of ['heat_source', 'fluid_source', 'metal_source', 'pathway', 'trap']) {
+          M.five_elements[key] = feDef[key] || '';
+          if (!M.field_origin['five_' + key]) M.field_origin['five_' + key] = 'inferred';
+        }
       }
     });
     return model;
