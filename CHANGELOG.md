@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.4.0] — Phase 4 — 2026-05-15
+
+### Added
+- `tests/smoke/perf.test.js` — Playwright performance stress test with 10-layer/5-fault/2-fold fixture; three threshold assertions (render < 2 s, drag ≥ 30 fps, overlay toggle < 200 ms)
+- `npm run perf` script in `package.json`
+- Toast error notification system in `src/workspace.jsx` (`Toast` component; auto-dismiss 6 s; manual ✕)
+- Mobile-width fallback in `src/app.jsx` — viewports < 900 px render a full-screen notice instead of the workspace
+- Click-to-fill UX in description textarea — clicking when empty fills it with a one-sentence example
+
+### Changed
+- `src/workspace.jsx` — user-facing error messages: LLM failures → "Interpreter couldn't read that. Try again, or rephrase."; invalid JSON upload → "This file isn't a valid GeoForge model. Check it was downloaded from this app."
+- `src/workspace.jsx` — inline error notice replaced with floating Toast component (sibling of workspace div via React.Fragment)
+- `src/workspace.jsx` — JSON upload now validates for GeoForge structure before applying
+- `src/workspace.jsx` — description textarea placeholder simplified to the recommended example sentence
+- `src/app.jsx` — Overlays toggle calls imperative `applyVisibility()` before React state dispatch, reducing overlay toggle latency from ~210 ms to ~26 ms on large models
+- `src/scene.jsx` — exposes `stateRef.current.applyVisibility()` for imperative overlay/label/grid toggling; nulled in cleanup to prevent stale-ref calls after unmount
+
 ## [0.1.0] — Phase 0 — 2026-05-14
 
 ### Added
