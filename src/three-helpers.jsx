@@ -1630,6 +1630,63 @@
     return { meshes, overlays, labels };
   }
 
+  // ---- Predicted mineralisation geometry (Phase 8.2) ----
+  function buildPredictionGeometry(prediction, model) {
+    const meshes = [];
+    const overlays = new T.Group();
+
+    const layers = model.layers || [];
+    const totalHeight = layers.reduce((s, l) => s + (l.thickness || 1), 0);
+    const halfH = totalHeight / 2;
+
+    // Position: centre of the model horizontally, offset vertically by depth_top if present
+    const cx = 0;
+    const cy = prediction.depth_top != null ? (halfH - prediction.depth_top) : 0;
+    const cz = 0;
+
+    const r = prediction.alteration_radius || 0.8;
+
+    // Wireframe sphere to indicate predicted location — blue/purple color, low opacity
+    const sphereGeo = new T.SphereGeometry(r, 16, 12);
+    const sphereMat = new T.MeshBasicMaterial({
+      color: 0x8b5cf6, // purple
+      wireframe: true,
+      opacity: 0.6,
+      transparent: true,
+    });
+    const sphere = new T.Mesh(sphereGeo, sphereMat);
+    sphere.position.set(cx, cy, cz);
+    meshes.push(sphere);
+
+    // "PREDICTED" label
+    const labelDiv = document.createElement('div');
+    labelDiv.style.cssText = 'color:#a78bfa;font-size:11px;font-family:monospace;pointer-events:none;white-space:nowrap;background:rgba(0,0,0,0.5);padding:1px 4px;border-radius:3px;border:1px dashed #8b5cf6;';
+    labelDiv.textContent = `PREDICTED: ${prediction.subtype} (${prediction.metals || ''})`;
+    const lbl = new window.CSS2DObject(labelDiv);
+    lbl.position.set(cx, cy + r + 0.15, cz);
+    overlays.add(lbl);
+
+    // Confidence label
+    const confDiv = document.createElement('div');
+    confDiv.style.cssText = 'color:#c4b5fd;font-size:10px;font-family:monospace;pointer-events:none;white-space:nowrap;';
+    confDiv.textContent = prediction.confidence ? `confidence: ${prediction.confidence}` : '';
+    const confLbl = new window.CSS2DObject(confDiv);
+    confLbl.position.set(cx, cy + r + 0.45, cz);
+    overlays.add(confLbl);
+
+    // Rationale label (smaller, below sphere)
+    if (prediction.rationale) {
+      const ratDiv = document.createElement('div');
+      ratDiv.style.cssText = 'color:#a78bfa;font-size:9px;font-family:monospace;pointer-events:none;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;';
+      ratDiv.textContent = prediction.rationale;
+      const ratLbl = new window.CSS2DObject(ratDiv);
+      ratLbl.position.set(cx, cy - r - 0.2, cz);
+      overlays.add(ratLbl);
+    }
+
+    return { meshes, overlays };
+  }
+
   // ---- Hydrothermal five-elements annotation (7.3) ----
   function addHydrothermalAnnotation(M, model, overlays, labels) {
     const fe = M.five_elements;
@@ -1924,6 +1981,13 @@
     // Hydrothermal five-elements annotation (7.3)
     (model.mineralisation || []).forEach(function(M) {
       addHydrothermalAnnotation(M, model, overlays, labels);
+    });
+
+    // Predicted mineralisation (Phase 8.2)
+    (model.predictions || []).forEach(P => {
+      const { meshes: pMeshes, overlays: po } = buildPredictionGeometry(P, model);
+      pMeshes.forEach(m => root.add(m));
+      po.children.slice().forEach(c => overlays.add(c));
     });
 
     const bounds = new T.Box3().setFromObject(root);

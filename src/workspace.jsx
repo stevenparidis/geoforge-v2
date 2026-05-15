@@ -186,6 +186,32 @@ to reuse. Added sentences get fresh ids.
 In all other respects (defaults, field_origin flags, description_source
 quoting), behave identically to full mode.`;
 
+  const PREDICTION_SYSTEM_PROMPT = `You are GeoForge's geological prediction engine. Given a GeoModel JSON, suggest up to 3 plausible mineral deposit types that could form given the structural setting.
+
+OUTPUT: a JSON array only — no prose, no markdown. First character must be [ and last must be ].
+
+Each element:
+{
+  "id": "P1"|"P2"|"P3",
+  "subtype": one of [porphyry, orogenic_gold, vms, skarn, epithermal],
+  "metals": string (e.g. "Cu-Au", "Au", "Zn-Pb-Cu"),
+  "rationale": string (one sentence explaining why this deposit type fits the structural context),
+  "confidence": "high"|"medium"|"low",
+  "alteration_radius": number (default 0.8),
+  "predicted": true,
+  "five_elements": {
+    "heat_source": string,
+    "fluid_source": string,
+    "metal_source": string,
+    "pathway": string,
+    "trap": string
+  }
+}
+
+Base your predictions on: fault types (normal→rift settings, thrust→orogenic gold), intrusion types (batholith/porphyry→porphyry Cu, sill→skarn potential), lithologies (limestone→skarn, volcanic→VMS/epithermal), and structural traps (fold hinges, fault intersections).
+
+If the model has no structural features to guide prediction, return an empty array [].`;
+
   function applyDefaults(model) {
     // Patch any missing required fields with sensible defaults.
     if (!model.meta) model.meta = { name: 'Untitled', description: '' };
@@ -329,6 +355,24 @@ quoting), behave identically to full mode.`;
       if (i0 < 0 || i1 < 0) throw new Error('No JSON object found in response');
       const json = JSON.parse(txt.slice(i0, i1 + 1));
       return applyDefaults(json);
+    } catch (e) {
+      onErr?.(e.message || String(e));
+      return null;
+    }
+  }
+
+  async function predict(model, onErr) {
+    try {
+      const raw = await window.claude.complete({
+        messages: [{ role: 'user', content: `GeoModel:\n\`\`\`json\n${JSON.stringify(model)}\n\`\`\`\n\nSuggest mineral deposits for this structural setting.` }],
+        system: PREDICTION_SYSTEM_PROMPT,
+      });
+      let txt = raw.trim();
+      txt = txt.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+      const i0 = txt.indexOf('[');
+      const i1 = txt.lastIndexOf(']');
+      if (i0 < 0 || i1 < 0) throw new Error('No JSON array in response');
+      return JSON.parse(txt.slice(i0, i1 + 1));
     } catch (e) {
       onErr?.(e.message || String(e));
       return null;
@@ -485,6 +529,7 @@ quoting), behave identically to full mode.`;
     showLabels, showOverlays, showGrid,
   }) {
     const [interpreting, setInterpreting] = useState(false);
+    const [predicting, setPredicting] = useState(false);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null); // { kind: 'layer'|'event', id }
     const [inspectorOpen, setInspectorOpen] = useState(true);
@@ -608,6 +653,18 @@ quoting), behave identically to full mode.`;
       }
     }, [description, model, setModel]);
 
+    const handlePredict = async () => {
+      if (!model || predicting) return;
+      setPredicting(true);
+      const predictions = await predict(model, (msg) => setError(msg));
+      if (predictions) {
+        const newModel = { ...model, predictions };
+        setModel(newModel);
+        window.__lastModel = newModel;
+      }
+      setPredicting(false);
+    };
+
     const onSelectFeature = (data) => {
       setSelected(data);
       setInspectorOpen(true);
@@ -716,6 +773,14 @@ quoting), behave identically to full mode.`;
           <div className="panel-footer">
             <button className="btn primary" onClick={onInterpret} disabled={interpreting || !description.trim()}>
               {interpreting ? <><span className="spin"></span> Interpreting…</> : 'Interpret →'}
+            </button>
+            <button
+              className="btn"
+              onClick={handlePredict}
+              disabled={!model || predicting}
+              style={{ opacity: (!model || predicting) ? 0.5 : 1 }}
+            >
+              {predicting ? 'Predicting…' : 'Predict'}
             </button>
             <button className="btn" onClick={() => { setDescription(''); setModel(null); setSelected(null); }}>
               Reset
