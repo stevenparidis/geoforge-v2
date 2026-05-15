@@ -1270,7 +1270,7 @@
     if (!found) contactY = 0;
 
     // Draw the wavy line across the full scene width
-    const halfW = totalHeight * 1.2;
+    const halfW = 2.1; // matches fixed block half-width in layerBlock
     const N = 24;
     const amplitude = 0.08;
     const frequency = 4;
@@ -1278,17 +1278,15 @@
     for (let i = 0; i <= N; i++) {
       const t = i / N;
       const x = (t - 0.5) * halfW * 2;
-      const z = Math.sin(t * Math.PI * 2 * frequency) * amplitude;
-      wavePoints.push(new T.Vector3(x, contactY, z));
+      const yWave = contactY + Math.sin(t * Math.PI * 2 * frequency) * amplitude;
+      wavePoints.push(new T.Vector3(x, yWave, 0));
     }
     const waveLine = solidLine(wavePoints, 0xFFAA00, { linewidth: 2 });
     meshes.add(waveLine);
 
     // For angular subtype: add a second parallel faint line to suggest the angular cut
     if (unconformity.subtype === 'angular') {
-      const wavePoints2 = wavePoints.map(function(p) {
-        return new T.Vector3(p.x, contactY + 0.04, p.z + 0.15);
-      });
+      const wavePoints2 = wavePoints.map(p => new T.Vector3(p.x, p.y + 0.04, 0));
       const waveLine2 = solidLine(wavePoints2, 0xFFAA00, { linewidth: 1, opacity: 0.4, transparent: true });
       meshes.add(waveLine2);
     }
