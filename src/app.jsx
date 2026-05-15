@@ -61,7 +61,16 @@
           </div>
           <div className="topbar-actions">
             <button className={'toggle' + (t.labelsOn ? ' on' : '')} onClick={() => setTweak('labelsOn', !t.labelsOn)}>Labels</button>
-            <button className={'toggle' + (t.overlaysOn ? ' on' : '')} onClick={() => setTweak('overlaysOn', !t.overlaysOn)}>Overlays</button>
+            <button className={'toggle' + (t.overlaysOn ? ' on' : '')} onClick={() => {
+              const next = !t.overlaysOn;
+              // Apply imperatively to Three.js scene first — before React's render cycle —
+              // to keep overlay toggle under the 200 ms performance threshold on large models.
+              const sceneRef = window.__lastGeoScene;
+              if (sceneRef && sceneRef.current && sceneRef.current.applyVisibility) {
+                sceneRef.current.applyVisibility(next, t.labelsOn, t.gridOn);
+              }
+              setTweak('overlaysOn', next);
+            }}>Overlays</button>
             <button className={'toggle' + (t.gridOn ? ' on' : '')} onClick={() => setTweak('gridOn', !t.gridOn)}>Grid</button>
           </div>
         </div>

@@ -169,6 +169,19 @@
       const entry = { host, scene, camera, controls, labelRenderer, canvas2d, ctx2d, chrome, modelRoot, overlayRoot, handleRoot };
       stateRef.current = { T, ...entry };
       window.__lastGeoScene = stateRef;
+
+      // Expose an imperative visibility setter so the App topbar can update
+      // Three.js state directly on the click event, without waiting for React's
+      // full render-and-effect cycle (which causes > 200 ms latency on large models).
+      stateRef.current.applyVisibility = (showOverlays, showLabels, showGrid) => {
+        const st = stateRef.current;
+        if (!st) return;
+        st.overlayRoot.visible = showOverlays;
+        st.chrome.visible = showGrid;
+        st.modelRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showLabels; });
+        st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
+      };
+
       Surface.addScene(entry);
 
       // Picking
@@ -200,6 +213,7 @@
             const m = n.material; if (Array.isArray(m)) m.forEach(mm => mm.dispose?.()); else m.dispose?.();
           }
         });
+        stateRef.current.applyVisibility = null;
       };
     }, [window.__threeReady]);
 
