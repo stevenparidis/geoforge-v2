@@ -1166,6 +1166,135 @@
     return { meshes, overlays, labels };
   }
 
+  // ---- Intrusion geometry builder ----
+  // Returns { meshes, overlays, labels } for one intrusion.
+  function buildIntrusionGeometry(intrusion, model) {
+    const meshes = new T.Group();
+    const overlays = new T.Group();
+    const labels = [];
+
+    const totalHeight = (model.layers || []).reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+
+    // Rock type color
+    const col = (window.GD.LITHOLOGY[intrusion.rock_type] || {}).color || '#CC8899';
+    const rockColor = new T.Color(col);
+
+    const subtype = intrusion.subtype;
+
+    if (subtype === 'dyke') {
+      // Thin vertical plane cutting through the layer stack at the given strike.
+      const geo = new T.BoxGeometry(2 * totalHeight, totalHeight, intrusion.thickness || 0.5);
+      const mat = new T.MeshLambertMaterial({
+        color: rockColor,
+        transparent: true,
+        opacity: 0.85,
+        side: T.DoubleSide,
+      });
+      const mesh = new T.Mesh(geo, mat);
+      mesh.position.y = totalHeight / 2;
+      // Strike is angle from north; three.js Y rotation is opposite convention
+      mesh.rotation.y = -rad(intrusion.strike || 0);
+      meshes.add(mesh);
+
+    } else if (subtype === 'sill') {
+      // Thin horizontal plane between layers (at mid-stack by default).
+      const geo = new T.BoxGeometry(2 * totalHeight, intrusion.thickness || 0.3, 2 * totalHeight);
+      const mat = new T.MeshLambertMaterial({
+        color: rockColor,
+        transparent: true,
+        opacity: 0.8,
+        side: T.DoubleSide,
+      });
+      const mesh = new T.Mesh(geo, mat);
+      mesh.position.y = totalHeight / 2;
+      meshes.add(mesh);
+
+    } else if (subtype === 'batholith') {
+      // Large rounded dome at the base of the section (lower hemisphere only).
+      const geo = new T.SphereGeometry(totalHeight * 0.8, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+      const mat = new T.MeshLambertMaterial({
+        color: rockColor,
+        transparent: true,
+        opacity: 0.75,
+        side: T.DoubleSide,
+      });
+      const mesh = new T.Mesh(geo, mat);
+      mesh.position.y = 0;
+      meshes.add(mesh);
+
+    } else if (subtype === 'laccolith') {
+      // Dome shape at emplacement depth, pushing layers up.
+      const geo = new T.SphereGeometry(totalHeight * 0.5, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+      const mat = new T.MeshLambertMaterial({
+        color: rockColor,
+        transparent: true,
+        opacity: 0.75,
+        side: T.DoubleSide,
+      });
+      const mesh = new T.Mesh(geo, mat);
+      mesh.position.y = intrusion.depth != null ? intrusion.depth : totalHeight / 2;
+      meshes.add(mesh);
+    }
+
+    return { meshes, overlays, labels };
+  }
+
+  // ---- Unconformity renderer ----
+  // Returns { meshes, overlays, labels } for a single unconformity entry.
+  // The wavy line is drawn at the erosion contact between below_layer_id (top) and
+  // above_layer_id (bottom of above group), i.e. at the top surface of the 'below' layer.
+  // Layer stacking matches buildLayersOnly: y = -totalHeight/2 at base, ascending by order.
+  function buildUnconformityGeometry(unconformity, model) {
+    const meshes = new T.Group();
+    const overlays = new T.Group();
+
+    // Sort layers by order ascending (bottom = 0, top = N)
+    const sorted = [...(model.layers || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const totalHeight = sorted.reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+
+    // Find the contact Y: top of the 'below' layer.
+    // Layers are centred on origin: base starts at -totalHeight/2.
+    let contactY = 0;
+    let cumY = -totalHeight / 2;
+    let found = false;
+    for (const L of sorted) {
+      cumY += L.thickness ?? 1.0;
+      if (L.id === unconformity.below_layer_id) {
+        contactY = cumY; // top of the 'below' layer in scene coords
+        found = true;
+        break;
+      }
+    }
+    // Fallback: if IDs don't match, use midpoint
+    if (!found) contactY = 0;
+
+    // Draw the wavy line across the full scene width
+    const halfW = totalHeight * 1.2;
+    const N = 24;
+    const amplitude = 0.08;
+    const frequency = 4;
+    const wavePoints = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const x = (t - 0.5) * halfW * 2;
+      const z = Math.sin(t * Math.PI * 2 * frequency) * amplitude;
+      wavePoints.push(new T.Vector3(x, contactY, z));
+    }
+    const waveLine = solidLine(wavePoints, 0xFFAA00, { linewidth: 2 });
+    meshes.add(waveLine);
+
+    // For angular subtype: add a second parallel faint line to suggest the angular cut
+    if (unconformity.subtype === 'angular') {
+      const wavePoints2 = wavePoints.map(function(p) {
+        return new T.Vector3(p.x, contactY + 0.04, p.z + 0.15);
+      });
+      const waveLine2 = solidLine(wavePoints2, 0xFFAA00, { linewidth: 1, opacity: 0.4, transparent: true });
+      meshes.add(waveLine2);
+    }
+
+    return { meshes, overlays, labels: [] };
+  }
+
   // ---- Master dispatcher ----
   function buildSceneContents(model, opts = {}) {
     const root = new T.Group();
@@ -1390,6 +1519,22 @@
         // via onDragChange, but the 3D arrow will catch up on final.)
       };
     }
+
+    // Render intrusions
+    (model.intrusions || []).forEach(function(I) {
+      const ir = buildIntrusionGeometry(I, model);
+      root.add(ir.meshes);
+      overlays.add(ir.overlays);
+      labels.push(...ir.labels);
+    });
+
+    // Render unconformities
+    (model.unconformities || []).forEach(function(U) {
+      const ur = buildUnconformityGeometry(U, model);
+      root.add(ur.meshes);
+      overlays.add(ur.overlays);
+      labels.push(...ur.labels);
+    });
 
     const bounds = new T.Box3().setFromObject(root);
     return { root, overlays, labels, overlayUpdateMap, bounds };
