@@ -52,7 +52,7 @@
             <div className="mark" />
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
               <span>GeoForge</span>
-              <span className="brand-sub">v1 · prototype</span>
+              <span className="brand-sub">v1.0</span>
             </div>
           </div>
           <div className="tabs">
