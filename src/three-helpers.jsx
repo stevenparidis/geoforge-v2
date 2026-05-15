@@ -1237,6 +1237,105 @@
       meshes.add(mesh);
     }
 
+    // ---- Measurement-origin overlays ----
+    if (subtype === 'dyke') {
+      const topPt = new T.Vector3(0, halfH, 0);
+      const fo = intrusion.field_origin || {};
+
+      // Strike line: short horizontal line in the strike direction
+      const sv = strikeVec(intrusion.strike || 0).multiplyScalar(0.7);
+      const strikeLine = solidLine([topPt.clone().sub(sv), topPt.clone().add(sv)], COLOR.overlay);
+      overlays.add(strikeLine);
+
+      // Dip arc: since dykes are ~90°, draw a short arc from horizontal to vertical
+      const horizDir = bearingVec((intrusion.strike || 0) + 90);
+      const vertDir = new T.Vector3(0, 1, 0);
+      const dipArc = arc3D(topPt, horizDir, vertDir, 0.5, COLOR.overlay);
+      overlays.add(dipArc.line);
+      const dipLbl = makeValueLabel(`${intrusion.dip ?? 90}°`, { inferred: fo.dip === 'inferred' });
+      dipLbl.position.copy(dipArc.midPoint).addScalar(0.1);
+      overlays.add(dipLbl);
+
+      // Thickness label: double arrow across the dyke width
+      const perpDir = bearingVec(intrusion.strike || 0);
+      const halfT = (intrusion.thickness || 0.5) / 2;
+      const from = new T.Vector3(0, 0, 0).sub(perpDir.clone().multiplyScalar(halfT));
+      const to = new T.Vector3(0, 0, 0).add(perpDir.clone().multiplyScalar(halfT));
+      const thkArrow = doubleArrow(from, to, COLOR.overlay);
+      overlays.add(thkArrow);
+      const thkLbl = makeValueLabel(`${(intrusion.thickness || 0.5).toFixed(1)} u`, { inferred: fo.thickness === 'inferred' });
+      thkLbl.position.set(0, 0.15, 0);
+      overlays.add(thkLbl);
+
+      // Feature label
+      const lbl = makeLabel(`Dyke (${intrusion.rock_type || 'basalt'})`);
+      lbl.position.set(0, halfH + 0.25, 0);
+      overlays.add(lbl);
+
+    } else if (subtype === 'sill') {
+      const sillY = 0; // mesh position.y
+      const fo = intrusion.field_origin || {};
+
+      // Thickness label
+      const thkArrow = doubleArrow(
+        new T.Vector3(halfH + 0.3, sillY - (intrusion.thickness || 0.3) / 2, 0),
+        new T.Vector3(halfH + 0.3, sillY + (intrusion.thickness || 0.3) / 2, 0),
+        COLOR.overlay
+      );
+      overlays.add(thkArrow);
+      const thkLbl = makeValueLabel(`${(intrusion.thickness || 0.3).toFixed(1)} u`, { inferred: fo.thickness === 'inferred' });
+      thkLbl.position.set(halfH + 0.55, sillY, 0);
+      overlays.add(thkLbl);
+
+      // Feature label
+      const lbl = makeLabel(`Sill (${intrusion.rock_type || 'basalt'})`);
+      lbl.position.set(0, sillY + 0.25, 0);
+      overlays.add(lbl);
+
+    } else if (subtype === 'batholith') {
+      const domeTopY = -halfH + totalHeight * 0.8;
+      const fo = intrusion.field_origin || {};
+
+      // Depth label: dashed line from surface to dome top
+      const surfaceY = halfH;
+      const depthLine = dashedLine(
+        new T.Vector3(halfH * 0.8, surfaceY, 0),
+        new T.Vector3(halfH * 0.8, domeTopY, 0),
+        COLOR.overlay
+      );
+      overlays.add(depthLine);
+      const depthLbl = makeValueLabel(`depth ${(intrusion.depth ?? totalHeight).toFixed(1)} u`, { inferred: fo.depth === 'inferred' });
+      depthLbl.position.set(halfH * 0.8 + 0.15, (surfaceY + domeTopY) / 2, 0);
+      overlays.add(depthLbl);
+
+      // Feature label
+      const lbl = makeLabel(`Batholith (${intrusion.rock_type || 'granite'})`);
+      lbl.position.set(0, domeTopY - 0.3, 0);
+      overlays.add(lbl);
+
+    } else if (subtype === 'laccolith') {
+      const laccY = halfH - (intrusion.depth ?? halfH);
+      const laccRadius = totalHeight * 0.5;
+      const fo = intrusion.field_origin || {};
+
+      // Depth label: dashed line from surface to dome top
+      const surfaceY = halfH;
+      const depthLine = dashedLine(
+        new T.Vector3(laccRadius + 0.3, surfaceY, 0),
+        new T.Vector3(laccRadius + 0.3, laccY + laccRadius, 0),
+        COLOR.overlay
+      );
+      overlays.add(depthLine);
+      const depthLbl = makeValueLabel(`depth ${(intrusion.depth ?? halfH).toFixed(1)} u`, { inferred: fo.depth === 'inferred' });
+      depthLbl.position.set(laccRadius + 0.5, (surfaceY + laccY + laccRadius) / 2, 0);
+      overlays.add(depthLbl);
+
+      // Feature label
+      const lbl = makeLabel(`Laccolith (${intrusion.rock_type || 'granite'})`);
+      lbl.position.set(0, laccY + laccRadius + 0.2, 0);
+      overlays.add(lbl);
+    }
+
     return { meshes, overlays, labels };
   }
 
@@ -1289,6 +1388,45 @@
       const wavePoints2 = wavePoints.map(p => new T.Vector3(p.x, p.y + 0.04, 0));
       const waveLine2 = solidLine(wavePoints2, 0xFFAA00, { linewidth: 1, opacity: 0.4, transparent: true });
       meshes.add(waveLine2);
+    }
+
+    // ---- Overlays ----
+    const fo = unconformity.field_origin || {};
+    const timeGap = unconformity.time_gap_ma ?? 10;
+
+    // Time gap label — right end of wavy line, slightly above
+    const timeLbl = makeValueLabel(
+      `~${timeGap} Ma gap`,
+      { inferred: fo.time_gap_ma === 'inferred' }
+    );
+    timeLbl.position.set(2.1, contactY + 0.15, 0);
+    overlays.add(timeLbl);
+
+    // Unconformity type label — left end of wavy line, slightly above
+    const typeLbl = makeLabel(
+      unconformity.subtype === 'angular' ? 'Angular Unconformity'
+      : unconformity.subtype === 'nonconformity' ? 'Nonconformity'
+      : 'Disconformity'
+    );
+    typeLbl.position.set(-2.1, contactY + 0.15, 0);
+    overlays.add(typeLbl);
+
+    // Angular subtype: discordance arc showing the angle between upper and lower beds
+    if (unconformity.subtype === 'angular') {
+      const discordance = unconformity.angular_discordance ?? 30;
+      const centre = new T.Vector3(-1.5, contactY, 0);
+      const dipRad = rad(discordance);
+      // Upper beds are horizontal; lower beds dip at discordance degrees
+      const discordanceFromDir = new T.Vector3(1, 0, 0);
+      const discordanceToDir = new T.Vector3(Math.cos(-dipRad), Math.sin(-dipRad), 0).normalize();
+
+      const discArc = arc3D(centre, discordanceFromDir, discordanceToDir, 0.4, 0xFFAA00);
+      overlays.add(discArc.line);
+
+      // Discordance angle label at the arc midpoint
+      const discLbl = makeValueLabel(`${discordance}°`, { inferred: fo.angular_discordance === 'inferred' });
+      discLbl.position.copy(discArc.midPoint);
+      overlays.add(discLbl);
     }
 
     return { meshes, overlays, labels: [] };
