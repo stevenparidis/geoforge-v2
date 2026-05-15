@@ -33,6 +33,14 @@
     fault:    0xff8c5a,
     hinge:    0xf6d3ff,
     axial:    0xb693ff,
+    minCore:    0xffd700,  // gold — ore body core
+    minPhyllic: 0x708090,  // slate grey — phyllic alteration
+    minArgillic:0xcd853f,  // peru brown — argillic alteration
+    minPropyl:  0x556b2f,  // dark olive — propylitic alteration
+    minVein:    0xf5f5dc,  // beige — quartz veins
+    minVMS:     0x696969,  // dim grey — VMS massive sulphide
+    minSkarn:   0xd2691e,  // chocolate — skarn
+    minEpi:     0xe8d4a0,  // tan — epithermal
   };
 
   // ---------- Math helpers ----------
@@ -1432,6 +1440,123 @@
     return { meshes, overlays, labels: [] };
   }
 
+  function buildMineralisationGeometry(M, model) {
+    const meshes   = new T.Group();
+    const overlays = new T.Group();
+    const labels   = [];
+
+    const totalHeight = (model.layers || []).reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+    const halfH = totalHeight / 2;
+
+    // Ore body centre Y position (depth_top measured from surface = +halfH down)
+    const depthTop = M.depth_top != null ? M.depth_top : halfH * 0.6;
+    const oreY = halfH - depthTop - (M.alteration_radius || 0.5);
+
+    switch (M.subtype) {
+
+      case 'porphyry': {
+        // Four concentric transparent ellipsoidal shells:
+        // propylitic (outer) → argillic → phyllic → potassic (inner core)
+        const R = M.alteration_radius || 1.0;
+        const zones = [
+          { f: 1.00, color: COLOR.minPropyl,  op: 0.10 },
+          { f: 0.70, color: COLOR.minArgillic,op: 0.15 },
+          { f: 0.45, color: COLOR.minPhyllic, op: 0.20 },
+          { f: 0.25, color: COLOR.minCore,    op: 0.35 },
+        ];
+        zones.forEach(({ f, color, op }) => {
+          const geo = new T.SphereGeometry(R * f, 16, 12);
+          const mat = new T.MeshBasicMaterial({ color, transparent: true, opacity: op, side: T.DoubleSide, depthWrite: false });
+          const mesh = new T.Mesh(geo, mat);
+          mesh.scale.y = 1.4; // elongate vertically to represent plunge
+          mesh.position.set(0, oreY, 0);
+          meshes.add(mesh);
+        });
+        break;
+      }
+
+      case 'orogenic_gold': {
+        // 3 thin parallel vein planes along strike/dip of structural control (or default N-S vertical)
+        const R = M.alteration_radius || 0.3;
+        let strike = 0, dip = 70;
+        // If structural_control_event_id is set, try to match a fault/fold
+        if (M.structural_control_event_id) {
+          const ctrl = (model.events || []).find(e => e.id === M.structural_control_event_id);
+          if (ctrl) { strike = ctrl.strike ?? ctrl.axis_strike ?? 0; dip = ctrl.dip ?? 70; }
+        }
+        // Build vein planes as thin boxes rotated to strike/dip
+        const veinSpacing = 0.18;
+        for (let i = -1; i <= 1; i++) {
+          const geo = new T.BoxGeometry(0.04, totalHeight * 0.6, R * 2.5);
+          const mat = new T.MeshBasicMaterial({ color: COLOR.minVein, transparent: true, opacity: 0.30, side: T.DoubleSide, depthWrite: false });
+          const mesh = new T.Mesh(geo, mat);
+          const dipR = rad(dip), stkR = rad(strike);
+          mesh.rotation.y = -stkR;
+          mesh.rotation.z = -(Math.PI / 2 - dipR);
+          mesh.position.set(i * veinSpacing, oreY, 0);
+          meshes.add(mesh);
+        }
+        break;
+      }
+
+      case 'vms': {
+        // Lens-shaped (flattened sphere) massive sulphide body near the base of the stack
+        const R = M.alteration_radius || 0.5;
+        const geo = new T.SphereGeometry(R, 16, 12);
+        const mat = new T.MeshBasicMaterial({ color: COLOR.minVMS, transparent: true, opacity: 0.40, side: T.DoubleSide, depthWrite: false });
+        const mesh = new T.Mesh(geo, mat);
+        mesh.scale.y = 0.35; // flatten into a lens
+        mesh.position.set(0, -halfH + R * 0.35, 0); // near base of stack
+        meshes.add(mesh);
+        // Alteration (chlorite) halo
+        const haloGeo = new T.SphereGeometry(R * 1.5, 16, 12);
+        const haloMat = new T.MeshBasicMaterial({ color: 0x3c6e3c, transparent: true, opacity: 0.10, side: T.DoubleSide, depthWrite: false });
+        const halo = new T.Mesh(haloGeo, haloMat);
+        halo.scale.y = 0.5;
+        halo.position.set(0, -halfH + R * 0.35, 0);
+        meshes.add(halo);
+        break;
+      }
+
+      case 'skarn': {
+        // Irregular calc-silicate zone at a contact, rendered as a thick wedge/ellipsoid
+        const R = M.alteration_radius || 0.4;
+        const geo = new T.SphereGeometry(R, 12, 10);
+        const mat = new T.MeshBasicMaterial({ color: COLOR.minSkarn, transparent: true, opacity: 0.35, side: T.DoubleSide, depthWrite: false });
+        const mesh = new T.Mesh(geo, mat);
+        mesh.scale.set(1.5, 0.6, 0.8); // flatten and widen to represent contact zone
+        mesh.position.set(0.8, oreY, 0); // offset from centre toward the intrusion contact
+        meshes.add(mesh);
+        break;
+      }
+
+      case 'epithermal': {
+        // Shallow sub-vertical vein set in upper third of section
+        const R = M.alteration_radius || 0.5;
+        const veinH = totalHeight * 0.4;
+        for (let i = 0; i < 3; i++) {
+          const geo = new T.BoxGeometry(0.05, veinH, R * 1.2);
+          const mat = new T.MeshBasicMaterial({ color: COLOR.minEpi, transparent: true, opacity: 0.28, side: T.DoubleSide, depthWrite: false });
+          const mesh = new T.Mesh(geo, mat);
+          mesh.position.set((i - 1) * 0.3, halfH * 0.55, 0); // upper portion of section
+          mesh.rotation.y = rad(10 * (i - 1)); // slight spread
+          meshes.add(mesh);
+        }
+        break;
+      }
+
+      default:
+        break;
+    }
+
+    // Feature label
+    const lbl = makeLabel(`${capitalise(M.subtype)} — ${M.metals || ''}`, { center: true });
+    lbl.position.set(0, oreY + (M.alteration_radius || 0.5) + 0.25, 0);
+    labels.push(lbl);
+
+    return { meshes, overlays, labels };
+  }
+
   // ---- Master dispatcher ----
   function buildSceneContents(model, opts = {}) {
     const root = new T.Group();
@@ -1671,6 +1796,14 @@
       root.add(ur.meshes);
       overlays.add(ur.overlays);
       labels.push(...ur.labels);
+    });
+
+    // Render mineralisation
+    (model.mineralisation || []).forEach(function(M) {
+      const mr = buildMineralisationGeometry(M, model);
+      root.add(mr.meshes);
+      overlays.add(mr.overlays);
+      labels.push(...mr.labels);
     });
 
     const bounds = new T.Box3().setFromObject(root);
