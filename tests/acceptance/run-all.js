@@ -11,6 +11,7 @@ const tests = [
   'ac-7-default-state.test.js',
   'ac-8-intrusions.test.js',
   'ac-9-unconformities.test.js',
+  'ac-10-mineralisation.test.js',
 ];
 let failed = 0;
 for (const t of tests) {
