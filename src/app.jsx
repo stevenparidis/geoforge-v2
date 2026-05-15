@@ -29,6 +29,27 @@
       return () => window.removeEventListener('resize', handler);
     }, []);
 
+    // Restore last session from localStorage on mount
+    useEffect(() => {
+      try {
+        const saved = localStorage.getItem('geoforge-session');
+        if (saved) {
+          const { model: m, description: d } = JSON.parse(saved);
+          if (m) setModel(m);
+          if (d != null) setDescription(d);
+        }
+      } catch (e) {}
+    }, []);
+
+    // Auto-save session to localStorage whenever model or description changes
+    useEffect(() => {
+      try {
+        if (model != null || description) {
+          localStorage.setItem('geoforge-session', JSON.stringify({ model, description }));
+        }
+      } catch (e) {}
+    }, [model, description]);
+
     if (viewportWidth < 900) {
       return (
         <div style={{
