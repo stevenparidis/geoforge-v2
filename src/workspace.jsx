@@ -534,9 +534,10 @@ quoting), behave identically to full mode.`;
           </div>
           <textarea
             className="desc-area"
-            placeholder={"Write a structural geology description in plain English. E.g.\n\nA 200 m sequence of sandstone, shale, and limestone is tilted 25° to the east. A normal fault dips 60° east and has dropped the hanging wall about 30 m."}
+            placeholder="A 1 m thick sandstone layer overlies a 0.8 m shale layer, all dipping 30° east. A normal fault cuts through them, dipping 60° east with 0.5 m of throw."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            onClick={() => { if (!description.trim()) setDescription('A 1 m thick sandstone layer overlies a 0.8 m shale layer, all dipping 30° east. A normal fault cuts through them, dipping 60° east with 0.5 m of throw.'); }}
           />
           {model?.events?.length > 0 && (
             <div className="desc-anchors">
