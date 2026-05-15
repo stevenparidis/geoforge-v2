@@ -1557,6 +1557,48 @@
     return { meshes, overlays, labels };
   }
 
+  // ---- Hydrothermal five-elements annotation (7.3) ----
+  function addHydrothermalAnnotation(M, model, overlays, labels) {
+    const fe = M.five_elements;
+    if (!fe) return;
+
+    const totalHeight = (model.layers || []).reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+    const halfH = totalHeight / 2;
+
+    // Ore body centre Y (same logic as buildMineralisationGeometry)
+    const depthTop = M.depth_top != null ? M.depth_top : halfH * 0.6;
+    const oreY = halfH - depthTop - (M.alteration_radius || 0.5);
+
+    const elements = [
+      { key: 'heat_source',   symbol: '♨', label: 'Heat source' },
+      { key: 'fluid_source',  symbol: '💧', label: 'Fluid source' },
+      { key: 'metal_source',  symbol: '⛏', label: 'Metal source' },
+      { key: 'pathway',       symbol: '→', label: 'Pathway' },
+      { key: 'trap',          symbol: '⬡', label: 'Trap' },
+    ];
+
+    const spacing = 0.42;
+    const xBase = (M.alteration_radius || 0.5) + 1.0; // offset right of the deposit
+
+    elements.forEach(function({ key, symbol, label }, idx) {
+      const val = fe[key];
+      if (!val) return; // skip empty strings
+
+      const y = oreY + (2 - idx) * spacing; // spread vertically around ore body
+
+      // Small pointing arrow from xBase toward the deposit
+      const from = new T.Vector3(xBase + 0.4, y, 0);
+      const to   = new T.Vector3(xBase,       y, 0);
+      const arrowLine = arrow3D(from, to, 0x67e8f9, { headLength: 0.12, headWidth: 0.07, depthTest: false });
+      overlays.add(arrowLine);
+
+      // Label: "Symbol Label: value"
+      const lbl = makeLabel(`${symbol} ${label}: ${val}`, { center: false });
+      lbl.position.set(xBase + 0.48, y, 0);
+      overlays.add(lbl);
+    });
+  }
+
   // ---- Master dispatcher ----
   function buildSceneContents(model, opts = {}) {
     const root = new T.Group();
@@ -1804,6 +1846,11 @@
       root.add(mr.meshes);
       overlays.add(mr.overlays);
       labels.push(...mr.labels);
+    });
+
+    // Hydrothermal five-elements annotation (7.3)
+    (model.mineralisation || []).forEach(function(M) {
+      addHydrothermalAnnotation(M, model, overlays, labels);
     });
 
     const bounds = new T.Box3().setFromObject(root);
