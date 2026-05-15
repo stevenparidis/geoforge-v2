@@ -1549,6 +1549,79 @@
         break;
     }
 
+    // Grade and metals annotation
+    if (M.grade != null) {
+      const isGoldType = (M.subtype === 'orogenic_gold' || M.subtype === 'epithermal');
+      const unit = isGoldType ? ' g/t' : '%';
+      const gradeLbl = makeValueLabel(`Grade: ${M.grade}${unit}`, { inferred: M.field_origin?.grade === 'inferred' });
+      gradeLbl.position.set(0, oreY - (M.alteration_radius || 0.5) - 0.22, 0);
+      overlays.add(gradeLbl);
+    }
+
+    if (M.subtype === 'porphyry') {
+      const R = M.alteration_radius || 1.0;
+      const zoneBoundaries = [
+        { f: 1.00, name: 'Propylitic',     color: COLOR.minPropyl },
+        { f: 0.70, name: 'Argillic',       color: COLOR.minArgillic },
+        { f: 0.45, name: 'Phyllic',        color: COLOR.minPhyllic },
+        { f: 0.25, name: 'Potassic (ore)', color: COLOR.minCore },
+      ];
+      zoneBoundaries.forEach(function({ f, name, color }) {
+        overlays.add(horizontalDisc(new T.Vector3(0, oreY, 0), R * f, color, 0.18));
+        const zLbl = makeValueLabel(name, { inferred: false });
+        zLbl.position.set(R * f + 0.12, oreY, 0);
+        overlays.add(zLbl);
+      });
+    }
+
+    if (M.subtype === 'orogenic_gold') {
+      const R = M.alteration_radius || 0.3;
+      const envHalfH = totalHeight * 0.3;
+      const corners = [
+        new T.Vector3(-R, oreY + envHalfH, 0),
+        new T.Vector3( R, oreY + envHalfH, 0),
+        new T.Vector3( R, oreY - envHalfH, 0),
+        new T.Vector3(-R, oreY - envHalfH, 0),
+        new T.Vector3(-R, oreY + envHalfH, 0),
+      ];
+      for (let ci = 0; ci < corners.length - 1; ci++) {
+        overlays.add(dashedLine(corners[ci], corners[ci + 1], COLOR.minVein));
+      }
+      const envLbl = makeValueLabel('Ore envelope', { inferred: false });
+      envLbl.position.set(R + 0.12, oreY, 0);
+      overlays.add(envLbl);
+    }
+
+    if (M.subtype === 'vms') {
+      const R = M.alteration_radius || 0.5;
+      const lensY = -halfH + R * 0.35;
+      overlays.add(horizontalDisc(new T.Vector3(0, lensY, 0), R, COLOR.minVMS, 0.22));
+      const lensLbl = makeValueLabel('VMS lens', { inferred: false });
+      lensLbl.position.set(R + 0.12, lensY, 0);
+      overlays.add(lensLbl);
+      overlays.add(horizontalDisc(new T.Vector3(0, lensY, 0), R * 1.5, 0x3c6e3c, 0.12));
+      const chlorLbl = makeValueLabel('Chlorite halo', { inferred: false });
+      chlorLbl.position.set(R * 1.5 + 0.12, lensY, 0);
+      overlays.add(chlorLbl);
+    }
+
+    if (M.subtype === 'skarn') {
+      const R = M.alteration_radius || 0.4;
+      overlays.add(horizontalDisc(new T.Vector3(0.8, oreY, 0), R * 1.4, COLOR.minSkarn, 0.20));
+      const skLbl = makeValueLabel('Skarn contact zone', { inferred: false });
+      skLbl.position.set(0.8 + R * 1.4 + 0.12, oreY, 0);
+      overlays.add(skLbl);
+    }
+
+    if (M.subtype === 'epithermal') {
+      const R = M.alteration_radius || 0.5;
+      const boilingY = halfH * 0.3;
+      overlays.add(horizontalDisc(new T.Vector3(0, boilingY, 0), R + 0.5, COLOR.minEpi, 0.14));
+      const boilLbl = makeValueLabel('Paleo-boiling zone', { inferred: true });
+      boilLbl.position.set(R + 0.62, boilingY, 0);
+      overlays.add(boilLbl);
+    }
+
     // Feature label
     const lbl = makeLabel(`${capitalise(M.subtype)} — ${M.metals || ''}`, { center: true });
     lbl.position.set(0, oreY + (M.alteration_radius || 0.5) + 0.25, 0);
