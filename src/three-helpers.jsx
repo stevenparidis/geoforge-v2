@@ -1390,6 +1390,45 @@
       meshes.add(waveLine2);
     }
 
+    // ---- Overlays ----
+    const fo = unconformity.field_origin || {};
+    const timeGap = unconformity.time_gap_ma ?? 10;
+
+    // Time gap label — right end of wavy line, slightly above
+    const timeLbl = makeValueLabel(
+      `~${timeGap} Ma gap`,
+      { inferred: fo.time_gap_ma === 'inferred' }
+    );
+    timeLbl.position.set(2.1, contactY + 0.15, 0);
+    overlays.add(timeLbl);
+
+    // Unconformity type label — left end of wavy line, slightly above
+    const typeLbl = makeLabel(
+      unconformity.subtype === 'angular' ? 'Angular Unconformity'
+      : unconformity.subtype === 'nonconformity' ? 'Nonconformity'
+      : 'Disconformity'
+    );
+    typeLbl.position.set(-2.1, contactY + 0.15, 0);
+    overlays.add(typeLbl);
+
+    // Angular subtype: discordance arc showing the angle between upper and lower beds
+    if (unconformity.subtype === 'angular') {
+      const discordance = Math.max(1, unconformity.angular_discordance ?? 30);
+      const centre = new T.Vector3(-1.5, contactY, 0);
+      const dipRad = rad(discordance);
+      // Upper beds are horizontal; lower beds dip at discordance degrees
+      const discordanceFromDir = new T.Vector3(1, 0, 0);
+      const discordanceToDir = new T.Vector3(Math.cos(-dipRad), Math.sin(-dipRad), 0).normalize();
+
+      const discArc = arc3D(centre, discordanceFromDir, discordanceToDir, 0.4, 0xFFAA00);
+      overlays.add(discArc.line);
+
+      // Discordance angle label at the arc midpoint
+      const discLbl = makeValueLabel(`${discordance}°`, { inferred: fo.angular_discordance === 'inferred' });
+      discLbl.position.copy(discArc.midPoint);
+      overlays.add(discLbl);
+    }
+
     return { meshes, overlays, labels: [] };
   }
 
