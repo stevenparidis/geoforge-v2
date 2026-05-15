@@ -29,6 +29,8 @@
       return () => window.removeEventListener('resize', handler);
     }, []);
 
+    const [shareToast, setShareToast] = useState(false);
+
     // Restore last session from localStorage on mount
     useEffect(() => {
       try {
@@ -41,6 +43,19 @@
       } catch (e) {}
     }, []);
 
+    // Restore model from URL fragment on mount (share link — takes priority over localStorage)
+    useEffect(() => {
+      try {
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#model=')) {
+          const encoded = hash.slice('#model='.length);
+          const decoded = JSON.parse(atob(encoded));
+          if (decoded.model) setModel(decoded.model);
+          if (decoded.description != null) setDescription(decoded.description);
+        }
+      } catch (e) {}
+    }, []);
+
     // Auto-save session to localStorage whenever model or description changes
     useEffect(() => {
       try {
@@ -49,6 +64,7 @@
         }
       } catch (e) {}
     }, [model, description]);
+
 
     if (viewportWidth < 900) {
       return (
@@ -65,6 +81,17 @@
         </div>
       );
     }
+
+    const handleShare = () => {
+      if (!model) return;
+      const payload = btoa(JSON.stringify({ model, description }));
+      const hash = '#model=' + payload;
+      window.history.replaceState(null, '', hash);
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).catch(() => {});
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 3000);
+    };
 
     return (
       <div className="app">
@@ -93,6 +120,14 @@
               setTweak('overlaysOn', next);
             }}>Overlays</button>
             <button className={'toggle' + (t.gridOn ? ' on' : '')} onClick={() => setTweak('gridOn', !t.gridOn)}>Grid</button>
+            {model && (
+              <button
+                onClick={handleShare}
+                style={{ fontSize: 13, padding: '4px 10px', background: 'var(--blue, #89b4fa)', color: '#11111b', border: 'none', borderRadius: 4, cursor: 'pointer', marginLeft: 8 }}
+              >
+                Share
+              </button>
+            )}
           </div>
         </div>
         <div className="view">
@@ -132,6 +167,16 @@
               />
             </window.TweakSection>
           </window.TweaksPanel>
+        )}
+        {shareToast && (
+          <div style={{
+            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--bg-2, #1e1e2e)', color: 'var(--fg-1, #cdd6f4)',
+            border: '1px solid var(--green, #a6e3a1)', borderRadius: 8,
+            padding: '10px 16px', zIndex: 9999, fontSize: 13, pointerEvents: 'none',
+          }}>
+            Link copied to clipboard!
+          </div>
         )}
       </div>
     );
