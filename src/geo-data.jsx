@@ -502,6 +502,189 @@ const REFERENCE_FORMATIONS = [
       ],
     },
   },
+  {
+    id: 'porphyry-cu-au',
+    section: 'mineralisation',
+    title: 'Porphyry Cu-Au',
+    tag: 'Mineralisation',
+    caption: 'Large, low-grade copper-gold deposit centred on a porphyritic intrusion. Four concentric alteration zones (potassic → phyllic → argillic → propylitic) widen outward from the ore-grade core. Mineralisation is disseminated through stockwork veins.',
+    overlays: ['alteration zones', 'ore body envelope'],
+    cameraHint: { phi: 0.85, theta: 0.5, dist: 9 },
+    model: {
+      meta: { name: 'Porphyry Cu-Au', description: 'Cu-Au porphyry deposit around a granite intrusion.' },
+      layers: [
+        { id: 'L1', name: 'Mudstone',  lithology: 'mudstone',  thickness: 0.8, order: 0, description_source: 'mudstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Sandstone', lithology: 'sandstone', thickness: 1.0, order: 1, description_source: 'sandstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Limestone', lithology: 'limestone', thickness: 0.9, order: 2, description_source: 'limestone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      mineralisation: [
+        {
+          id: 'M1',
+          subtype: 'porphyry',
+          metals: 'Cu-Au',
+          grade: 0.5,
+          alteration_radius: 1.0,
+          five_elements: {
+            heat_source: 'Porphyritic granite intrusion',
+            fluid_source: 'Magmatic + meteoric water',
+            metal_source: 'Magmatic source',
+            pathway: 'Stockwork fractures',
+            trap: 'Cooling and boiling zone',
+          },
+          description_source: 'A porphyry copper-gold deposit forms around the granite intrusion.',
+          field_origin: { metals: 'stated', grade: 'stated', alteration_radius: 'inferred' },
+        },
+      ],
+    },
+  },
+  {
+    id: 'orogenic-gold',
+    section: 'mineralisation',
+    title: 'Orogenic Gold',
+    tag: 'Mineralisation',
+    caption: 'Structurally controlled mesothermal gold deposit hosted in quartz veins along a crustal-scale shear zone. Formed during metamorphism at depth; fluids ascend along fault corridors and deposit gold where pressure drops.',
+    overlays: ['ore body envelope', 'grade label'],
+    cameraHint: { phi: 0.95, theta: 0.4, dist: 8 },
+    model: {
+      meta: { name: 'Orogenic Gold', description: 'Gold in quartz veins in a shear zone.' },
+      layers: [
+        { id: 'L1', name: 'Schist',     lithology: 'schist',     thickness: 1.0, order: 0, description_source: 'schist', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Quartzite',  lithology: 'quartzite',  thickness: 0.8, order: 1, description_source: 'quartzite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Gneiss',     lithology: 'gneiss',     thickness: 1.0, order: 2, description_source: 'gneiss', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [
+        { id: 'E1', type: 'fault', subtype: 'normal', strike: 0, dip: 70, dip_direction: 90, throw: 0.4, order: 0, description_source: 'Shear zone dipping 70° east.', field_origin: { dip: 'stated', strike: 'stated', dip_direction: 'stated' } },
+      ],
+      mineralisation: [
+        {
+          id: 'M1',
+          subtype: 'orogenic_gold',
+          metals: 'Au',
+          grade: 8.0,
+          structural_control_event_id: 'E1',
+          alteration_radius: 0.3,
+          five_elements: {
+            heat_source: 'Metamorphic heat',
+            fluid_source: 'Metamorphic fluids',
+            metal_source: 'Crustal source',
+            pathway: 'Shear zone and veins',
+            trap: 'Pressure-temperature drop',
+          },
+          description_source: 'Gold occurs in quartz veins in the shear zone.',
+          field_origin: { metals: 'stated', grade: 'stated', alteration_radius: 'inferred' },
+        },
+      ],
+    },
+  },
+  {
+    id: 'vms-deposit',
+    section: 'mineralisation',
+    title: 'VMS (Volcanic-Massive Sulphide)',
+    tag: 'Mineralisation',
+    caption: 'Lens-shaped polymetallic sulphide body formed at a paleo-seafloor by circulating hydrothermal fluids in a submarine volcanic setting. Zn-Pb-Cu ores typically accumulate as a dense lens underlain by a stockwork feeder zone.',
+    overlays: ['VMS lens boundary', 'chlorite halo'],
+    cameraHint: { phi: 1.0, theta: 0.4, dist: 8 },
+    model: {
+      meta: { name: 'VMS Deposit', description: 'Zn-Pb-Cu VMS deposit at the base of a volcanic sequence.' },
+      layers: [
+        { id: 'L1', name: 'Basalt (footwall)',  lithology: 'basalt',    thickness: 0.8, order: 0, description_source: 'basalt footwall', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Rhyolite',           lithology: 'rhyolite',  thickness: 0.9, order: 1, description_source: 'rhyolite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Basalt (hangingwall)',lithology: 'basalt',    thickness: 1.0, order: 2, description_source: 'basalt hangingwall', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      mineralisation: [
+        {
+          id: 'M1',
+          subtype: 'vms',
+          metals: 'Zn-Pb-Cu',
+          grade: 8.0,
+          alteration_radius: 0.5,
+          five_elements: {
+            heat_source: 'Seafloor volcanism',
+            fluid_source: 'Seawater + magmatic',
+            metal_source: 'Volcanic rocks',
+            pathway: 'Hydrothermal vents',
+            trap: 'Seafloor interface',
+          },
+          description_source: 'A VMS deposit forms at the seafloor between the basalt units.',
+          field_origin: { metals: 'stated', grade: 'stated', alteration_radius: 'inferred' },
+        },
+      ],
+    },
+  },
+  {
+    id: 'skarn-deposit',
+    section: 'mineralisation',
+    title: 'Skarn (Contact Metasomatic)',
+    tag: 'Mineralisation',
+    caption: 'Calc-silicate replacement body (garnet-pyroxene assemblage) formed by reaction of magmatic fluids with carbonate rocks at an igneous contact. Gold, copper, iron or tungsten are typical commodities depending on intrusion composition.',
+    overlays: ['contact zone boundary'],
+    cameraHint: { phi: 0.9, theta: 0.5, dist: 8 },
+    model: {
+      meta: { name: 'Skarn', description: 'Fe-Cu skarn at an igneous–carbonate contact.' },
+      layers: [
+        { id: 'L1', name: 'Limestone',  lithology: 'limestone', thickness: 1.0, order: 0, description_source: 'limestone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Granite',    lithology: 'granite',   thickness: 0.9, order: 1, description_source: 'granite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Mudstone',   lithology: 'mudstone',  thickness: 0.8, order: 2, description_source: 'mudstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      mineralisation: [
+        {
+          id: 'M1',
+          subtype: 'skarn',
+          metals: 'Fe-Cu',
+          grade: null,
+          alteration_radius: 0.4,
+          five_elements: {
+            heat_source: 'Intrusive body',
+            fluid_source: 'Magmatic fluids',
+            metal_source: 'Intrusion and carbonate',
+            pathway: 'Contact zone fractures',
+            trap: 'Reactive carbonate host',
+          },
+          description_source: 'Skarn mineralisation at the granite–limestone contact.',
+          field_origin: { metals: 'stated', alteration_radius: 'inferred' },
+        },
+      ],
+    },
+  },
+  {
+    id: 'epithermal-au-ag',
+    section: 'mineralisation',
+    title: 'Epithermal Au-Ag',
+    tag: 'Mineralisation',
+    caption: 'Shallow gold-silver deposit formed in sub-volcanic hydrothermal systems where meteoric water and magmatic gases interact near the palaeosurface. Vein systems mark the boiling zone where ascending fluids flash to steam.',
+    overlays: ['boiling zone', 'vein array'],
+    cameraHint: { phi: 0.8, theta: 0.4, dist: 8 },
+    model: {
+      meta: { name: 'Epithermal Au-Ag', description: 'Shallow gold-silver epithermal deposit.' },
+      layers: [
+        { id: 'L1', name: 'Andesite',  lithology: 'basalt',    thickness: 0.9, order: 0, description_source: 'andesite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Rhyolite',  lithology: 'rhyolite',  thickness: 0.8, order: 1, description_source: 'rhyolite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Andesite',  lithology: 'basalt',    thickness: 1.0, order: 2, description_source: 'andesite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+      ],
+      events: [],
+      mineralisation: [
+        {
+          id: 'M1',
+          subtype: 'epithermal',
+          metals: 'Au-Ag',
+          grade: 3.5,
+          alteration_radius: 0.5,
+          five_elements: {
+            heat_source: 'Shallow magma body',
+            fluid_source: 'Meteoric + magmatic water',
+            metal_source: 'Hydrothermal fluids',
+            pathway: 'Fault and vein systems',
+            trap: 'Boiling zone',
+          },
+          description_source: 'Epithermal gold-silver mineralisation in shallow volcanic rocks.',
+          field_origin: { metals: 'stated', grade: 'stated', alteration_radius: 'inferred' },
+        },
+      ],
+    },
+  },
 ];
 
 const REFERENCE_SECTIONS = [
@@ -510,6 +693,7 @@ const REFERENCE_SECTIONS = [
   { id: 'folds',         num: '03', title: 'Folds — simple', blurb: 'Hinge line, axial plane, interlimb angle and plunge.' },
   { id: 'intrusions',    num: '04', title: 'Intrusions', blurb: 'Igneous bodies that cut or inject into the host stratigraphy — dykes, sills, batholiths, and laccoliths.' },
   { id: 'unconformities',num: '05', title: 'Unconformities', blurb: 'Erosion surfaces recording missing time — angular, parallel, and basement contacts.' },
+  { id: 'mineralisation',num: '06', title: 'Mineralisation & ore deposits', blurb: 'Five deposit-type models showing structural controls, alteration zones, and the five hydrothermal system elements.' },
 ];
 
 // ---- Sample descriptions for the workspace empty state ----
