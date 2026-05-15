@@ -81,7 +81,8 @@ async function run() {
     page.on('pageerror', err => console.error(`[browser error] ${err.message}`));
 
     // Stub: first call returns model fixture, second returns predictions
-    await context.addInitScript((modelJson, predictionsJson) => {
+    // addInitScript takes only one serialised argument — pass both values as a single object
+    await context.addInitScript(({ modelJson, predictionsJson }) => {
       let callCount = 0;
       window.claude = {
         complete: async () => {
@@ -90,7 +91,7 @@ async function run() {
           return predictionsJson;
         },
       };
-    }, JSON.stringify(MODEL_FIXTURE), JSON.stringify(PREDICTIONS_FIXTURE));
+    }, { modelJson: JSON.stringify(MODEL_FIXTURE), predictionsJson: JSON.stringify(PREDICTIONS_FIXTURE) });
 
     await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
