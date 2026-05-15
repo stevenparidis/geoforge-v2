@@ -1174,6 +1174,7 @@
     const labels = [];
 
     const totalHeight = (model.layers || []).reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+    const halfH = totalHeight / 2;
 
     // Rock type color
     const col = (window.GD.LITHOLOGY[intrusion.rock_type] || {}).color || '#CC8899';
@@ -1191,7 +1192,7 @@
         side: T.DoubleSide,
       });
       const mesh = new T.Mesh(geo, mat);
-      mesh.position.y = totalHeight / 2;
+      mesh.position.y = 0;
       // Strike is angle from north; three.js Y rotation is opposite convention
       mesh.rotation.y = -rad(intrusion.strike || 0);
       meshes.add(mesh);
@@ -1206,7 +1207,7 @@
         side: T.DoubleSide,
       });
       const mesh = new T.Mesh(geo, mat);
-      mesh.position.y = totalHeight / 2;
+      mesh.position.y = 0;
       meshes.add(mesh);
 
     } else if (subtype === 'batholith') {
@@ -1219,7 +1220,7 @@
         side: T.DoubleSide,
       });
       const mesh = new T.Mesh(geo, mat);
-      mesh.position.y = 0;
+      mesh.position.y = -halfH;
       meshes.add(mesh);
 
     } else if (subtype === 'laccolith') {
@@ -1232,7 +1233,7 @@
         side: T.DoubleSide,
       });
       const mesh = new T.Mesh(geo, mat);
-      mesh.position.y = intrusion.depth != null ? intrusion.depth : totalHeight / 2;
+      mesh.position.y = halfH - (intrusion.depth ?? halfH);
       meshes.add(mesh);
     }
 
