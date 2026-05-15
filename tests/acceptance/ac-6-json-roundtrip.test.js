@@ -167,8 +167,8 @@ async function run() {
       model: capturedState.model,
     };
 
-    // Click Reset button (second button in .panel-footer, text "Reset")
-    const resetBtn = page.locator('.panel-footer button.btn:not(.primary)');
+    // Click Reset button — use text selector to avoid matching other non-primary buttons (e.g. Predict)
+    const resetBtn = page.locator('.panel-footer button.btn:has-text("Reset")');
     await resetBtn.click();
     console.log('Reset clicked');
 
