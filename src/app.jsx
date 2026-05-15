@@ -39,8 +39,7 @@
         }}>
           <div>
             <div style={{ fontSize: 32, marginBottom: 16 }}>⚠</div>
-            <p>GeoForge is desktop-only in v1.</p>
-            <p>Open this page on a screen at least 1024px wide for the full experience.</p>
+            <p>GeoForge is desktop-only in v1. Open this page on a screen at least 1024px wide for the full experience.</p>
           </div>
         </div>
       );
