@@ -453,7 +453,8 @@
     const dipDeg = evt.dip ?? 60;
     const dipDir = evt.dip_direction ?? 90;
     const subtype = evt.subtype;
-    const throwV = evt.throw ?? 0;
+    const total = model.layers.reduce((s, L) => s + L.thickness, 0);
+    const throwV = evt.throw ?? (total * 0.3); // inferred default = 30% of stack height
     const heaveV = evt.heave ?? (Math.abs(throwV) / Math.tan(rad(dipDeg))); // h = t/tan
     const displacement = evt.displacement ?? 0;
 
@@ -468,7 +469,6 @@
 
     const width = 4.6;
     const depth = 3.6;
-    const total = model.layers.reduce((s, L) => s + L.thickness, 0);
     const palette = window.GD.LITHOLOGY;
 
     // Slip vector for movement of the hanging wall relative to the footwall.
@@ -533,6 +533,21 @@
       meshes.add(hw);
       slabs.push({ y0: y, y1: y + t, L, t });
       y += t;
+    }
+
+    // ---- Layer thickness overlays (footwall side, no offset applied) ----
+    {
+      const sideX = -2.3; // footwall side offset in X
+      for (const s of slabs) {
+        const from = new T.Vector3(sideX, s.y0, 0);
+        const to = new T.Vector3(sideX, s.y1, 0);
+        const inferred = s.L.field_origin?.thickness === 'inferred';
+        overlays.add(doubleArrow(from, to, inferred ? COLOR.inferred : COLOR.overlay, { headLength: 0.07, headWidth: 0.045 }));
+        const mid = from.clone().add(to).multiplyScalar(0.5).add(new T.Vector3(-0.18, 0, 0));
+        const lbl = makeValueLabel(`${s.t.toFixed(2)} u`, { inferred });
+        lbl.position.copy(mid);
+        overlays.add(lbl);
+      }
     }
 
     // ---- Fault plane visualization ----
@@ -1198,8 +1213,12 @@
         transparent: true,
         opacity: 0.85,
         side: T.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       });
       const mesh = new T.Mesh(geo, mat);
+      mesh.renderOrder = 2; // render after layers
       mesh.position.y = 0;
       // Strike is angle from north; three.js Y rotation is opposite convention
       mesh.rotation.y = -rad(intrusion.strike || 0);
@@ -1219,8 +1238,9 @@
       meshes.add(mesh);
 
     } else if (subtype === 'batholith') {
-      // Large rounded dome at the base of the section (lower hemisphere only).
-      const geo = new T.SphereGeometry(totalHeight * 0.8, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+      // Large dome below the layer stack — lower hemisphere so dome points downward,
+      // flat face at y = -halfH (touching the bottom of the stack), dome extends below.
+      const geo = new T.SphereGeometry(totalHeight * 0.8, 16, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
       const mat = new T.MeshLambertMaterial({
         color: rockColor,
         transparent: true,
@@ -1233,7 +1253,9 @@
 
     } else if (subtype === 'laccolith') {
       // Dome shape at emplacement depth, pushing layers up.
-      const geo = new T.SphereGeometry(totalHeight * 0.5, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+      // Use a smaller radius (0.4) so it fits between layers, dome protruding upward.
+      const depth = intrusion.depth ?? halfH * 0.5;
+      const geo = new T.SphereGeometry(totalHeight * 0.4, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
       const mat = new T.MeshLambertMaterial({
         color: rockColor,
         transparent: true,
@@ -1241,7 +1263,7 @@
         side: T.DoubleSide,
       });
       const mesh = new T.Mesh(geo, mat);
-      mesh.position.y = halfH - (intrusion.depth ?? halfH);
+      mesh.position.y = halfH - depth; // flat base at emplacement depth, dome upward
       meshes.add(mesh);
     }
 
@@ -1457,6 +1479,8 @@
       case 'porphyry': {
         // Four concentric transparent ellipsoidal shells:
         // propylitic (outer) → argillic → phyllic → potassic (inner core)
+        // Offset to x=1.5 so shells protrude from the side of the layer block (halfWidth ~2.1),
+        // making them visible from the default 3/4 camera angle.
         const R = M.alteration_radius || 1.0;
         const zones = [
           { f: 1.00, color: COLOR.minPropyl,  op: 0.10 },
@@ -1469,7 +1493,8 @@
           const mat = new T.MeshBasicMaterial({ color, transparent: true, opacity: op, side: T.DoubleSide, depthWrite: false });
           const mesh = new T.Mesh(geo, mat);
           mesh.scale.y = 1.4; // elongate vertically to represent plunge
-          mesh.position.set(0, oreY, 0);
+          mesh.position.set(1.5, oreY, 0); // offset so shells protrude from side of layer block
+          mesh.renderOrder = 1;
           meshes.add(mesh);
         });
         break;
@@ -1485,61 +1510,67 @@
           if (ctrl) { strike = ctrl.strike ?? ctrl.axis_strike ?? 0; dip = ctrl.dip ?? 70; }
         }
         // Build vein planes as thin boxes rotated to strike/dip
+        // Extend full height so veins cut through the entire stack and are visible
         const veinSpacing = 0.18;
         for (let i = -1; i <= 1; i++) {
-          const geo = new T.BoxGeometry(0.04, totalHeight * 0.6, R * 2.5);
+          const geo = new T.BoxGeometry(0.04, totalHeight * 1.0, R * 2.5);
           const mat = new T.MeshBasicMaterial({ color: COLOR.minVein, transparent: true, opacity: 0.30, side: T.DoubleSide, depthWrite: false });
           const mesh = new T.Mesh(geo, mat);
           const dipR = rad(dip), stkR = rad(strike);
           mesh.rotation.y = -stkR;
           mesh.rotation.z = -(Math.PI / 2 - dipR);
           mesh.position.set(i * veinSpacing, oreY, 0);
+          mesh.renderOrder = 1;
           meshes.add(mesh);
         }
         break;
       }
 
       case 'vms': {
-        // Lens-shaped (flattened sphere) massive sulphide body near the base of the stack
+        // Lens-shaped (flattened sphere) massive sulphide body just below the base of the stack
         const R = M.alteration_radius || 0.5;
         const geo = new T.SphereGeometry(R, 16, 12);
         const mat = new T.MeshBasicMaterial({ color: COLOR.minVMS, transparent: true, opacity: 0.40, side: T.DoubleSide, depthWrite: false });
         const mesh = new T.Mesh(geo, mat);
         mesh.scale.y = 0.35; // flatten into a lens
-        mesh.position.set(0, -halfH + R * 0.35, 0); // near base of stack
+        mesh.position.set(0, -halfH - R * 0.1, 0); // just below base of stack — visible from below
+        mesh.renderOrder = 1;
         meshes.add(mesh);
         // Alteration (chlorite) halo
         const haloGeo = new T.SphereGeometry(R * 1.5, 16, 12);
         const haloMat = new T.MeshBasicMaterial({ color: 0x3c6e3c, transparent: true, opacity: 0.10, side: T.DoubleSide, depthWrite: false });
         const halo = new T.Mesh(haloGeo, haloMat);
         halo.scale.y = 0.5;
-        halo.position.set(0, -halfH + R * 0.35, 0);
+        halo.position.set(0, -halfH - R * 0.1, 0);
+        halo.renderOrder = 1;
         meshes.add(halo);
         break;
       }
 
       case 'skarn': {
-        // Irregular calc-silicate zone at a contact, rendered as a thick wedge/ellipsoid
+        // Irregular calc-silicate zone at intrusion contact, offset to edge of block
         const R = M.alteration_radius || 0.4;
         const geo = new T.SphereGeometry(R, 12, 10);
         const mat = new T.MeshBasicMaterial({ color: COLOR.minSkarn, transparent: true, opacity: 0.35, side: T.DoubleSide, depthWrite: false });
         const mesh = new T.Mesh(geo, mat);
         mesh.scale.set(1.5, 0.6, 0.8); // flatten and widen to represent contact zone
-        mesh.position.set(0.8, oreY, 0); // offset from centre toward the intrusion contact
+        mesh.position.set(1.5, oreY, 0); // offset toward edge of block so it protrudes visibly
+        mesh.renderOrder = 1;
         meshes.add(mesh);
         break;
       }
 
       case 'epithermal': {
-        // Shallow sub-vertical vein set in upper third of section
+        // Shallow sub-vertical vein set near top of section, protruding above layer block
         const R = M.alteration_radius || 0.5;
         const veinH = totalHeight * 0.4;
         for (let i = 0; i < 3; i++) {
           const geo = new T.BoxGeometry(0.05, veinH, R * 1.2);
           const mat = new T.MeshBasicMaterial({ color: COLOR.minEpi, transparent: true, opacity: 0.28, side: T.DoubleSide, depthWrite: false });
           const mesh = new T.Mesh(geo, mat);
-          mesh.position.set((i - 1) * 0.3, halfH * 0.55, 0); // upper portion of section
+          mesh.position.set((i - 1) * 0.3, halfH * 0.8, 0); // near top so veins protrude above stack
           mesh.rotation.y = rad(10 * (i - 1)); // slight spread
+          mesh.renderOrder = 1;
           meshes.add(mesh);
         }
         break;
@@ -1738,25 +1769,32 @@
     // Update functions mutate overlay geometry in place without triggering a full rebuild.
     const overlayUpdateMap = {};
 
-    if (!model || !model.layers || model.layers.length === 0) {
+    const hasLayers = model && model.layers && model.layers.length > 0;
+    const hasIntrusions = model && (model.intrusions || []).length > 0;
+    const hasUnconformities = model && (model.unconformities || []).length > 0;
+    const hasMineralisation = model && (model.mineralisation || []).length > 0;
+    if (!hasLayers && !hasIntrusions && !hasUnconformities && !hasMineralisation) {
       return { root, overlays, labels, overlayUpdateMap, bounds: new T.Box3(new T.Vector3(-1,-1,-1), new T.Vector3(1,1,1)) };
     }
 
-    // Decide which builder to use based on event types
-    const firstEvent = (model.events || [])[0];
-    let res;
-    if (!firstEvent) {
-      res = buildLayersOnly(model);
-    } else if (firstEvent.type === 'fault') {
-      res = buildFaultScene(model);
-    } else if (firstEvent.type === 'fold') {
-      res = buildFoldScene(model);
-    } else {
-      res = buildLayersOnly(model);
+    let firstEvent = null;
+    let res = null;
+    if (hasLayers) {
+      // Decide which builder to use based on event types
+      firstEvent = (model.events || [])[0] || null;
+      if (!firstEvent) {
+        res = buildLayersOnly(model);
+      } else if (firstEvent.type === 'fault') {
+        res = buildFaultScene(model);
+      } else if (firstEvent.type === 'fold') {
+        res = buildFoldScene(model);
+      } else {
+        res = buildLayersOnly(model);
+      }
+      root.add(res.meshes);
+      overlays.add(res.overlays);
+      labels.push(...res.labels);
     }
-    root.add(res.meshes);
-    overlays.add(res.overlays);
-    labels.push(...res.labels);
 
     // Build overlay update functions for the first event (if any).
     // These let the drag controller co-update overlays without a full scene rebuild.
