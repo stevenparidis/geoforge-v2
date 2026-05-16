@@ -513,12 +513,14 @@
     hostEl.addEventListener('pointerdown', onPointerDown);
     hostEl.addEventListener('pointermove', onPointerMove);
     hostEl.addEventListener('pointerup', onPointerUp);
+    hostEl.addEventListener('pointercancel', onPointerUp);
     hostEl.addEventListener('pointermove', onPointerOver);
 
     return function cleanup() {
       hostEl.removeEventListener('pointerdown', onPointerDown);
       hostEl.removeEventListener('pointermove', onPointerMove);
       hostEl.removeEventListener('pointerup', onPointerUp);
+      hostEl.removeEventListener('pointercancel', onPointerUp);
       hostEl.removeEventListener('pointermove', onPointerOver);
       removeDragPreview();
     };

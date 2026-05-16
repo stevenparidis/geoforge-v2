@@ -588,6 +588,10 @@ If the model has no structural features to guide prediction, return an empty arr
 
     // onDragChange: called from handle-layer.jsx drag controller on each drag frame.
     const onDragChange = useCallback((featureKind, featureId, field, value, opts) => {
+      // Skip React state update during intermediate drag frames — Three.js
+      // overlay update (overlayUpdateMap) handles in-flight visual feedback.
+      if (opts && opts.intermediate) return;
+
       setModel((prev) => {
         if (!prev) return prev;
         const next = JSON.parse(JSON.stringify(prev));
