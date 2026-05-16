@@ -205,7 +205,7 @@
         }
         try {
           const canvas = await window.html2canvas(st.host, {
-            backgroundColor: null,
+            backgroundColor: '#08090d',
             useCORS: true,
             scale: 1,
             logging: false,
