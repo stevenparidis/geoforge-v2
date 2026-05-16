@@ -1662,7 +1662,7 @@
   }
 
   // ---- Predicted mineralisation geometry (Phase 8.2) ----
-  function buildPredictionGeometry(prediction, model) {
+  function buildPredictionGeometry(prediction, model, predIndex) {
     const meshes = [];
     const overlays = new T.Group();
 
@@ -1689,29 +1689,30 @@
     sphere.position.set(cx, cy, cz);
     meshes.push(sphere);
 
-    // "PREDICTED" label
+    // Spread labels vertically so multiple predictions don't overlap:
+    // P0 at halfH + 0.5, P1 at halfH + 1.1, P2 at halfH + 1.7, etc.
+    const idx = typeof predIndex === 'number' ? predIndex : 0;
+    const labelY = halfH + 0.5 + idx * 0.6;
+
+    // Main "PREDICTED" label — confidence inline
+    const confText = prediction.confidence ? ` — ${prediction.confidence.toUpperCase()}` : '';
     const labelDiv = document.createElement('div');
     labelDiv.style.cssText = 'color:#a78bfa;font-size:11px;font-family:monospace;pointer-events:none;white-space:nowrap;background:rgba(0,0,0,0.5);padding:1px 4px;border-radius:3px;border:1px dashed #8b5cf6;';
-    labelDiv.textContent = `PREDICTED: ${prediction.subtype} (${prediction.metals || ''})`;
+    labelDiv.textContent = `PREDICTED: ${prediction.subtype} (${prediction.metals || ''})${confText}`;
     const lbl = new window.CSS2DObject(labelDiv);
-    lbl.position.set(cx, cy + r + 0.15, cz);
+    lbl.position.set(cx, labelY, cz);
     overlays.add(lbl);
 
-    // Confidence label
-    const confDiv = document.createElement('div');
-    confDiv.style.cssText = 'color:#c4b5fd;font-size:10px;font-family:monospace;pointer-events:none;white-space:nowrap;';
-    confDiv.textContent = prediction.confidence ? `confidence: ${prediction.confidence}` : '';
-    const confLbl = new window.CSS2DObject(confDiv);
-    confLbl.position.set(cx, cy + r + 0.45, cz);
-    overlays.add(confLbl);
-
-    // Rationale label (smaller, below sphere)
+    // Rationale label (smaller, directly below main label)
     if (prediction.rationale) {
+      const shortRationale = (prediction.rationale || '').length > 45
+        ? (prediction.rationale || '').slice(0, 45) + '…'
+        : (prediction.rationale || '');
       const ratDiv = document.createElement('div');
-      ratDiv.style.cssText = 'color:#a78bfa;font-size:9px;font-family:monospace;pointer-events:none;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;';
-      ratDiv.textContent = prediction.rationale;
+      ratDiv.style.cssText = 'color:#a78bfa;font-size:9.5px;font-family:monospace;pointer-events:none;white-space:nowrap;background:rgba(0,0,0,0.45);padding:1px 4px;border-radius:3px;';
+      ratDiv.textContent = shortRationale;
       const ratLbl = new window.CSS2DObject(ratDiv);
-      ratLbl.position.set(cx, cy - r - 0.2, cz);
+      ratLbl.position.set(cx, labelY - 0.3, cz);
       overlays.add(ratLbl);
     }
 
@@ -2022,8 +2023,8 @@
     });
 
     // Predicted mineralisation (Phase 8.2)
-    (model.predictions || []).forEach(P => {
-      const { meshes: pMeshes, overlays: po } = buildPredictionGeometry(P, model);
+    (model.predictions || []).forEach((P, idx) => {
+      const { meshes: pMeshes, overlays: po } = buildPredictionGeometry(P, model, idx);
       pMeshes.forEach(m => root.add(m));
       po.children.slice().forEach(c => overlays.add(c));
     });

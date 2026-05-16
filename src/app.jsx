@@ -30,6 +30,7 @@
     }, []);
 
     const [shareToast, setShareToast] = useState(false);
+    const [exporting, setExporting] = useState(false);
 
     // Restore last session from localStorage on mount
     useEffect(() => {
@@ -93,17 +94,21 @@
       setTimeout(() => setShareToast(false), 3000);
     };
 
-    const handleExport = () => {
+    const handleExport = async () => {
+      if (exporting) return;
       const sceneRef = window.__lastGeoScene;
       if (!sceneRef || !sceneRef.current || !sceneRef.current.captureFrame) return;
-      const dataUrl = sceneRef.current.captureFrame();
-      if (!dataUrl) return;
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = 'geoforge-export.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      setExporting(true);
+      try {
+        const dataUrl = await sceneRef.current.captureFrame();
+        if (!dataUrl) return;
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = 'geoforge-export.png';
+        a.click();
+      } finally {
+        setExporting(false);
+      }
     };
 
     return (
@@ -141,14 +146,14 @@
                 Share
               </button>
             )}
-            {model && (
-              <button
-                onClick={handleExport}
-                style={{ fontSize: 13, padding: '4px 10px', background: 'var(--surface1, #313244)', color: 'var(--fg-1, #cdd6f4)', border: '1px solid var(--overlay0, #6c7086)', borderRadius: 4, cursor: 'pointer', marginLeft: 8 }}
-              >
-                Export PNG
-              </button>
-            )}
+            <button
+              className="btn"
+              disabled={!model || exporting}
+              style={{ opacity: (!model || exporting) ? 0.5 : 1 }}
+              onClick={handleExport}
+            >
+              {exporting ? 'Exporting…' : 'Export PNG'}
+            </button>
           </div>
         </div>
         <div className="view">

@@ -182,10 +182,39 @@
         st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
       };
 
-      stateRef.current.captureFrame = () => {
+      stateRef.current.captureFrame = async () => {
         const st = stateRef.current;
-        if (!st || !st.canvas2d) return null;
-        return st.canvas2d.toDataURL('image/png');
+        if (!st || !st.host) return null;
+        // Force one more render to ensure the WebGL canvas is up to date
+        if (Surface.renderer && st.scene && st.camera) {
+          Surface.renderer.setSize(
+            Math.max(8, Math.round(st.host.getBoundingClientRect().width)),
+            Math.max(8, Math.round(st.host.getBoundingClientRect().height)),
+            false
+          );
+          Surface.renderer.render(st.scene, st.camera);
+          if (st.labelRenderer) st.labelRenderer.render(st.scene, st.camera);
+          // Copy pixels to canvas2d
+          const rect = st.host.getBoundingClientRect();
+          const w = Math.max(8, Math.round(rect.width));
+          const h = Math.max(8, Math.round(rect.height));
+          const pxR = Surface.renderer.getPixelRatio();
+          if (st.canvas2d.width !== Math.floor(w * pxR)) st.canvas2d.width = Math.floor(w * pxR);
+          if (st.canvas2d.height !== Math.floor(h * pxR)) st.canvas2d.height = Math.floor(h * pxR);
+          st.ctx2d.drawImage(Surface.renderer.domElement, 0, 0, st.canvas2d.width, st.canvas2d.height);
+        }
+        try {
+          const canvas = await window.html2canvas(st.host, {
+            backgroundColor: '#08090d',
+            useCORS: true,
+            scale: 1,
+            logging: false,
+          });
+          return canvas.toDataURL('image/png');
+        } catch (err) {
+          // Fallback to WebGL-only capture
+          return st.canvas2d ? st.canvas2d.toDataURL('image/png') : null;
+        }
       };
 
       Surface.addScene(entry);
