@@ -364,7 +364,7 @@ const REFERENCE_FORMATIONS = [
     title: 'Basalt Dyke',
     blurb: 'A near-vertical discordant sheet of basalt cutting across bedding planes.',
     overlays: ['strike line', 'dip arc', 'thickness label'],
-    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    cameraHint: { phi: 1.05, theta: 0.785, dist: 6 },
     model: {
       meta: { name: 'Basalt Dyke', description: 'A vertical basalt dyke cuts across sandstone-shale-limestone stratigraphy.' },
       layers: [
@@ -384,7 +384,7 @@ const REFERENCE_FORMATIONS = [
     title: 'Basalt Sill',
     blurb: 'A concordant tabular sheet of basalt injected parallel to bedding planes.',
     overlays: ['thickness label', 'feature label'],
-    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    cameraHint: { phi: 1.05, theta: 0.785, dist: 6 },
     model: {
       meta: { name: 'Basalt Sill', description: 'A horizontal basalt sill injected along bedding.' },
       layers: [
@@ -404,7 +404,7 @@ const REFERENCE_FORMATIONS = [
     title: 'Granite Batholith',
     blurb: 'A large discordant granitic pluton underlying the sedimentary sequence.',
     overlays: ['depth label', 'feature label'],
-    cameraHint: { distance: 7, azimuth: 30, elevation: 20 },
+    cameraHint: { phi: 1.22, theta: 0.52, dist: 7 },
     model: {
       meta: { name: 'Granite Batholith', description: 'A large granite batholith underlies the sedimentary layers.' },
       layers: [
@@ -424,7 +424,7 @@ const REFERENCE_FORMATIONS = [
     title: 'Granite Laccolith',
     blurb: 'A dome-roofed intrusion that pushed overlying strata into an arch.',
     overlays: ['depth label', 'feature label'],
-    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    cameraHint: { phi: 1.05, theta: 0.785, dist: 6 },
     model: {
       meta: { name: 'Granite Laccolith', description: 'A granite laccolith domed the overlying strata upward.' },
       layers: [
@@ -446,7 +446,7 @@ const REFERENCE_FORMATIONS = [
     title: 'Angular Unconformity',
     blurb: 'Tilted older strata erosionally cut by flat-lying younger strata — records uplift, tilting, erosion, and resubmergence.',
     overlays: ['time gap', 'angular discordance arc'],
-    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    cameraHint: { phi: 1.05, theta: 0.785, dist: 6 },
     model: {
       meta: { name: 'Angular Unconformity', description: 'Tilted older beds cut by younger horizontal beds — 25 Ma time gap.' },
       layers: [
@@ -467,7 +467,7 @@ const REFERENCE_FORMATIONS = [
     title: 'Disconformity',
     blurb: 'An erosion surface between parallel strata — the beds above and below are parallel but a time gap is missing.',
     overlays: ['time gap'],
-    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    cameraHint: { phi: 1.05, theta: 0.785, dist: 6 },
     model: {
       meta: { name: 'Disconformity', description: 'An erosion surface between parallel shale and limestone beds — 15 Ma time gap.' },
       layers: [
@@ -488,7 +488,7 @@ const REFERENCE_FORMATIONS = [
     title: 'Nonconformity',
     blurb: 'Sedimentary rocks deposited directly on eroded igneous or metamorphic basement rock.',
     overlays: ['time gap'],
-    cameraHint: { distance: 6, azimuth: 45, elevation: 30 },
+    cameraHint: { phi: 1.05, theta: 0.785, dist: 6 },
     model: {
       meta: { name: 'Nonconformity', description: 'Sandstone deposited directly on granite basement — 200 Ma time gap.' },
       layers: [
