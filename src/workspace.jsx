@@ -652,6 +652,10 @@ If the model has no structural features to guide prediction, return an empty arr
       if (json) {
         json.meta = json.meta || {};
         json.meta.last_parsed_description = description;
+        // Preserve predictions through re-interpret — they are cleared only by Reset
+        if (model && model.predictions && model.predictions.length > 0) {
+          json.predictions = model.predictions;
+        }
         setModel(json);
         setSelected(null);
       }

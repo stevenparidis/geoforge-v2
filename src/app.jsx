@@ -93,10 +93,10 @@
       setTimeout(() => setShareToast(false), 3000);
     };
 
-    const handleExport = () => {
+    const handleExport = async () => {
       const sceneRef = window.__lastGeoScene;
       if (!sceneRef || !sceneRef.current || !sceneRef.current.captureFrame) return;
-      const dataUrl = sceneRef.current.captureFrame();
+      const dataUrl = await sceneRef.current.captureFrame();
       if (!dataUrl) return;
       const a = document.createElement('a');
       a.href = dataUrl;
