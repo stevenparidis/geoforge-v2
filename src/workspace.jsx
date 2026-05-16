@@ -142,6 +142,10 @@ DEFAULTS (use when a value is missing and mark it inferred):
 - Thrust fault dip = 25°
 - Strike-slip fault dip = 90° (vertical)
 - Listric: dip = 70° at surface, dip_at_depth = 10°, detachment_depth = half of total layer thickness
+- Normal fault throw = 0.5 if not stated; mark throw and heave as "inferred" in field_origin
+- Reverse fault throw = 0.3 if not stated; mark throw and heave as "inferred" in field_origin
+- Thrust fault throw = 0.2 if not stated; mark throw and heave as "inferred" in field_origin
+- Strike-slip fault throw = 0; displacement is the measured quantity for strike-slip
 - Fold plunge = 0° (non-plunging)
 - Layer thickness when not stated = 1.0
 - Order events in the order they appear in the user's text.
@@ -652,6 +656,10 @@ If the model has no structural features to guide prediction, return an empty arr
       if (json) {
         json.meta = json.meta || {};
         json.meta.last_parsed_description = description;
+        // Preserve predictions through re-interpret — they are cleared only by Reset
+        if (model && model.predictions && model.predictions.length > 0) {
+          json.predictions = model.predictions;
+        }
         setModel(json);
         setSelected(null);
       }
@@ -774,6 +782,38 @@ If the model has no structural features to guide prediction, return an empty arr
               ))}
             </div>
           )}
+          {(model?.intrusions?.length > 0 || model?.unconformities?.length > 0 || model?.mineralisation?.length > 0) && (
+            <div className="desc-anchors">
+              {(model.intrusions || []).map((I) => (
+                <div key={I.id} className="anchor">
+                  <span className="tag">{I.subtype}</span>
+                  <span className="src">{I.description_source || '—'}</span>
+                </div>
+              ))}
+              {(model.unconformities || []).map((U) => (
+                <div key={U.id} className="anchor">
+                  <span className="tag">{U.subtype}</span>
+                  <span className="src">{U.description_source || '—'}</span>
+                </div>
+              ))}
+              {(model.mineralisation || []).map((M) => (
+                <div key={M.id} className="anchor">
+                  <span className="tag">{M.subtype}</span>
+                  <span className="src">{M.description_source || '—'}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {!model && !description.trim() && (
+            <div className="sample-list" style={{ marginTop: 8 }}>
+              {window.GD.SAMPLE_DESCRIPTIONS.map((s, i) => (
+                <button key={i} className="sample" onClick={() => setDescription(s.text)}>
+                  <div style={{ color: 'var(--fg-0)', fontWeight: 500, marginBottom: 4 }}>{s.title}</div>
+                  <div style={{ color: 'var(--fg-2)', fontSize: 11.5 }}>{s.text}</div>
+                </button>
+              ))}
+            </div>
+          )}
           <div className="panel-footer">
             <button className="btn primary" onClick={onInterpret} disabled={interpreting || !description.trim()}>
               {interpreting ? <><span className="spin"></span> Interpreting…</> : 'Interpret →'}
@@ -795,33 +835,17 @@ If the model has no structural features to guide prediction, return an empty arr
         {/* ============== CENTRE — 3D ============== */}
         <div className="center">
           <div className="scene-host">
-            {model ? (
-              <window.GeoScene
-                model={playbackModel}
-                showLabels={showLabels}
-                showOverlays={showOverlays}
-                showGrid={showGrid}
-                cameraHint={cameraHint}
-                onSelect={onSelectFeature}
-                selectedId={selected?.id}
-                selected={selected}
-                onDragChange={onDragChange}
-              />
-            ) : (
-              <div className="empty">
-                <div className="glyph" />
-                <div className="empty-headline">No model yet</div>
-                <div className="empty-hint">Write a description on the left and click Interpret, or pick a sample:</div>
-                <div className="sample-list">
-                  {window.GD.SAMPLE_DESCRIPTIONS.map((s, i) => (
-                    <button key={i} className="sample" onClick={() => setDescription(s.text)}>
-                      <div style={{ color: 'var(--fg-0)', fontWeight: 500, marginBottom: 4 }}>{s.title}</div>
-                      <div style={{ color: 'var(--fg-2)', fontSize: 11.5 }}>{s.text}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <window.GeoScene
+              model={playbackModel}
+              showLabels={showLabels}
+              showOverlays={showOverlays}
+              showGrid={showGrid}
+              cameraHint={cameraHint}
+              onSelect={onSelectFeature}
+              selectedId={selected?.id}
+              selected={selected}
+              onDragChange={onDragChange}
+            />
           </div>
 
           {/* Timeline scrubber */}
