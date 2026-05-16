@@ -139,10 +139,13 @@ TRIGGER PHRASE LIBRARY (for classification — incomplete by design):
 DEFAULTS (use when a value is missing and mark it inferred):
 - Normal fault dip = 60°
 - Reverse fault dip = 45°
-- Normal fault throw = 0.5 (one third of average layer thickness) if not stated; mark throw and heave as "inferred" in field_origin
 - Thrust fault dip = 25°
 - Strike-slip fault dip = 90° (vertical)
 - Listric: dip = 70° at surface, dip_at_depth = 10°, detachment_depth = half of total layer thickness
+- Normal fault throw = 0.5 if not stated; mark throw and heave as "inferred" in field_origin
+- Reverse fault throw = 0.3 if not stated; mark throw and heave as "inferred" in field_origin
+- Thrust fault throw = 0.2 if not stated; mark throw and heave as "inferred" in field_origin
+- Strike-slip fault throw = 0; displacement is the measured quantity for strike-slip
 - Fold plunge = 0° (non-plunging)
 - Layer thickness when not stated = 1.0
 - Order events in the order they appear in the user's text.
