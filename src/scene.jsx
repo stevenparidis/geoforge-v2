@@ -256,7 +256,7 @@
     // Rebuild on model change
     useEffect(() => {
       const st = stateRef.current;
-      if (!st || !model) return;
+      if (!st) return;
       const T = st.T;
       const disposeNode = (node) => {
         node.traverse?.((n) => {

@@ -60,9 +60,7 @@
     // Auto-save session to localStorage whenever model or description changes
     useEffect(() => {
       try {
-        if (model != null || description) {
-          localStorage.setItem('geoforge-session', JSON.stringify({ model, description }));
-        }
+        localStorage.setItem('geoforge-session', JSON.stringify({ model, description }));
       } catch (e) {}
     }, [model, description]);
 
