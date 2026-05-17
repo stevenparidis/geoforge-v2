@@ -33,6 +33,16 @@ Sources were selected on 2026-05-18 by Phase A.1 agent.
 | Mineralisation | EarthSci.org — Skarn Deposits | https://earthsci.org/mineral/mindep/skarn/skarn.html | Porphyry-skarn spatial relationship diagram; general skarn deposit diagram; zonation description (proximal garnet to distal pyroxene) | Primary |
 | Mineralisation | USGS SIR 2010-5070-Q — Epithermal Gold-Silver Model | https://pubs.usgs.gov/sir/2010/5070/q/sir20105070q.pdf | LS epithermal cross-section (adularia-sericite veins); HS epithermal cross-section (advanced argillic lithocap, enargite); depth-temperature zonation | Primary |
 
+## Cross-Cutting Secondary Sources
+
+These sources apply across all feature classes rather than a single class.
+
+| Applies To | Source | URL | Priority |
+|---|---|---|---|
+| All feature classes | Atit et al. (2015) — Student Misconceptions in Geoscience | https://doi.org/10.1080/10899995.2015.1035470 | Secondary |
+
+**Atit et al. (2015):** Catalogue of documented student misconceptions in geoscience spatial reasoning. Cited in spec-v2 §3.4 as the source for the misconception audit criteria. A.4 auditors should consult this when assessing whether a GeoForge deficiency matches a known documented misconception. Sidecar file: `docs/v2-audit/references/cross-cutting/atit2015-misconceptions.txt`.
+
 ## How to Use These Sources During the Audit
 
 ### Workflow
