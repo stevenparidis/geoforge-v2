@@ -35,6 +35,18 @@ scoped into a future v2 specification.
 
 ## Geometry / Rendering
 
+### Angular unconformity — tilted lower block clips through upper block (from RT-09c)
+- When `buildAngularUnconformityLayers` tilts the lower slab group, the far corners of
+  the rectangular lower block protrude into the space occupied by the upper horizontal
+  block, producing visible intersection and Z-fighting flicker at the contact surface.
+- In real geology, the erosion surface truncates the tops of the lower tilted beds —
+  they should not extend above the contact plane.
+- Fix: clip the lower block to the half-space below `contactY` using a Three.js clipping
+  plane (`renderer.clippingPlanes`) or compute CSG subtraction. The clipping-plane approach
+  is simpler: one `THREE.Plane(new T.Vector3(0,1,0), -contactY)` applied to the lower
+  block's materials clips everything above `y = contactY`.
+- Until fixed, the intersection is a known visual artefact noted in smoke-test-v1.6.
+
 ### Anticline vs syncline visual distinction at zero plunge (BUG-03, from WF-07)
 - At default parameters (plunge 0°, interlimb ~120°) an anticline and syncline render
   identically because both produce a gentle arch with no directional cue.
