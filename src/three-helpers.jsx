@@ -1420,14 +1420,37 @@
       const yWave = contactY + Math.sin(t * Math.PI * 2 * frequency) * amplitude;
       wavePoints.push(new T.Vector3(x, yWave, 0));
     }
-    const waveLine = solidLine(wavePoints, 0xFFAA00, { linewidth: 2 });
-    meshes.add(waveLine);
+    // Contact lines go into overlays (depthTest:false) so they aren't occluded by the
+    // opaque layer block — solidLine uses LineBasicMaterial which is always 1px on
+    // Windows regardless of linewidth, so depth-testing against the block hides it.
+    const waveLine = solidLine(wavePoints, 0xFFAA00, { depthTest: false, opacity: 0.95 });
+    waveLine.renderOrder = 9;
+    overlays.add(waveLine);
 
-    // For angular subtype: add a second parallel faint line to suggest the angular cut
+    // For angular subtype: second wave + tilted bedding indicators showing dipping lower beds.
     if (unconformity.subtype === 'angular') {
-      const wavePoints2 = wavePoints.map(p => new T.Vector3(p.x, p.y + 0.04, 0));
-      const waveLine2 = solidLine(wavePoints2, 0xFFAA00, { linewidth: 1, opacity: 0.4, transparent: true });
-      meshes.add(waveLine2);
+      const wavePoints2 = wavePoints.map(p => new T.Vector3(p.x, p.y + 0.06, 0));
+      const waveLine2 = solidLine(wavePoints2, 0xFFAA00, { depthTest: false, opacity: 0.5 });
+      waveLine2.renderOrder = 9;
+      overlays.add(waveLine2);
+
+      // Short dipping bedding-plane lines below the contact — also overlays so they show.
+      const dAng = Math.max(1, unconformity.angular_discordance ?? 30);
+      const dipR = rad(dAng);
+      const hw = halfW * 0.65;
+      const dx = Math.cos(dipR) * hw;
+      const dy = Math.sin(dipR) * hw;
+      for (let i = 1; i <= 4; i++) {
+        const bY = contactY - i * 0.3;
+        if (bY < -totalHeight / 2 + 0.05) break;
+        const bPts = [
+          new T.Vector3(-dx, bY - dy, 0),
+          new T.Vector3( dx, bY + dy, 0),
+        ];
+        const bl = solidLine(bPts, 0xFFAA00, { depthTest: false, opacity: 0.4 });
+        bl.renderOrder = 9;
+        overlays.add(bl);
+      }
     }
 
     // ---- Overlays ----
@@ -1480,9 +1503,11 @@
     const totalHeight = (model.layers || []).reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
     const halfH = totalHeight / 2;
 
-    // Ore body centre Y position (depth_top measured from surface = +halfH down)
+    // Ore body centre Y position (depth_top measured from surface = +halfH down).
+    // Clamp so the centre never falls below the layer block base — prevents the deposit
+    // from being entirely invisible when alteration_radius > totalHeight.
     const depthTop = M.depth_top != null ? M.depth_top : halfH * 0.6;
-    const oreY = halfH - depthTop - (M.alteration_radius || 0.5);
+    const oreY = Math.max(-halfH + 0.1, halfH - depthTop - (M.alteration_radius || 0.5));
 
     switch (M.subtype) {
 
@@ -1607,10 +1632,12 @@
         { f: 0.45, name: 'Phyllic',        color: COLOR.minPhyllic },
         { f: 0.25, name: 'Potassic (ore)', color: COLOR.minCore },
       ];
+      // Zone labels only — the concentric shells already show the zones visually.
+      // Horizontal discs were removed: perpendicular to the shells, they created a
+      // second confusing "target" at a different orientation in the same scene.
       zoneBoundaries.forEach(function({ f, name, color }) {
-        overlays.add(horizontalDisc(new T.Vector3(0, oreY, 0), R * f, color, 0.18));
         const zLbl = makeValueLabel(name, { inferred: false });
-        zLbl.position.set(R * f + 0.12, oreY, 0);
+        zLbl.position.set(1.5 + R * f + 0.12, oreY, 0);
         overlays.add(zLbl);
       });
     }
@@ -1771,6 +1798,83 @@
     });
   }
 
+  // ---- Angular unconformity layer builder ----
+  // Splits the layer stack at the unconformity contact. Layers below the contact
+  // are rendered as a group tilted by angular_discordance degrees around the Z axis
+  // (pivoting at the contact surface). Layers above are kept horizontal.
+  function buildAngularUnconformityLayers(model, unconformity) {
+    const meshes = new T.Group();
+    const overlays = new T.Group();
+    const labels = [];
+
+    const sorted = [...(model.layers || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const belowIdx = sorted.findIndex(L => L.id === unconformity.below_layer_id);
+    // Fall back to normal rendering if the ID isn't matched
+    if (belowIdx < 0) return buildLayersOnly(model);
+
+    const belowLayers = sorted.slice(0, belowIdx + 1);
+    const aboveLayers = sorted.slice(belowIdx + 1);
+    if (aboveLayers.length === 0) return buildLayersOnly(model);
+
+    const lowerH = belowLayers.reduce((s, L) => s + (L.thickness ?? 1), 0);
+    const upperH = aboveLayers.reduce((s, L) => s + (L.thickness ?? 1), 0);
+    const totalH  = lowerH + upperH;
+    // Contact Y in world space — same origin convention as buildLayersOnly (centred at 0)
+    const contactY = lowerH - totalH / 2;
+
+    const discRad = rad(Math.max(0, unconformity.angular_discordance ?? 30));
+    const blockOpts = { width: 4.2, depth: 4.2 };
+
+    // ---- Lower (tilted) block ----
+    const lowerBlk = layerBlock(belowLayers, blockOpts);
+    // Shift the slab group so its TOP is at y=0 in wrapper space (the rotation pivot).
+    // layerBlock centres at y=0, so top is at +lowerH/2 → shift down by lowerH/2.
+    lowerBlk.group.position.y = -lowerH / 2;
+    lowerBlk.group.add(blockEdges(4.2, lowerH, 4.2));
+    const lowerWrapper = new T.Group();
+    lowerWrapper.add(lowerBlk.group);
+    lowerWrapper.rotation.z = -discRad; // tilt clockwise so right side dips down
+    lowerWrapper.position.y = contactY;
+    meshes.add(lowerWrapper);
+
+    // Layer name labels (CSS2DObject — follows parent transform in world space)
+    for (const s of lowerBlk.slabs) {
+      const nameLbl = makeLabel(s.L.name);
+      nameLbl.position.set(2.1, s.mesh.position.y, 2.1);
+      lowerBlk.group.add(nameLbl);
+      labels.push({ node: nameLbl, data: { kind: 'layer', id: s.L.id } });
+    }
+
+    // ---- Upper (horizontal) block ----
+    const upperBlk = layerBlock(aboveLayers, blockOpts);
+    // Centre of the upper block in world space = contactY + half its height
+    upperBlk.group.position.y = contactY + upperH / 2;
+    upperBlk.group.add(blockEdges(4.2, upperH, 4.2));
+    meshes.add(upperBlk.group);
+
+    for (const s of upperBlk.slabs) {
+      const nameLbl = makeLabel(s.L.name);
+      nameLbl.position.set(2.1, s.mesh.position.y, 2.1);
+      upperBlk.group.add(nameLbl);
+      labels.push({ node: nameLbl, data: { kind: 'layer', id: s.L.id } });
+    }
+
+    // Thickness overlays for the upper (horizontal) block only — computing correct
+    // world-space positions for the tilted lower block is a v2 item.
+    for (const s of upperBlk.slabs) {
+      const wBottom = new T.Vector3(-2.2, contactY + upperH / 2 + (s.bottom - upperH / 2), 2.1);
+      const wTop    = new T.Vector3(-2.2, contactY + upperH / 2 + (s.top    - upperH / 2), 2.1);
+      const inferred = s.L.field_origin?.thickness === 'inferred';
+      overlays.add(doubleArrow(wBottom, wTop, inferred ? COLOR.inferred : COLOR.overlay, { headLength: 0.07, headWidth: 0.045 }));
+      const mid = wBottom.clone().add(wTop).multiplyScalar(0.5).add(new T.Vector3(0.05, 0, 0));
+      const thkLbl = makeValueLabel(`${s.thickness.toFixed(2)} u`, { inferred });
+      thkLbl.position.copy(mid);
+      overlays.add(thkLbl);
+    }
+
+    return { meshes, overlays, labels };
+  }
+
   // ---- Master dispatcher ----
   function buildSceneContents(model, opts = {}) {
     const root = new T.Group();
@@ -1791,9 +1895,12 @@
     let firstEvent = null;
     let res = null;
     if (hasLayers) {
-      // Decide which builder to use based on event types
+      // Decide which builder to use based on event types / unconformity presence
       firstEvent = (model.events || [])[0] || null;
-      if (!firstEvent) {
+      const angularU = (model.unconformities || []).find(U => U.subtype === 'angular');
+      if (angularU) {
+        res = buildAngularUnconformityLayers(model, angularU);
+      } else if (!firstEvent) {
         res = buildLayersOnly(model);
       } else if (firstEvent.type === 'fault') {
         res = buildFaultScene(model);
@@ -2032,12 +2139,16 @@
       addHydrothermalAnnotation(M, model, overlays, labels);
     });
 
-    // Predicted mineralisation (Phase 8.2)
-    (model.predictions || []).forEach((P, idx) => {
-      const { meshes: pMeshes, overlays: po } = buildPredictionGeometry(P, model, idx);
-      pMeshes.forEach(m => root.add(m));
-      po.children.slice().forEach(c => overlays.add(c));
-    });
+    // Predicted mineralisation (Phase 8.2) — suppressed when explicit mineralisation is
+    // already present; showing both creates a confusing second overlapping target.
+    const hasExplicitMin = (model.mineralisation || []).length > 0;
+    if (!hasExplicitMin) {
+      (model.predictions || []).forEach((P, idx) => {
+        const { meshes: pMeshes, overlays: po } = buildPredictionGeometry(P, model, idx);
+        pMeshes.forEach(m => root.add(m));
+        po.children.slice().forEach(c => overlays.add(c));
+      });
+    }
 
     const bounds = new T.Box3().setFromObject(root);
     return { root, overlays, labels, overlayUpdateMap, bounds };
