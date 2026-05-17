@@ -731,7 +731,7 @@
 
   function addThrowHeaveOverlay(overlays, labels, { slip, strike, dipDeg, dipDir, slabs, total, evt, downSign }) {
     // We'll pick a marker layer (the top of the second layer from bottom) as the datum.
-    if (!slabs || slabs.length < 2) return;
+    if (!slabs || slabs.length < 1) return;
     const datum = slabs[Math.floor(slabs.length / 2)];
     const yDatum = datum.y1;
     // The datum trace runs along the X axis at y=yDatum, z=0.
@@ -1226,12 +1226,16 @@
 
     } else if (subtype === 'sill') {
       // Thin horizontal plane between layers (at mid-stack by default).
-      const geo = new T.BoxGeometry(2 * totalHeight, intrusion.thickness || 0.3, 2 * totalHeight);
+      const sillW = Math.max(2 * totalHeight, 5);
+      const geo = new T.BoxGeometry(sillW, intrusion.thickness || 0.3, sillW);
       const mat = new T.MeshLambertMaterial({
         color: rockColor,
         transparent: true,
         opacity: 0.8,
         side: T.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1,
       });
       const mesh = new T.Mesh(geo, mat);
       mesh.position.y = 0;
@@ -1254,8 +1258,11 @@
     } else if (subtype === 'laccolith') {
       // Dome shape at emplacement depth, pushing layers up.
       // Use a smaller radius (0.4) so it fits between layers, dome protruding upward.
-      const depth = intrusion.depth ?? halfH * 0.5;
-      const geo = new T.SphereGeometry(totalHeight * 0.4, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+      const laccRadius = totalHeight * 0.4;
+      const rawDepth = intrusion.depth ?? halfH * 0.5;
+      const minProtrusion = laccRadius * 0.2;
+      const effectiveDepth = Math.min(rawDepth, laccRadius - minProtrusion);
+      const geo = new T.SphereGeometry(laccRadius, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
       const mat = new T.MeshLambertMaterial({
         color: rockColor,
         transparent: true,
@@ -1263,7 +1270,7 @@
         side: T.DoubleSide,
       });
       const mesh = new T.Mesh(geo, mat);
-      mesh.position.y = halfH - depth; // flat base at emplacement depth, dome upward
+      mesh.position.y = halfH - effectiveDepth; // flat base at emplacement depth, dome upward
       meshes.add(mesh);
     }
 
@@ -1308,13 +1315,13 @@
 
       // Thickness label
       const thkArrow = doubleArrow(
-        new T.Vector3(halfH + 0.3, sillY - (intrusion.thickness || 0.3) / 2, 0),
-        new T.Vector3(halfH + 0.3, sillY + (intrusion.thickness || 0.3) / 2, 0),
+        new T.Vector3(2.7, sillY - (intrusion.thickness || 0.3) / 2, 0),
+        new T.Vector3(2.7, sillY + (intrusion.thickness || 0.3) / 2, 0),
         COLOR.overlay
       );
       overlays.add(thkArrow);
       const thkLbl = makeValueLabel(`${(intrusion.thickness || 0.3).toFixed(1)} u`, { inferred: fo.thickness === 'inferred' });
-      thkLbl.position.set(halfH + 0.55, sillY, 0);
+      thkLbl.position.set(2.9, sillY, 0);
       overlays.add(thkLbl);
 
       // Feature label
@@ -1344,8 +1351,11 @@
       overlays.add(lbl);
 
     } else if (subtype === 'laccolith') {
-      const laccY = halfH - (intrusion.depth ?? halfH);
-      const laccRadius = totalHeight * 0.5;
+      const laccRadius = totalHeight * 0.4;
+      const rawDepth = intrusion.depth ?? halfH * 0.5;
+      const minProtrusion = laccRadius * 0.2;
+      const effectiveDepth = Math.min(rawDepth, laccRadius - minProtrusion);
+      const laccY = halfH - effectiveDepth;
       const fo = intrusion.field_origin || {};
 
       // Depth label: dashed line from surface to dome top
