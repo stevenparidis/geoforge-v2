@@ -145,6 +145,13 @@ Copy this block verbatim for each formation, then fill it in:
 **v1 reference ID:** `<formation-id>` (e.g. `normal-fault`)
 **Source files involved:** `three-helpers.jsx` builder `build<Formation>()`, `geo-data.jsx` entry `REFERENCE_FORMATIONS['<formation-id>']`
 
+### Source-code reading summary
+
+- Builder function: `build<Formation>()` in `three-helpers.jsx`
+- REFERENCE_FORMATIONS entry: `geo-data.jsx` → `REFERENCE_FORMATIONS['<formation-id>']`
+- Key parameters: <list what drives the rendering>
+- Known deviations from default geometry: <or "none">
+
 ### v1 visualisation
 
 ![v1 default view](v1-screenshots/<feature-class>/<formation-id>-overlays-on.png)
@@ -178,6 +185,8 @@ Copy this block verbatim for each formation, then fill it in:
 - `incorrect` — actively wrong relative to consensus geology. Required v2 work, high priority.
 
 ### Required v2 work
+
+If no required v2 work: write "None — formation rates correct on all axes."
 
 <list of specific changes required, each cross-referenced to a spec-v2 §5 sub-section>
 
