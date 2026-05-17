@@ -1,8 +1,8 @@
 # GeoForge v2 — TODO for Spec v2
 
-Items below are out-of-scope for the current bug-fix release (smoketest v1.2). They represent
-enhancements, low-priority bugs, and new features identified during the v1.1 smoke test, to
-be scoped into a future v2 specification.
+Items below are out-of-scope for the current v1 codebase. They represent enhancements,
+low-priority bugs, and new features identified during v1.1 and v1.2 smoke testing, to be
+scoped into a future v2 specification.
 
 ---
 
@@ -15,6 +15,14 @@ be scoped into a future v2 specification.
   and confidence data should be readable in the sidebar without crowding the visual.
 - If more than one prediction exists, a collapsible "Predictions" section in the inspector
   should list each one (type, metals, confidence, rationale) with a scroll if needed.
+
+### Camera auto-zoom too tight for complex models (from RT-08 / WF-24)
+- When predictions are active, or models include large intrusions, the initial camera
+  distance is too close — the user cannot see the full model from the default position.
+- Fix: after building scene contents, auto-fit camera using bounding box of ALL objects
+  (model + predictions + intrusions), not just the layer stack bounding box.
+- The `bounds` returned from `buildSceneContents` already captures the full extent;
+  apply it to set camera distance on every model or prediction update.
 
 ### Custom model builder (from WF-01 user feedback)
 - Currently the workspace opens to an empty state with example prompts.
@@ -71,9 +79,9 @@ be scoped into a future v2 specification.
 
 ---
 
-## Direct 3D Drag (Stretch Goal)
-- The drag-handle system (handle-layer.jsx) works but is described by users as "buggy" —
-  specifically hard to initiate and unreliable on Windows pointer events.
+## Direct 3D Drag (Removed in v1 — v2 decision needed)
+- The drag-handle system (`handle-layer.jsx`) was removed in v1 (PR #39) after being reported
+  as unreliable and causing browser freezes on Windows pointer events.
+- The inspector numeric inputs (click ↑/↓) cover the same use case reliably.
 - v2 decision: either invest in a polished drag UX (smooth snap, visible guide rails,
-  multi-axis handles) or replace it entirely with inline numeric spinners in the inspector.
-- The inspector numeric inputs (click ↑/↓) already work reliably and cover the same use case.
+  multi-axis handles) or keep numeric-only editing as the sole interaction path.
