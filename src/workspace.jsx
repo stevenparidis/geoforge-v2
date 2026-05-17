@@ -590,36 +590,6 @@ If the model has no structural features to guide prediction, return an empty arr
       return () => { window.__setSelected = null; };
     }, [setSelected]);
 
-    // onDragChange: called from handle-layer.jsx drag controller on each drag frame.
-    const onDragChange = useCallback((featureKind, featureId, field, value, opts) => {
-      // Skip React state update during intermediate drag frames — Three.js
-      // overlay update (overlayUpdateMap) handles in-flight visual feedback.
-      if (opts && opts.intermediate) return;
-
-      setModel((prev) => {
-        if (!prev) return prev;
-        const next = JSON.parse(JSON.stringify(prev));
-        let feature = null;
-        if (featureKind === 'layer') {
-          feature = (next.layers || []).find((L) => L.id === featureId);
-        } else if (featureKind === 'event') {
-          feature = (next.events || []).find((E) => E.id === featureId);
-        }
-        if (!feature) return prev;
-        feature[field] = value;
-        feature.manually_edited = true;
-        if (!feature.field_origin) feature.field_origin = {};
-        feature.field_origin[field] = 'stated';
-        return next;
-      });
-    }, [setModel]);
-
-    useEffect(() => {
-      // Allow smoke tests to directly call onDragChange to verify the drag→JSON pipeline.
-      window.__testDragChange = onDragChange;
-      return () => { window.__testDragChange = null; };
-    }, [onDragChange]);
-
     useEffect(() => {
       if (!error) return;
       const t = setTimeout(() => setError(null), 6000);
@@ -738,6 +708,9 @@ If the model has no structural features to guide prediction, return an empty arr
       if (!selected || !model) return null;
       if (selected.kind === 'layer') return model.layers.find((L) => L.id === selected.id);
       if (selected.kind === 'event') return model.events.find((E) => E.id === selected.id);
+      if (selected.kind === 'intrusion') return (model.intrusions || []).find((I) => I.id === selected.id);
+      if (selected.kind === 'unconformity') return (model.unconformities || []).find((U) => U.id === selected.id);
+      if (selected.kind === 'mineralisation') return (model.mineralisation || []).find((M) => M.id === selected.id);
       return null;
     }, [selected, model]);
 
@@ -785,19 +758,19 @@ If the model has no structural features to guide prediction, return an empty arr
           {(model?.intrusions?.length > 0 || model?.unconformities?.length > 0 || model?.mineralisation?.length > 0) && (
             <div className="desc-anchors">
               {(model.intrusions || []).map((I) => (
-                <div key={I.id} className="anchor">
+                <div key={I.id} className="anchor" onClick={() => onSelectFeature({ kind: 'intrusion', id: I.id })}>
                   <span className="tag">{I.subtype}</span>
                   <span className="src">{I.description_source || '—'}</span>
                 </div>
               ))}
               {(model.unconformities || []).map((U) => (
-                <div key={U.id} className="anchor">
+                <div key={U.id} className="anchor" onClick={() => onSelectFeature({ kind: 'unconformity', id: U.id })}>
                   <span className="tag">{U.subtype}</span>
                   <span className="src">{U.description_source || '—'}</span>
                 </div>
               ))}
               {(model.mineralisation || []).map((M) => (
-                <div key={M.id} className="anchor">
+                <div key={M.id} className="anchor" onClick={() => onSelectFeature({ kind: 'mineralisation', id: M.id })}>
                   <span className="tag">{M.subtype}</span>
                   <span className="src">{M.description_source || '—'}</span>
                 </div>
@@ -844,7 +817,6 @@ If the model has no structural features to guide prediction, return an empty arr
               onSelect={onSelectFeature}
               selectedId={selected?.id}
               selected={selected}
-              onDragChange={onDragChange}
             />
           </div>
 
@@ -941,6 +913,53 @@ If the model has no structural features to guide prediction, return an empty arr
                     ))}
                   </div>
                 </div>
+                {(model.intrusions || []).length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div className="panel-title" style={{ marginBottom: 6 }}>Intrusions</div>
+                    <div className="feat-list">
+                      {(model.intrusions || []).map((I) => (
+                        <div key={I.id} className={'feat-item' + (selected?.id === I.id ? ' selected' : '')} onClick={() => onSelectFeature({ kind: 'intrusion', id: I.id })}>
+                          <div className="row">
+                            <span className="name">{I.subtype} · {I.rock_type}</span>
+                          </div>
+                          <span className="type">{I.subtype}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(model.unconformities || []).length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div className="panel-title" style={{ marginBottom: 6 }}>Unconformities</div>
+                    <div className="feat-list">
+                      {(model.unconformities || []).map((U) => (
+                        <div key={U.id} className={'feat-item' + (selected?.id === U.id ? ' selected' : '')} onClick={() => onSelectFeature({ kind: 'unconformity', id: U.id })}>
+                          <div className="row">
+                            <span className="name">{U.subtype}</span>
+                            {U.time_gap_ma != null && <span className="meta">{U.time_gap_ma} Ma</span>}
+                          </div>
+                          <span className="type">{U.subtype}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(model.mineralisation || []).length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div className="panel-title" style={{ marginBottom: 6 }}>Mineralisation</div>
+                    <div className="feat-list">
+                      {(model.mineralisation || []).map((M) => (
+                        <div key={M.id} className={'feat-item' + (selected?.id === M.id ? ' selected' : '')} onClick={() => onSelectFeature({ kind: 'mineralisation', id: M.id })}>
+                          <div className="row">
+                            <span className="name">{M.subtype}</span>
+                            {M.metals && <span className="meta">{M.metals}</span>}
+                          </div>
+                          <span className="type">{M.subtype}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
             {selectedFeature && (
@@ -1004,6 +1023,31 @@ If the model has no structural features to guide prediction, return an empty arr
             {feature.flexure_dip != null && <FieldRow label="Flexure dip" value={feature.flexure_dip} unit="°" inferred={fo.flexure_dip === 'inferred'} onChange={(v) => onChange('flexure_dip', v)} />}
             {feature.flexure_width != null && <FieldRow label="Flexure width" value={feature.flexure_width} unit="u" inferred={fo.flexure_width === 'inferred'} onChange={(v) => onChange('flexure_width', v)} />}
             {feature.step_height != null && <FieldRow label="Step height" value={feature.step_height} unit="u" inferred={fo.step_height === 'inferred'} onChange={(v) => onChange('step_height', v)} />}
+          </>
+        )}
+        {kind === 'intrusion' && (
+          <>
+            <FieldRow label="Subtype" value={feature.subtype} inferred={false} />
+            <FieldRow label="Rock type" value={feature.rock_type} inferred={fo.rock_type === 'inferred'} />
+            {feature.thickness != null && <FieldRow label="Thickness" value={feature.thickness} unit="u" inferred={fo.thickness === 'inferred'} />}
+            {feature.depth != null && <FieldRow label="Depth" value={feature.depth} unit="u" inferred={fo.depth === 'inferred'} />}
+            {feature.strike != null && <FieldRow label="Strike" value={feature.strike} unit="°" inferred={fo.strike === 'inferred'} />}
+            {feature.dip != null && <FieldRow label="Dip" value={feature.dip} unit="°" inferred={fo.dip === 'inferred'} />}
+          </>
+        )}
+        {kind === 'unconformity' && (
+          <>
+            <FieldRow label="Subtype" value={feature.subtype} inferred={false} />
+            {feature.time_gap_ma != null && <FieldRow label="Time gap" value={feature.time_gap_ma} unit="Ma" inferred={fo.time_gap_ma === 'inferred'} />}
+            {feature.angular_discordance != null && <FieldRow label="Angular discordance" value={feature.angular_discordance} unit="°" inferred={fo.angular_discordance === 'inferred'} />}
+          </>
+        )}
+        {kind === 'mineralisation' && (
+          <>
+            <FieldRow label="Subtype" value={feature.subtype} inferred={false} />
+            {feature.metals && <FieldRow label="Metals" value={feature.metals} inferred={fo.metals === 'inferred'} />}
+            {feature.grade != null && <FieldRow label="Grade" value={feature.grade} unit="g/t or %" inferred={fo.grade === 'inferred'} />}
+            {feature.alteration_radius != null && <FieldRow label="Alteration radius" value={feature.alteration_radius} unit="u" inferred={fo.alteration_radius === 'inferred'} />}
           </>
         )}
         {feature.manually_edited && (
