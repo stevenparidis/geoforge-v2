@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GeoForge v1 — UI Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg-0: #0a0c10;
+  --bg-1: #0f1218;
+  --bg-2: #151921;
+  --bg-3: #1c2230;
+  --line: #232a38;
+  --line-2: #2e3648;
+  --fg-0: #f3efe7;
+  --fg-1: #c9c4b8;
+  --fg-2: #8a8578;
+  --fg-3: #5a5648;
+  --accent: #67e8f9;
+  --accent-2: #a3e4ff;
+  --inferred: #f59e0b;
+  --warn: #f97316;
+  --ok: #5fd49a;
+  --bad: #ef6262;
+  --kbd: 'Geist Mono', ui-monospace, monospace;
+  --sans: 'Geist', -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg-0); color: var(--fg-0); font-family: var(--sans); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+/* ── Top bar ── */
+.app { display: grid; grid-template-rows: 48px 1fr; height: 100vh; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--bg-1); border-bottom: 1px solid var(--line); z-index: 20; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: -0.01em; }
+.brand .mark { width: 22px; height: 22px; border: 1.5px solid var(--accent); transform: rotate(45deg); position: relative; }
+.brand .mark::after { content: ''; position: absolute; inset: 4px; background: var(--accent); opacity: 0.25; }
+.brand-name { font-size: 14px; }
+.brand-sub { font-family: var(--kbd); font-size: 11px; color: var(--fg-2); letter-spacing: 0.04em; text-transform: uppercase; }
+.tabs { display: flex; gap: 4px; background: var(--bg-2); padding: 3px; border-radius: 6px; border: 1px solid var(--line); }
+.tab { appearance: none; background: transparent; color: var(--fg-2); border: 0; padding: 5px 14px; font: inherit; font-size: 12.5px; font-weight: 500; border-radius: 4px; cursor: pointer; letter-spacing: 0.01em; }
+.tab.active { background: var(--bg-3); color: var(--fg-0); box-shadow: 0 0 0 1px var(--line-2); }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.btn { appearance: none; background: var(--bg-2); color: var(--fg-1); border: 1px solid var(--line); padding: 6px 12px; font: inherit; font-size: 12.5px; border-radius: 5px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.btn.primary { background: var(--accent); color: #04161a; border-color: var(--accent); font-weight: 500; }
+.btn.sm { padding: 4px 10px; font-size: 12px; }
+.btn.danger { color: var(--bad); }
+.toggle { appearance: none; background: transparent; color: var(--fg-2); border: 0; padding: 5px 10px; font: inherit; font-size: 11.5px; border-radius: 4px; cursor: pointer; font-family: var(--kbd); text-transform: uppercase; letter-spacing: 0.06em; }
+.toggle.on { background: var(--bg-3); color: var(--accent); }
+
+/* ── Workspace layout ── */
+.workspace { display: grid; grid-template-columns: 340px 1fr 360px; height: 100%; }
+.panel { background: var(--bg-1); border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
+.panel.right { border-right: 0; border-left: 1px solid var(--line); }
+.panel-header { padding: 12px 14px 10px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
+.panel-title { font-size: 11px; font-family: var(--kbd); text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-2); }
+.panel-body { flex: 1; overflow: auto; padding: 14px; }
+.panel-footer { padding: 10px 12px; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+
+/* ── Left panel ── */
+.desc-area-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; border-bottom: 1px solid var(--line); }
+.desc-text { padding: 14px; font-size: 14px; line-height: 1.55; color: var(--fg-0); flex: 1; overflow: auto; }
+.desc-actions { padding: 10px 12px; border-top: 1px solid var(--line); display: flex; gap: 8px; align-items: center; }
+.anchor-list { padding: 8px 12px; background: var(--bg-2); max-height: 160px; overflow: auto; border-bottom: 1px solid var(--line); }
+.anchor { font-size: 12px; color: var(--fg-1); padding: 4px 6px; border-radius: 3px; cursor: pointer; line-height: 1.45; display: block; }
+.anchor:hover { background: var(--bg-3); }
+.anchor .tag { color: var(--accent); font-family: var(--kbd); font-size: 10.5px; margin-right: 6px; text-transform: uppercase; }
+.anchor .src { color: var(--fg-2); font-style: italic; font-size: 11.5px; display: block; padding-left: 2px; }
+.samples-wrap { padding: 12px; display: flex; flex-direction: column; gap: 6px; overflow: auto; }
+.samples-label { font-family: var(--kbd); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-3); margin-bottom: 4px; }
+.sample { background: var(--bg-2); border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; color: var(--fg-1); cursor: pointer; font-size: 12.5px; line-height: 1.4; }
+
+/* ── Centre viewport ── */
+.center { position: relative; background: radial-gradient(ellipse at center, #131820 0%, #08090d 70%); overflow: hidden; }
+.scene-toolbar { position: absolute; top: 12px; left: 12px; display: flex; gap: 6px; z-index: 5; background: rgba(15,18,24,0.85); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 7px; padding: 4px; }
+.scene-svg { width: 100%; height: 100%; }
+
+/* ── Timeline ── */
+.timeline { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: min(680px, calc(100% - 32px)); background: rgba(15,18,24,0.92); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; z-index: 5; }
+.timeline-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.timeline-title { font-family: var(--kbd); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-2); }
+.timeline-controls { display: flex; gap: 4px; align-items: center; }
+.step-btn { appearance: none; background: var(--bg-2); color: var(--fg-1); border: 1px solid var(--line); width: 26px; height: 24px; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; }
+.scrubber-track { position: relative; height: 4px; background: var(--bg-3); border-radius: 99px; margin: 4px 0; }
+.scrubber-fill { position: absolute; left: 0; width: 60%; height: 100%; background: var(--accent); border-radius: 99px; opacity: 0.8; }
+.scrubber-ticks { position: relative; height: 16px; }
+.tick { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 8px; height: 8px; border-radius: 99px; background: var(--bg-3); border: 1.5px solid var(--line-2); }
+.tick.active { background: var(--accent); border-color: var(--accent); }
+.tick.past { background: var(--fg-2); border-color: var(--fg-2); }
+.tick-label { position: absolute; top: 14px; transform: translateX(-50%); font-family: var(--kbd); font-size: 9.5px; color: var(--fg-3); white-space: nowrap; }
+
+/* ── Right panel / Inspector ── */
+.overview-section { margin-bottom: 14px; }
+.overview-section-title { font-family: var(--kbd); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-3); margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px solid var(--line); }
+.feat-item { background: var(--bg-2); border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; cursor: pointer; font-size: 12.5px; line-height: 1.4; display: flex; flex-direction: column; gap: 4px; margin-bottom: 5px; }
+.feat-item.selected { background: var(--bg-3); border-color: var(--accent); }
+.feat-item .row { display: flex; justify-content: space-between; align-items: center; }
+.feat-item .type { font-family: var(--kbd); font-size: 10px; text-transform: uppercase; color: var(--fg-2); }
+.feat-item .name { color: var(--fg-0); font-weight: 500; }
+.feat-item .meta { color: var(--fg-2); font-family: var(--kbd); font-size: 11px; }
+.field { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.field:last-child { border-bottom: 0; }
+.field-label { font-family: var(--kbd); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-2); margin-bottom: 4px; }
+.field-value { font-size: 14px; color: var(--fg-0); display: flex; align-items: baseline; gap: 8px; }
+.field-value.inferred { color: var(--inferred); text-decoration: underline dashed var(--inferred); text-underline-offset: 3px; }
+.field-value .unit { color: var(--fg-2); font-family: var(--kbd); font-size: 12px; }
+.inferred-pill { display: inline-flex; align-items: center; background: rgba(245,158,11,0.12); color: var(--inferred); border: 1px solid rgba(245,158,11,0.35); border-radius: 99px; padding: 1px 7px; font-family: var(--kbd); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.source-quote { color: var(--fg-2); font-style: italic; font-size: 13px; border-left: 2px solid var(--line-2); padding-left: 10px; margin-top: 4px; }
+.num-input { background: var(--bg-2); color: var(--fg-0); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; width: 80px; font-family: var(--kbd); font-size: 13px; }
+.inspector-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.inspector-title { font-size: 14px; font-weight: 500; color: var(--fg-0); }
+.inspector-subtitle { font-family: var(--kbd); font-size: 10.5px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; }
+.panel-actions { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px; border-top: 1px solid var(--line); }
+
+/* ── Reference tab ── */
+.reference-view { height: 100%; overflow: auto; padding: 28px 32px 60px; background: linear-gradient(180deg, #08090d 0%, #0a0d12 100%); display: none; }
+.reference-view.active { display: block; }
+.workspace-view { display: grid; grid-template-columns: 340px 1fr 360px; height: 100%; }
+.workspace-view.hidden { display: none; }
+.ref-intro { max-width: 920px; margin: 0 auto 24px; }
+.ref-intro h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+.ref-intro p { color: var(--fg-2); font-size: 14.5px; margin: 0 0 4px; max-width: 660px; line-height: 1.55; }
+.ref-section { max-width: 1280px; margin: 0 auto 36px; }
+.ref-section-title { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.ref-section-title .num { font-family: var(--kbd); color: var(--accent); font-size: 12px; letter-spacing: 0.06em; }
+.ref-section-title h2 { font-size: 17px; font-weight: 500; margin: 0; letter-spacing: -0.01em; }
+.ref-section-title .blurb { color: var(--fg-2); font-size: 13px; margin-left: auto; font-style: italic; }
+.ref-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.ref-card { background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.ref-card-canvas { position: relative; aspect-ratio: 4/3; background: radial-gradient(ellipse at center, #131820 0%, #08090d 80%); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+.ref-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
+.ref-card-header { display: flex; justify-content: space-between; align-items: baseline; }
+.ref-card-title { font-size: 14.5px; font-weight: 500; }
+.ref-card-tag { font-family: var(--kbd); font-size: 10px; text-transform: uppercase; color: var(--fg-2); letter-spacing: 0.06em; }
+.ref-card-caption { color: var(--fg-2); font-size: 12.5px; line-height: 1.5; }
+.ref-card-overlays { margin-top: 4px; font-family: var(--kbd); font-size: 10.5px; color: var(--accent); letter-spacing: 0.03em; text-transform: uppercase; }
+.ref-card-overlays .lit { color: var(--fg-3); margin-right: 6px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 99px; border: 2px solid var(--bg-1); }
+
+/* Tab switching */
+.view-workspace .reference-view { display: none; }
+.view-workspace .workspace-view { display: grid; }
+.view-reference .workspace-view { display: none; }
+.view-reference .reference-view { display: block; }
+</style>
+</head>
+<body>
+
+<div class="app view-workspace" id="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <div class="brand-name">GeoForge</div>
+        <div class="brand-sub">Structural geology interpreter</div>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('workspace')">Workspace</button>
+      <button class="tab" onclick="switchTab('reference')">Formation reference</button>
+    </div>
+    <div class="topbar-actions">
+      <button class="toggle on">Labels</button>
+      <button class="toggle on">Overlays</button>
+      <button class="toggle on">Grid</button>
+    </div>
+  </div>
+
+  <!-- WORKSPACE VIEW -->
+  <div class="workspace-view" id="workspaceView">
+
+    <!-- LEFT PANEL -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Description</span>
+        <span style="font-family:var(--kbd);font-size:10px;color:var(--ok);">● interpreted</span>
+      </div>
+      <div class="desc-area-wrap">
+        <div class="desc-text">A sandstone layer 2 metres thick. A limestone layer 1.5 metres thick above it. A normal fault dipping 60 degrees east with a throw of 0.4 metres.</div>
+        <div class="desc-actions">
+          <button class="btn primary" style="flex:1">Interpret</button>
+          <button class="btn">Reset</button>
+          <button class="btn">Predict</button>
+        </div>
+      </div>
+      <!-- Anchor list -->
+      <div class="anchor-list">
+        <a class="anchor">
+          <span><span class="tag">Layer</span>Sandstone</span>
+          <span class="src">"A sandstone layer 2 metres thick."</span>
+        </a>
+        <a class="anchor">
+          <span><span class="tag">Layer</span>Limestone</span>
+          <span class="src">"A limestone layer 1.5 metres thick above it."</span>
+        </a>
+        <a class="anchor">
+          <span><span class="tag">Event</span>Normal Fault</span>
+          <span class="src">"A normal fault dipping 60 degrees east…"</span>
+        </a>
+      </div>
+      <!-- Sample prompts -->
+      <div class="samples-wrap">
+        <div class="samples-label">Sample prompts</div>
+        <div class="sample">A sandstone layer with a normal fault dipping 60° east.</div>
+        <div class="sample">Three limestone layers folded into an anticline with 120° interlimb.</div>
+        <div class="sample">An older sandstone series below an angular unconformity with horizontal limestone above.</div>
+        <div class="sample">A sandstone layer intruded by a vertical basalt dyke.</div>
+        <div class="sample">A sandstone layer with a porphyry copper-gold deposit.</div>
+      </div>
+    </div>
+
+    <!-- CENTRE — 3D VIEWPORT -->
+    <div class="center">
+      <!-- Scene toolbar -->
+      <div class="scene-toolbar">
+        <button class="toggle on">Labels</button>
+        <button class="toggle on">Overlays</button>
+      </div>
+
+      <!-- SVG 3D scene representation -->
+      <svg viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;position:absolute;inset:0">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#232a38" stroke-width="0.8" opacity="0.6"/>
+          </pattern>
+          <linearGradient id="sandstoneGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c4943a" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#a07828" stop-opacity="0.85"/>
+          </linearGradient>
+          <linearGradient id="limestoneGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#9ab8c8" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#7c9fb0" stop-opacity="0.85"/>
+          </linearGradient>
+          <linearGradient id="sandstoneGradHW" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#b8852e" stop-opacity="0.72"/>
+            <stop offset="100%" stop-color="#8a6418" stop-opacity="0.72"/>
+          </linearGradient>
+          <linearGradient id="limestoneGradHW" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#849fb0" stop-opacity="0.72"/>
+            <stop offset="100%" stop-color="#6882930" stop-opacity="0.72"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Background grid -->
+        <rect width="800" height="560" fill="#08090d"/>
+        <rect width="800" height="560" fill="url(#grid)"/>
+        <!-- Ground plane fade -->
+        <ellipse cx="400" cy="460" rx="280" ry="30" fill="#131820" opacity="0.6"/>
+
+        <!-- === FOOTWALL BLOCK (right of fault) === -->
+        <!-- Limestone layer FW (top) -->
+        <rect x="390" y="155" width="220" height="75" rx="1" fill="url(#limestoneGrad)"/>
+        <rect x="390" y="155" width="220" height="75" rx="1" fill="none" stroke="#2e3648" stroke-width="1"/>
+        <!-- Sandstone layer FW (bottom) -->
+        <rect x="390" y="230" width="220" height="105" rx="1" fill="url(#sandstoneGrad)"/>
+        <rect x="390" y="230" width="220" height="105" rx="1" fill="none" stroke="#2e3648" stroke-width="1"/>
+        <!-- FW block side edge (3D depth hint) -->
+        <polygon points="610,155 630,143 630,348 610,335" fill="#1c2230" stroke="#2e3648" stroke-width="0.8" opacity="0.8"/>
+        <polygon points="390,335 630,335 630,348 390,348" fill="#1a1f2a" stroke="#2e3648" stroke-width="0.8" opacity="0.8"/>
+
+        <!-- === HANGING WALL BLOCK (left of fault, dropped down by throw) === -->
+        <!-- Limestone layer HW -->
+        <rect x="178" y="208" width="212" height="70" rx="1" fill="url(#limestoneGrad)"/>
+        <rect x="178" y="208" width="212" height="70" rx="1" fill="none" stroke="#2e3648" stroke-width="1"/>
+        <!-- Sandstone layer HW -->
+        <rect x="178" y="278" width="212" height="100" rx="1" fill="url(#sandstoneGrad)"/>
+        <rect x="178" y="278" width="212" height="100" rx="1" fill="none" stroke="#2e3648" stroke-width="1"/>
+        <!-- HW block edges -->
+        <polygon points="178,208 158,196 158,390 178,378" fill="#1c2230" stroke="#2e3648" stroke-width="0.8" opacity="0.8"/>
+        <polygon points="178,378 390,378 390,390 178,390" fill="#1a1f2a" stroke="#2e3648" stroke-width="0.8" opacity="0.8"/>
+
+        <!-- === FAULT PLANE (dashed semi-transparent, dips 60° east = right) === -->
+        <polygon points="390,155 430,335 410,348 366,160" fill="#ef626222" stroke="none"/>
+        <line x1="390" y1="152" x2="428" y2="340" stroke="#ef6262" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.7"/>
+
+        <!-- === OVERLAYS: throw (vertical cyan), heave (horizontal cyan) === -->
+        <!-- Throw vertical line (hanging wall vs footwall at fault, vertical component) -->
+        <line x1="390" y1="208" x2="390" y2="155" stroke="#67e8f9" stroke-width="1.5" opacity="0.9"/>
+        <!-- Arrow heads on throw line -->
+        <polygon points="390,155 385,167 395,167" fill="#67e8f9" opacity="0.9"/>
+        <polygon points="390,208 385,196 395,196" fill="#67e8f9" opacity="0.9"/>
+        <!-- Throw label -->
+        <rect x="394" y="173" width="72" height="17" rx="3" fill="rgba(8,14,18,0.9)"/>
+        <text x="430" y="185" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#f59e0b">Throw 0.40 u</text>
+        <!-- Throw label inferred underline hint -->
+
+        <!-- Heave horizontal line -->
+        <line x1="390" y1="335" x2="430" y2="335" stroke="#67e8f9" stroke-width="1.5" opacity="0.8"/>
+        <polygon points="390,335 400,330 400,340" fill="#67e8f9" opacity="0.8"/>
+        <polygon points="430,335 420,330 420,340" fill="#67e8f9" opacity="0.8"/>
+        <!-- Heave label -->
+        <rect x="396" y="338" width="68" height="16" rx="3" fill="rgba(8,14,18,0.9)"/>
+        <text x="430" y="349" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#f59e0b">Heave 0.23 u</text>
+
+        <!-- === LAYER NAME LABELS === -->
+        <!-- Limestone FW label -->
+        <rect x="508" y="182" width="80" height="18" rx="3" fill="rgba(15,18,24,0.85)" stroke="#2e3648" stroke-width="0.8"/>
+        <text x="548" y="195" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10.5" fill="#c9c4b8">Limestone</text>
+        <!-- Sandstone FW label -->
+        <rect x="500" y="267" width="90" height="18" rx="3" fill="rgba(15,18,24,0.85)" stroke="#2e3648" stroke-width="0.8"/>
+        <text x="545" y="280" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10.5" fill="#c9c4b8">Sandstone</text>
+
+        <!-- Thickness double-arrows (FW side) -->
+        <!-- Limestone thickness -->
+        <line x1="372" y1="155" x2="372" y2="230" stroke="#67e8f9" stroke-width="1.2" opacity="0.75"/>
+        <polygon points="372,155 368,165 376,165" fill="#67e8f9" opacity="0.75"/>
+        <polygon points="372,230 368,220 376,220" fill="#67e8f9" opacity="0.75"/>
+        <rect x="326" y="185" width="42" height="16" rx="3" fill="rgba(8,14,18,0.9)"/>
+        <text x="347" y="197" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#67e8f9">1.50 u</text>
+        <!-- Sandstone thickness -->
+        <line x1="372" y1="230" x2="372" y2="335" stroke="#67e8f9" stroke-width="1.2" opacity="0.75"/>
+        <polygon points="372,230 368,240 376,240" fill="#67e8f9" opacity="0.75"/>
+        <polygon points="372,335 368,325 376,325" fill="#67e8f9" opacity="0.75"/>
+        <rect x="326" y="272" width="42" height="16" rx="3" fill="rgba(8,14,18,0.9)"/>
+        <text x="347" y="284" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#67e8f9">2.00 u</text>
+
+        <!-- Dip arc on fault plane top -->
+        <path d="M 410,155 A 30,30 0 0 1 427,183" fill="none" stroke="#67e8f9" stroke-width="1.5" opacity="0.8"/>
+        <rect x="416" y="157" width="38" height="16" rx="3" fill="rgba(8,14,18,0.9)"/>
+        <text x="435" y="169" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#67e8f9">60°</text>
+
+        <!-- === NORTH ARROW (top right) === -->
+        <g transform="translate(730,50)">
+          <line x1="0" y1="20" x2="0" y2="-20" stroke="#ef6262" stroke-width="2"/>
+          <polygon points="0,-20 -5,-8 5,-8" fill="#ef6262"/>
+          <text x="0" y="32" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ef6262">N</text>
+        </g>
+
+        <!-- Strike direction annotation -->
+        <line x1="460" y1="148" x2="540" y2="148" stroke="#67e8f9" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+        <rect x="542" y="140" width="50" height="16" rx="3" fill="rgba(8,14,18,0.88)"/>
+        <text x="567" y="152" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#8a8578">Strike 000</text>
+
+        <!-- Strike label near fault -->
+        <rect x="395" y="120" width="82" height="17" rx="3" fill="rgba(8,14,18,0.88)"/>
+        <text x="436" y="132" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#8a8578">Normal fault</text>
+
+        <!-- Dip direction arrow (horizontal) -->
+        <line x1="440" y1="148" x2="480" y2="148" stroke="#67e8f9" stroke-width="1.5" opacity="0.7"/>
+        <polygon points="480,148 470,144 470,152" fill="#67e8f9" opacity="0.7"/>
+        <rect x="484" y="140" width="50" height="16" rx="3" fill="rgba(8,14,18,0.88)"/>
+        <text x="509" y="152" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#67e8f9">Dip dir 090</text>
+
+      </svg>
+
+      <!-- Timeline scrubber -->
+      <div class="timeline">
+        <div class="timeline-head">
+          <span class="timeline-title">Geological history</span>
+          <div class="timeline-controls">
+            <button class="step-btn">◀</button>
+            <button class="step-btn">▶</button>
+            <select class="step-btn" style="width:auto;padding:0 6px;font-family:var(--kbd);font-size:11px;background:var(--bg-2);color:var(--fg-1);border:1px solid var(--line);border-radius:4px">
+              <option>1×</option><option>2×</option><option>4×</option>
+            </select>
+          </div>
+        </div>
+        <div class="scrubber-track">
+          <div class="scrubber-fill"></div>
+        </div>
+        <div class="scrubber-ticks" style="position:relative;height:24px;">
+          <div class="tick past" style="left:0%"><span class="tick-label" style="position:absolute;top:12px;transform:translateX(-50%);font-family:var(--kbd);font-size:9.5px;color:var(--fg-3)">Deposition</span></div>
+          <div class="tick past" style="left:30%"><span class="tick-label" style="position:absolute;top:12px;transform:translateX(-50%);font-family:var(--kbd);font-size:9.5px;color:var(--fg-3)">Limestone</span></div>
+          <div class="tick active" style="left:60%"><span class="tick-label" style="position:absolute;top:12px;transform:translateX(-50%);font-family:var(--kbd);font-size:9.5px;color:var(--accent)">Faulting</span></div>
+          <div class="tick" style="left:100%"><span class="tick-label" style="position:absolute;top:12px;transform:translateX(-50%);font-family:var(--kbd);font-size:9.5px;color:var(--fg-3)">Present</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL — Inspector -->
+    <div class="panel right" id="rightPanel">
+      <div class="panel-header">
+        <span class="panel-title">Model overview</span>
+      </div>
+      <div class="panel-body" id="panelBody">
+
+        <!-- OVERVIEW STATE (click an item to show inspector) -->
+        <div id="overviewState">
+          <div class="overview-section">
+            <div class="overview-section-title">Layers</div>
+            <div class="feat-item" onclick="showInspector('layer')">
+              <div class="row"><span class="name">Sandstone</span><span class="type">Layer</span></div>
+              <div class="meta">2.00 u thick · order 0</div>
+            </div>
+            <div class="feat-item" onclick="showInspector('layer2')">
+              <div class="row"><span class="name">Limestone</span><span class="type">Layer</span></div>
+              <div class="meta">1.50 u thick · order 1</div>
+            </div>
+          </div>
+
+          <div class="overview-section">
+            <div class="overview-section-title">Events</div>
+            <div class="feat-item selected" onclick="showInspector('fault')">
+              <div class="row"><span class="name">Normal Fault</span><span class="type">Fault</span></div>
+              <div class="meta">Dip 60° E · Throw <span style="color:var(--inferred)">0.40 u</span></div>
+            </div>
+          </div>
+
+          <div class="overview-section">
+            <div class="overview-section-title" style="color:var(--fg-3)">Intrusions</div>
+            <div style="font-size:12px;color:var(--fg-3);padding:4px 0;">None</div>
+          </div>
+          <div class="overview-section">
+            <div class="overview-section-title" style="color:var(--fg-3)">Unconformities</div>
+            <div style="font-size:12px;color:var(--fg-3);padding:4px 0;">None</div>
+          </div>
+          <div class="overview-section">
+            <div class="overview-section-title" style="color:var(--fg-3)">Mineralisation</div>
+            <div style="font-size:12px;color:var(--fg-3);padding:4px 0;">None</div>
+          </div>
+        </div>
+
+        <!-- FEATURE INSPECTOR STATE (hidden by default, shown on click) -->
+        <div id="inspectorState" style="display:none">
+          <div class="inspector-header">
+            <div>
+              <div class="inspector-title" id="inspectorTitle">Normal Fault</div>
+              <div class="inspector-subtitle">FAULT · EVENT</div>
+            </div>
+            <button class="btn sm" onclick="showOverview()">← Back</button>
+          </div>
+
+          <!-- FAULT inspector fields -->
+          <div id="faultFields">
+            <div class="field">
+              <div class="field-label">Subtype</div>
+              <div class="field-value">Normal</div>
+            </div>
+            <div class="field">
+              <div class="field-label">Dip</div>
+              <div class="field-value">60 <span class="unit">°</span></div>
+            </div>
+            <div class="field">
+              <div class="field-label">Strike</div>
+              <div class="field-value">000 <span class="unit">°</span></div>
+            </div>
+            <div class="field">
+              <div class="field-label">Dip direction</div>
+              <div class="field-value">090 <span class="unit">°</span></div>
+            </div>
+            <div class="field">
+              <div class="field-label">Throw <span class="inferred-pill" style="margin-left:6px">inferred</span></div>
+              <div class="field-value inferred">0.40 <span class="unit">u</span></div>
+            </div>
+            <div class="field">
+              <div class="field-label">Heave <span class="inferred-pill" style="margin-left:6px">inferred</span></div>
+              <div class="field-value inferred">0.23 <span class="unit">u</span></div>
+            </div>
+            <div class="field">
+              <div class="field-label">Description source</div>
+              <div class="source-quote">"A normal fault dipping 60 degrees east with a throw of 0.4 metres."</div>
+            </div>
+          </div>
+
+          <!-- LAYER inspector fields (hidden) -->
+          <div id="layerFields" style="display:none">
+            <div class="field"><div class="field-label">Name</div><div class="field-value">Sandstone</div></div>
+            <div class="field"><div class="field-label">Lithology</div><div class="field-value">Sandstone</div></div>
+            <div class="field">
+              <div class="field-label">Thickness</div>
+              <div class="field-value">2.00 <span class="unit">u</span></div>
+            </div>
+            <div class="field"><div class="field-label">Order</div><div class="field-value">0 <span class="unit">(bottom)</span></div></div>
+            <div class="field"><div class="field-label">Description source</div><div class="source-quote">"A sandstone layer 2 metres thick."</div></div>
+          </div>
+
+          <!-- LAYER2 inspector fields (hidden) -->
+          <div id="layer2Fields" style="display:none">
+            <div class="field"><div class="field-label">Name</div><div class="field-value">Limestone</div></div>
+            <div class="field"><div class="field-label">Lithology</div><div class="field-value">Limestone</div></div>
+            <div class="field">
+              <div class="field-label">Thickness <span class="inferred-pill" style="margin-left:6px">inferred</span></div>
+              <div class="field-value inferred">1.50 <span class="unit">u</span></div>
+            </div>
+            <div class="field"><div class="field-label">Order</div><div class="field-value">1</div></div>
+            <div class="field"><div class="field-label">Description source</div><div class="source-quote">"A limestone layer 1.5 metres thick above it."</div></div>
+          </div>
+        </div>
+
+      </div>
+      <div class="panel-actions">
+        <button class="btn sm">Export JSON</button>
+        <button class="btn sm">Export PNG</button>
+        <button class="btn sm">Share URL</button>
+      </div>
+    </div>
+  </div><!-- /workspace-view -->
+
+  <!-- FORMATION REFERENCE VIEW -->
+  <div class="reference-view" id="referenceView">
+    <div class="ref-intro">
+      <h1>Formation reference</h1>
+      <p>Every geological structure GeoForge v1 supports, rendered as a self-contained 3D example with its full set of measurement-origin overlays visible. Drag any card to rotate the camera.</p>
+      <p style="color:var(--fg-3);font-size:12.5px;margin-top:10px">Inferred values display in <span style="color:var(--inferred);border-bottom:1px dashed var(--inferred)">amber with a dashed underline</span>; stated values display in white.</p>
+    </div>
+
+    <!-- Section 01: Faults -->
+    <div class="ref-section">
+      <div class="ref-section-title">
+        <span class="num">01</span>
+        <h2>Faults</h2>
+        <span class="blurb">Displacement along a planar break</span>
+      </div>
+      <div class="ref-grid">
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="0" y="80" width="145" height="60" fill="#c4943a" opacity="0.75"/>
+              <rect x="0" y="140" width="145" height="70" fill="#9ab8c8" opacity="0.75"/>
+              <rect x="155" y="50" width="165" height="60" fill="#c4943a" opacity="0.75"/>
+              <rect x="155" y="110" width="165" height="70" fill="#9ab8c8" opacity="0.75"/>
+              <line x1="145" y1="40" x2="160" y2="210" stroke="#ef6262" stroke-width="2" stroke-dasharray="6,4" opacity="0.8"/>
+              <line x1="150" y1="80" x2="150" y2="50" stroke="#67e8f9" stroke-width="1.5"/>
+              <text x="155" y="67" font-family="monospace" font-size="9" fill="#f59e0b">Throw</text>
+              <text x="60" y="115" text-anchor="middle" font-family="monospace" font-size="9" fill="#c9c4b8">Sandstone</text>
+              <text x="60" y="182" text-anchor="middle" font-family="monospace" font-size="9" fill="#c9c4b8">Limestone</text>
+              <text x="150" y="30" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Normal Fault · 60°E</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Normal Fault</div><div class="ref-card-tag">Fault</div></div>
+            <div class="ref-card-caption">Extensional structure — hanging wall dropped relative to footwall. Dip 60°, throw + heave shown.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>DIP ARC · THROW · HEAVE · STRIKE LINE</div>
+          </div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="0" y="100" width="145" height="55" fill="#c4943a" opacity="0.75"/>
+              <rect x="0" y="155" width="145" height="65" fill="#9ab8c8" opacity="0.75"/>
+              <rect x="155" y="70" width="165" height="55" fill="#c4943a" opacity="0.75"/>
+              <rect x="155" y="125" width="165" height="65" fill="#9ab8c8" opacity="0.75"/>
+              <line x1="145" y1="55" x2="162" y2="220" stroke="#ef6262" stroke-width="2" stroke-dasharray="6,4" opacity="0.8"/>
+              <text x="160" y="50" font-family="monospace" font-size="10" fill="#8a8578">Reverse Fault · 45°W</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Reverse Fault</div><div class="ref-card-tag">Fault</div></div>
+            <div class="ref-card-caption">Compressional structure — hanging wall pushed up over footwall. Dip typically 40–60°.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>DIP ARC · THROW · HEAVE · SLIP ARROW</div>
+          </div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="0" y="95" width="155" height="50" fill="#c4943a" opacity="0.75"/>
+              <rect x="0" y="145" width="155" height="60" fill="#9ab8c8" opacity="0.75"/>
+              <rect x="160" y="68" width="160" height="50" fill="#c4943a" opacity="0.75"/>
+              <rect x="160" y="118" width="160" height="60" fill="#9ab8c8" opacity="0.75"/>
+              <line x1="155" y1="55" x2="168" y2="205" stroke="#ef6262" stroke-width="2" stroke-dasharray="6,4" opacity="0.8"/>
+              <text x="160" y="44" font-family="monospace" font-size="10" fill="#8a8578">Thrust Fault · 25°</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Thrust Fault</div><div class="ref-card-tag">Fault</div></div>
+            <div class="ref-card-caption">Low-angle reverse fault (dip &lt;30°). Older rocks pushed over younger in compressional settings.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>DIP ARC · SLIP ARROW · DISPLACEMENT</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 02: Folds -->
+    <div class="ref-section">
+      <div class="ref-section-title">
+        <span class="num">02</span>
+        <h2>Folds</h2>
+        <span class="blurb">Ductile bending of strata</span>
+      </div>
+      <div class="ref-grid">
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <path d="M 20,170 Q 160,80 300,170" fill="none" stroke="#c4943a" stroke-width="22" stroke-linecap="round" opacity="0.75"/>
+              <path d="M 20,190 Q 160,100 300,190" fill="none" stroke="#9ab8c8" stroke-width="22" stroke-linecap="round" opacity="0.75"/>
+              <path d="M 20,210 Q 160,120 300,210" fill="none" stroke="#8b9e6a" stroke-width="20" stroke-linecap="round" opacity="0.65"/>
+              <line x1="160" y1="75" x2="160" y2="180" stroke="#67e8f9" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>
+              <text x="160" y="65" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Anticline</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Anticline</div><div class="ref-card-tag">Fold</div></div>
+            <div class="ref-card-caption">Arch-up fold — oldest rocks at core. Interlimb angle, hinge line, plunge shown.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>HINGE LINE · INTERLIMB ARC · PLUNGE ARROW</div>
+          </div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <path d="M 20,80 Q 160,170 300,80" fill="none" stroke="#c4943a" stroke-width="22" stroke-linecap="round" opacity="0.75"/>
+              <path d="M 20,60 Q 160,150 300,60" fill="none" stroke="#9ab8c8" stroke-width="22" stroke-linecap="round" opacity="0.75"/>
+              <path d="M 20,40 Q 160,130 300,40" fill="none" stroke="#8b9e6a" stroke-width="18" stroke-linecap="round" opacity="0.6"/>
+              <line x1="160" y1="60" x2="160" y2="175" stroke="#67e8f9" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>
+              <text x="160" y="200" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Syncline</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Syncline</div><div class="ref-card-tag">Fold</div></div>
+            <div class="ref-card-caption">Trough-down fold — youngest rocks at core. Mirror image of anticline geometry.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>HINGE LINE · INTERLIMB ARC · PLUNGE ARROW</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 04: Intrusions -->
+    <div class="ref-section">
+      <div class="ref-section-title">
+        <span class="num">04</span>
+        <h2>Intrusions</h2>
+        <span class="blurb">Igneous bodies emplaced into country rock</span>
+      </div>
+      <div class="ref-grid">
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="60" y="70" width="200" height="45" fill="#c4943a" opacity="0.7"/>
+              <rect x="60" y="115" width="200" height="45" fill="#9ab8c8" opacity="0.7"/>
+              <rect x="60" y="160" width="200" height="45" fill="#8b9e6a" opacity="0.65"/>
+              <rect x="145" y="60" width="30" height="150" fill="#2d1a0e" opacity="0.9"/>
+              <rect x="145" y="60" width="30" height="150" fill="none" stroke="#8b4513" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.6"/>
+              <text x="160" y="52" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Basalt Dyke</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Basalt Dyke</div><div class="ref-card-tag">Intrusion</div></div>
+            <div class="ref-card-caption">Vertical discordant sheet cutting across bedding planes. Width and rock type overlaid.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>WIDTH ARROW · ROCK TYPE · DIP ARC</div>
+          </div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="60" y="80" width="200" height="45" fill="#c4943a" opacity="0.7"/>
+              <rect x="40" y="130" width="240" height="18" fill="#2d1a0e" opacity="0.9"/>
+              <rect x="40" y="130" width="240" height="18" fill="none" stroke="#8b4513" stroke-width="1" stroke-dasharray="4,2" opacity="0.6"/>
+              <rect x="60" y="148" width="200" height="45" fill="#9ab8c8" opacity="0.7"/>
+              <text x="160" y="65" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Basalt Sill</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Basalt Sill</div><div class="ref-card-tag">Intrusion</div></div>
+            <div class="ref-card-caption">Horizontal concordant sheet injected along bedding. Protrudes beyond layer edges.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>THICKNESS ARROW · ROCK TYPE</div>
+          </div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="60" y="80" width="200" height="45" fill="#c4943a" opacity="0.7"/>
+              <rect x="60" y="125" width="200" height="40" fill="#9ab8c8" opacity="0.7"/>
+              <ellipse cx="160" cy="188" rx="70" ry="40" fill="#5c3a1e" opacity="0.85"/>
+              <ellipse cx="160" cy="188" rx="70" ry="40" fill="none" stroke="#8b5a2b" stroke-width="1" stroke-dasharray="4,2" opacity="0.6"/>
+              <text x="160" y="65" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Granite Batholith</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Granite Batholith</div><div class="ref-card-tag">Intrusion</div></div>
+            <div class="ref-card-caption">Large dome-shaped felsic pluton below the layer stack. Partial exposure at surface.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>DEPTH ARROW · ROCK TYPE</div>
+          </div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="60" y="130" width="200" height="40" fill="#c4943a" opacity="0.7"/>
+              <rect x="60" y="170" width="200" height="40" fill="#9ab8c8" opacity="0.7"/>
+              <ellipse cx="160" cy="128" rx="55" ry="38" fill="#5c3a1e" opacity="0.85"/>
+              <ellipse cx="160" cy="128" rx="55" ry="38" fill="none" stroke="#8b5a2b" stroke-width="1" stroke-dasharray="4,2" opacity="0.6"/>
+              <text x="160" y="65" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Granite Laccolith</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Granite Laccolith</div><div class="ref-card-tag">Intrusion</div></div>
+            <div class="ref-card-caption">Dome-roofed intrusion that arches overlying beds upward. Dome protrudes above layer top.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>DEPTH ARROW · DOME HEIGHT · ROCK TYPE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 05: Unconformities -->
+    <div class="ref-section">
+      <div class="ref-section-title">
+        <span class="num">05</span>
+        <h2>Unconformities</h2>
+        <span class="blurb">Surfaces of erosion or non-deposition</span>
+      </div>
+      <div class="ref-grid">
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <!-- Upper horizontal layers -->
+              <rect x="40" y="70" width="240" height="40" fill="#9ab8c8" opacity="0.75"/>
+              <rect x="40" y="110" width="240" height="35" fill="#c4943a" opacity="0.75"/>
+              <!-- Angular contact wavy line -->
+              <path d="M 40,148 Q 80,143 120,150 Q 160,157 200,148 Q 240,139 280,148" fill="none" stroke="#FFAA00" stroke-width="2.5"/>
+              <!-- Lower tilted layers (rotated ~25°) -->
+              <g transform="rotate(-25 160 148)">
+                <rect x="40" y="150" width="240" height="35" fill="#8b9e6a" opacity="0.65"/>
+                <rect x="40" y="185" width="240" height="35" fill="#c4943a" opacity="0.65"/>
+              </g>
+              <!-- Discordance arc -->
+              <path d="M 85,148 A 22,22 0 0 0 98,130" fill="none" stroke="#FFAA00" stroke-width="1.5" opacity="0.8"/>
+              <text x="102" y="128" font-family="monospace" font-size="9" fill="#f59e0b">30°</text>
+              <text x="160" y="55" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Angular Unconformity</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Angular Unconformity</div><div class="ref-card-tag">Unconformity</div></div>
+            <div class="ref-card-caption">Lower tilted beds truncated by upper horizontal sequence. Angular discordance shown with arc.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>CONTACT LINE · DISCORDANCE ARC · TIME GAP</div>
+          </div>
+        </div>
+        <div class="ref-card">
+          <div class="ref-card-canvas">
+            <svg viewBox="0 0 320 240" width="100%" height="100%">
+              <rect width="320" height="240" fill="#08090d"/>
+              <rect x="40" y="70" width="240" height="40" fill="#9ab8c8" opacity="0.75"/>
+              <rect x="40" y="110" width="240" height="35" fill="#c4943a" opacity="0.75"/>
+              <path d="M 40,148 Q 80,143 120,150 Q 160,157 200,148 Q 240,139 280,148" fill="none" stroke="#FFAA00" stroke-width="2.5"/>
+              <rect x="40" y="150" width="240" height="35" fill="#8b9e6a" opacity="0.75"/>
+              <rect x="40" y="185" width="240" height="35" fill="#c4943a" opacity="0.7"/>
+              <text x="285" y="164" font-family="monospace" font-size="9" fill="#f59e0b">~10 Ma gap</text>
+              <text x="160" y="55" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a8578">Disconformity</text>
+            </svg>
+          </div>
+          <div class="ref-card-body">
+            <div class="ref-card-header"><div class="ref-card-title">Disconformity</div><div class="ref-card-tag">Unconformity</div></div>
+            <div class="ref-card-caption">Erosion surface between parallel beds. Beds above and below are parallel — time gap only.</div>
+            <div class="ref-card-overlays"><span class="lit">overlays:</span>CONTACT LINE · TIME GAP LABEL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /reference-view -->
+
+</div><!-- /app -->
+
+<script>
+function switchTab(tab) {
+  const app = document.getElementById('app');
+  app.className = 'app view-' + tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function showInspector(type) {
+  document.getElementById('overviewState').style.display = 'none';
+  document.getElementById('inspectorState').style.display = 'block';
+  ['faultFields','layerFields','layer2Fields'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.querySelectorAll('.feat-item').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  if (type === 'fault') {
+    document.getElementById('faultFields').style.display = 'block';
+    document.getElementById('inspectorTitle').textContent = 'Normal Fault';
+    document.querySelector('.inspector-subtitle').textContent = 'FAULT · EVENT';
+  } else if (type === 'layer') {
+    document.getElementById('layerFields').style.display = 'block';
+    document.getElementById('inspectorTitle').textContent = 'Sandstone';
+    document.querySelector('.inspector-subtitle').textContent = 'LAYER';
+  } else if (type === 'layer2') {
+    document.getElementById('layer2Fields').style.display = 'block';
+    document.getElementById('inspectorTitle').textContent = 'Limestone';
+    document.querySelector('.inspector-subtitle').textContent = 'LAYER';
+  }
+}
+function showOverview() {
+  document.getElementById('overviewState').style.display = 'block';
+  document.getElementById('inspectorState').style.display = 'none';
+}
+</script>
+</body>
+</html>
