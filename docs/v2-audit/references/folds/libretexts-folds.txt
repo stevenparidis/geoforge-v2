@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Bookshelves/Geology/Book:_An_Introduction_to_Geology_(Johnson_Affolter_Inkenbrandt_and_Mosher)/09:_Crustal_Deformation_and_Earthquakes/9.04:_Folds
+Access date: 2026-05-18
+Diagram: Figure 9.4.1 — anticline model diagram with axial plane and hinge line labelled; Figure 9.4.4 — Water Pocket Fold monocline aerial photo (Capitol Reef NP); Figure 9.4.5 — San Rafael Swell dome satellite image; Figure 9.4.6 — Denver Basin syncline schematic map and cross-section.
+
+Description: Introductory geology textbook chapter covering anticline, syncline, monocline, dome, and basin with labelled diagrams. Anticline diagram explicitly marks the axial plane, hinge line, and bed-dip directions, showing oldest rock in fold core.
+
+Useful for auditing: The anticline block diagram (Fig 9.4.1) is the primary reference for verifying GeoForge's axial plane position, limb dip angles, and oldest-rock-in-core rule. The monocline photo validates the step-like geometry GeoForge should render for that subtype.

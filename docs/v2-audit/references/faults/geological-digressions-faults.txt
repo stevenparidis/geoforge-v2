@@ -1,0 +1,7 @@
+Source URL: https://www.geological-digressions.com/faults-some-common-terminology/
+Access date: 2026-05-18
+Diagram: Fault anatomy diagram (strike, dip, footwall, hanging wall labelled); dip-slip faults schematic (high and low angle through dipping strata); strike-slip faults schematic (sinistral and dextral); oblique-slip faults schematic (left-lateral oblique with dip and strike components); listric faults diagram (extensional crust and delta growth fault examples).
+
+Description: Blog-format but authoritative structural geology terminology reference with clear schematic diagrams for each fault type including listric and oblique-slip variants. Includes field photographs of fault scarps from New Zealand earthquakes.
+
+Useful for auditing: The listric fault diagram is particularly valuable — it shows both crustal extension settings and sedimentary delta growth-fault settings, which matches the geological contexts GeoForge needs to represent correctly. The oblique-slip schematic clarifies vector decomposition of fault motion.

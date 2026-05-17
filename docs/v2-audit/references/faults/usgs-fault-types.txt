@@ -1,0 +1,7 @@
+Source URL: https://www.usgs.gov/faqs/what-a-fault-and-what-are-different-types
+Access date: 2026-05-18
+Diagram: Static GIF showing strike-slip, normal, and reverse fault mechanics side-by-side; horst-and-graben JPG; animated GIFs/videos for normal, thrust, blind-thrust, and strike-slip fault motion.
+
+Description: USGS FAQ page with official government-sourced fault diagrams including motion animations for normal, thrust, blind-thrust, and strike-slip faults. Horst-and-graben diagram shows crustal extension context for normal fault arrays.
+
+Useful for auditing: The animated diagrams clarify the direction and sense of block movement — critical for verifying that GeoForge moves the correct block in the correct direction for each fault type. The blind-thrust animation is relevant to the thrust subtype where the fault does not reach the surface.

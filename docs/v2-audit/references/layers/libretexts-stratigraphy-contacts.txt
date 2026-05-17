@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Courses/SUNY_Potsdam/Sedimentary_Geology:_Rocks_Environments_and_Stratigraphy/12:_Stratigraphy/12.01:_Review_of_unconformities_and_other_types_of_contacts
+Access date: 2026-05-18
+Diagram: Contact types diagrams showing conformable parallel layering, disconformable contacts, and angular unconformities; cross-sections illustrating multi-layer sequences with varying bed thickness and orientation.
+
+Description: Sedimentary geology stratigraphy chapter reviewing conformable contacts and unconformable contacts. Provides cross-sections showing how multi-layer sequences look in outcrop with parallel conformable bedding vs eroded/tilted surfaces.
+
+Useful for auditing: The conformable multi-layer cross-sections are the baseline reference for GeoForge's "layers" feature class. Correct rendering requires parallel bedding planes, consistent layer thickness laterally, and sharp contacts between layers.

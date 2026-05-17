@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Courses/Sierra_College/Physical_Geology_(Sierra_College_Edition)/07:_Igneous_Rocks/7.04:_Intrusive_Igneous_Rocks
+Access date: 2026-05-18
+Diagram: Intrusive rock body diagrams distinguishing tabular bodies (dykes and sills) from irregular bodies (stocks and batholiths), with size-scale comparisons. Laccolith shown as sill-like body that has caused overlying rock to bulge upward.
+
+Description: Sierra College Physical Geology textbook chapter with diagrams and explanations of all major intrusion morphologies. Particularly clear on the distinction between a sill (concordant, flat) and a laccolith (concordant but with domed roof due to magma pressure).
+
+Useful for auditing: Clarifies the sill-vs-laccolith distinction which is subtle in 2D cross-section — the laccolith must show measurable doming of the overlying strata. This is the key visual diagnostic to check in GeoForge's laccolith rendering.

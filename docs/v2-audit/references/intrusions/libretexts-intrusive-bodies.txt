@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Bookshelves/Geology/Physical_Geology_(Earle)/03:_Intrusive_Igneous_Rocks/3.05:_Intrusive_Igneous_Bodies
+Access date: 2026-05-18
+Diagram: Figure 3.5.2 — labelled cross-section showing dyke, sill, laccolith, stock, batholith, and pipe in a single diagram; Figure 3.5.3 — photograph of a large vertical dyke (Stawamus Chief, BC); Figure 3.5.4 — mafic dyke with chilled margins field photo.
+
+Description: Physical Geology textbook chapter on intrusive igneous bodies. Figure 3.5.2 is the key teaching diagram showing all major intrusion types in a single schematic cross-section with labels — dykes cutting across layering, sills parallel to layering, laccoliths doming overlying rock, stocks and batholiths as large equidimensional bodies.
+
+Useful for auditing: Figure 3.5.2 is the primary reference for GeoForge's intrusion class. It establishes the correct geometric relationship between each intrusion type and the surrounding host-rock layering: dykes are discordant (cross-cut), sills are concordant (parallel), laccoliths dome the roof, and batholiths are massive irregular bodies.

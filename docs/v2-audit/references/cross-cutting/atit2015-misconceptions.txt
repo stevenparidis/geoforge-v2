@@ -1,0 +1,4 @@
+URL: https://doi.org/10.1080/10899995.2015.1035470
+Access date: 2026-05-18
+Description: Atit et al. (2015) catalogue of documented student misconceptions in geoscience spatial reasoning; cited in spec-v2 §3.4 as the source for the misconception audit criteria.
+Why useful: Direct citation in spec-v2; maps to the spec's §3.4 misconception list; useful for any A.4 auditor who needs to verify whether a formation's deficiency matches a documented misconception.

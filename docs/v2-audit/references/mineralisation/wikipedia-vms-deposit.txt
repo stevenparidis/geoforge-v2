@@ -1,0 +1,7 @@
+Source URL: https://en.wikipedia.org/wiki/Volcanogenic_massive_sulfide_ore_deposit
+Access date: 2026-05-18
+Diagram: Classic VMS deposit cross-section showing stringer/stockwork feeder zone (conical alteration zone below), massive exhalite mound (main ore body), and apron (stratiform exhalite flanking deposits); Kuroko-type massive sulfide cross-section showing internal deposit zonation.
+
+Description: Wikipedia VMS article with two cross-section diagrams: a generic VMS structural model and a Kuroko-type specific model. Field photograph of Kidd Mine, Ontario (2.7 Ga paleo-seafloor). The structural model diagram is the canonical teaching figure for VMS geometry.
+
+Useful for auditing: The stringer-zone/massive-mound/apron three-part geometry is the key diagnostic for GeoForge's VMS rendering. Audit checks: is the stockwork zone shown as a cone below the mound? Is the massive sulfide mound at the seafloor/contact? Are flank deposits (apron) shown?

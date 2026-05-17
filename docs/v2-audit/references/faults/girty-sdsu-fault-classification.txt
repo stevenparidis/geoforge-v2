@@ -1,0 +1,7 @@
+Source URL: https://earth.sdsu.edu/visualgeology/naturaldisasters/Chapters/Chapter5Faults.pdf
+Access date: 2026-05-18
+Diagram: Chapter 5 PDF from Girty's "Perilous Earth: Understanding Processes Behind Natural Disasters" (SDSU, v1.0, 2009). Contains fault attitude diagrams (strike/dip), dip-slip and strike-slip classification figures, oblique-slip fault classification schematic.
+
+Description: Authoritative university chapter covering fault attitude (strike and dip), dip-slip (normal, reverse/thrust), strike-slip (dextral/sinistral), and oblique-slip classification in detail. Oblique-slip diagram distinguishes oblique-normal from oblique-reverse based on which component dominates.
+
+Useful for auditing: Provides the formal academic classification framework against which GeoForge's oblique fault subtype should be validated. The strike/dip attitude diagrams are the reference for correct 3D orientation rendering of all fault planes.

@@ -1,0 +1,7 @@
+Source URL: https://en.wikipedia.org/wiki/Anticline
+Access date: 2026-05-18
+Diagram: Anticline cross-section diagram showing convex-upward arch with oldest beds at core; satellite/aerial photo of eroded anticline exposing concentric outcrop belts.
+
+Description: Wikipedia anticline article with standard cross-section illustration showing the defining geometry: convex-upward fold, limbs dipping away from the hinge, oldest rock exposed at the eroded core. Also cross-references syncline for comparison.
+
+Useful for auditing: Provides the canonical visual definition of an anticline against which GeoForge's rendering can be compared. The dip-direction arrows and core-age labelling in the diagram are the two most important features to verify in GeoForge output.

@@ -1,0 +1,7 @@
+Source URL: https://en.wikipedia.org/wiki/Fault_(geology)
+Access date: 2026-05-18
+Diagram: Strike-slip schematic (plan view); normal and reverse dip-slip cross-section; horst-and-graben basin-and-range diagram; listric fault cross-section with rollover fold; multiple listric faults cross-section; thrust fault with fault-bend fold; oblique-slip fault diagram.
+
+Description: Comprehensive illustrated reference covering all six GeoForge fault subtypes. Listric fault section includes two dedicated cross-sections, one showing the characteristic concave-upward geometry flattening to a basal detachment, and a second showing a rollover anticline in the hanging wall.
+
+Useful for auditing: The listric and oblique-slip diagrams are the most important reference for GeoForge subtypes not well-covered by textbook sources. The rollover-anticline geometry produced by listric faults is an advanced visual feature to verify. Strike-slip plan-view schematic validates GeoForge's map-view rendering of horizontal block offset.

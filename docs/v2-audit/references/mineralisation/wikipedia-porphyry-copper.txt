@@ -1,0 +1,7 @@
+Source URL: https://en.wikipedia.org/wiki/Porphyry_copper_deposit
+Access date: 2026-05-18
+Diagram: USGS Porphyry Copper Model (Cox, 1986) — idealised cross-section showing concentric hydrothermal alteration zones (outer epidote-chlorite, intermediate quartz-sericite, central potassic with biotite/orthoclase) around a central porphyritic intrusion with stockwork veining.
+
+Description: Wikipedia article on porphyry copper deposits including the classic Cox (1986) USGS idealised cross-section showing the zoned alteration halo and stockwork vein pattern around a central intrusion. Photographs of Morenci Mine (oxide/sulfide zones) and Bingham Canyon Mine (primary sulfide zone) provide real-scale context.
+
+Useful for auditing: The Cox cross-section is the most widely reproduced teaching diagram for porphyry deposits. GeoForge's porphyry rendering should show a central porphyritic stock with concentric alteration zones — audit against this to check: is the intrusion central? Are alteration zones concentric and distinguishable? Is stockwork veining present?

@@ -1,0 +1,7 @@
+Source URL: https://pubs.usgs.gov/of/2008/1321/
+Access date: 2026-05-18
+Diagram: USGS Open-File Report 2008-1321 "Preliminary Model of Porphyry Copper Deposits" — full deposit model including geophysical, remote sensing, and mineralogical attributes. PDF (1.6 MB) available at the linked URL.
+
+Description: Updated USGS deposit model for porphyry copper, expanding on the 1986 Bulletin 1693 model. Covers deposit zonation, alteration sequences, geophysical signatures, and spatial relationships to other deposit types (skarns, epithermal). Includes schematic diagrams within the PDF.
+
+Useful for auditing: Authoritative government source for the porphyry deposit model. The spatial relationship diagrams showing porphyry at depth transitioning upward to epithermal are useful for auditing GeoForge's porphyry vs epithermal rendering distinction.
