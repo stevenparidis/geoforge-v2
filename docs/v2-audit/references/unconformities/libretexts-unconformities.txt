@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Bookshelves/Geology/Introduction_to_Historical_Geology_(Ruppert_Lacy_and_Haddad)/08:_Geologic_Time/8.03:_Unconformities
+Access date: 2026-05-18
+Diagram: Figure 1 — cross-sectional diagrams of all three unconformity types (angular unconformity, disconformity, nonconformity) with arrows indicating contact boundaries; Figure 2 — "Great Unconformity" photograph (Grand Canyon); Figure 4 — Grand Canyon disconformity between Muav Limestone and Temple Butte/Redwall formations.
+
+Description: Historical geology textbook chapter covering angular unconformity, disconformity, and nonconformity with labelled cross-section diagrams and Grand Canyon field photographs. Angular unconformity diagram explicitly shows tilted lower beds with erosion surface and horizontal upper beds.
+
+Useful for auditing: Figure 1 is the primary reference for all three GeoForge unconformity types. The tilted-beds angle in the angular unconformity diagram, the wavy erosion surface in the disconformity, and the metamorphic/crystalline lower contact in the nonconformity are the three specific visual features to verify in GeoForge output.

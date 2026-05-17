@@ -1,0 +1,7 @@
+Source URL: https://en.wikipedia.org/wiki/Intrusion_(geology)
+Access date: 2026-05-18
+Diagram: Classic intrusion types diagram (from Utah Geological Survey, GNU FDL) showing: 1. Laccolith, 2. Small dyke, 3. Batholith, 4. Dyke, 5. Sill, 6. Volcanic neck/pipe, 7. Lopolith — all numbered and labelled in a single cross-section illustration.
+
+Description: Wikipedia's intrusion article and the Utah Geological Survey diagram it references provide the standard numbered-labelling of all major intrusion types in a single cross-section, widely reproduced in geology textbooks.
+
+Useful for auditing: The numbered diagram is arguably the most-reproduced teaching diagram for intrusion geometry. It allows direct comparison of GeoForge's dyke (discordant, steep) vs sill (concordant, horizontal) vs laccolith (concordant but domed roof) geometries against a widely-accepted standard.

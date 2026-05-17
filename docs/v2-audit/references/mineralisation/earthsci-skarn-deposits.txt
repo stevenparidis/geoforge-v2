@@ -1,0 +1,7 @@
+Source URL: https://earthsci.org/mineral/mindep/skarn/skarn.html
+Access date: 2026-05-18
+Diagram: "skarn_dep.jpg" — general skarn deposit diagram; "Porphyry-skarn-deposits.png" — diagram showing porphyry-skarn spatial relationship. Textual description of zonation: proximal garnet → distal pyroxene → idocrase/wollastonite at skarn-marble contact.
+
+Description: EarthSci.org overview of skarn deposits covering formation, mineralogy, spatial zonation relative to intrusion, exoskarn vs endoskarn distinction, and relationship to porphyry systems. Describes shallow (bedding-oblique, massive replacement) vs deep (bedding-parallel, narrow) skarn geometry.
+
+Useful for auditing: The porphyry-skarn spatial diagram and zonation description are essential for GeoForge's skarn rendering. Key audit checks: is the skarn shown at the intrusion-carbonate contact (not within the intrusion itself)? Is there a zonation gradient away from the intrusion? Is the host rock appropriately carbonate-bearing?

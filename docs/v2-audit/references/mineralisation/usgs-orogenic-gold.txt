@@ -1,0 +1,7 @@
+Source URL: https://pubs.usgs.gov/of/2003/of03-077/text.htm
+Access date: 2026-05-18
+Diagram: USGS Open-File Report 03-077 "Low-Sulfide Quartz Gold Deposit Model" — diagrams of structural controls on orogenic gold mineralisation including auriferous quartz veins in shear zones, fluid budget in collisional orogens, and typical depth-pressure setting (~5-15 km, greenschist facies).
+
+Description: USGS deposit model for low-sulfide quartz gold (orogenic gold). Describes the tectonic setting (compressional/transpressional collision orogens), structural host (transcrustal strike-slip and thrust faults), and fluid source. Contains schematic of vein geometry in shear zones.
+
+Useful for auditing: Orogenic gold is defined by structurally-controlled auriferous quartz veins in deformed rocks. GeoForge's orogenic gold rendering should show veins controlled by a fault or shear zone (not a pluton as in porphyry). Audit: are veins in fault/shear geometry? Is host rock deformed (not fresh volcanic)?

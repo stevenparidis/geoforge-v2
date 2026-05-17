@@ -1,0 +1,7 @@
+Source URL: https://courses.lumenlearning.com/suny-geophysical/chapter/geologic-structures/
+Access date: 2026-05-18
+Diagram: Geologic structures overview page including block diagrams of horizontal strata, tilted/dipping strata, and multi-layer sequences. Shows how horizontal beds appear in map view and cross-section, and how dipping beds produce different patterns.
+
+Description: Physical geography course chapter on geologic structures with diagrams covering the range from undisturbed horizontal layers through to deformed (folded, faulted) sequences. Multi-layer stacks shown in both map-view and cross-section.
+
+Useful for auditing: The horizontal-to-dipping spectrum of diagrams lets auditors verify GeoForge's layer thickness consistency, color differentiation between layers, and correct map-view expression of dipping beds (narrower apparent thickness up-dip, wider down-dip).

@@ -1,0 +1,7 @@
+Source URL: https://pubs.usgs.gov/sir/2010/5070/c/SIR10-5070-C.pdf
+Access date: 2026-05-18
+Diagram: USGS Scientific Investigations Report 2010-5070-C "Volcanogenic Massive Sulfide Occurrence Model" — comprehensive VMS deposit model PDF with stratigraphic diagrams, tectonic setting figures, and deposit cross-sections.
+
+Description: Full USGS deposit model for VMS occurrences. Chapter 5 specifically covers the physical volcanology of VMS deposits including submarine volcanic setting cross-sections showing hydrothermal vent mounds on the seafloor, feeder systems, and exhalative sediment distribution.
+
+Useful for auditing: Chapter 5 figures are authoritative for the volcanic host-rock geometry and fluid-flow architecture of VMS deposits. GeoForge's VMS rendering should show correct host-rock type (volcanic/volcaniclastic) and tectonic setting (seafloor spreading or arc) distinguishing it from skarn (contact-metasomatic) and orogenic gold (structurally controlled vein).

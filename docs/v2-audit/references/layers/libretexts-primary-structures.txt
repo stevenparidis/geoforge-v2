@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Bookshelves/Geology/Geological_Structures_-_A_Practical_Introduction_(Waldron_and_Snyder)/01:_Topics/1.03:_Primary_Structures
+Access date: 2026-05-18
+Diagram: Diagrams of sedimentary primary structures showing horizontal bedding, cross-bedding, and graded bedding; strike-and-dip notation on tilted/dipping beds; block diagrams of horizontal vs dipping strata in outcrop.
+
+Description: Practical structural geology introduction covering horizontal and dipping sedimentary layers. Explains strike and dip measurement as the primary descriptor of a dipping bed's orientation.
+
+Useful for auditing: Provides the reference geometry for GeoForge's horizontal and dipping layer classes. Strike-and-dip notation diagrams help verify that GeoForge correctly represents the angle and direction of dip in its cross-section view.

@@ -1,0 +1,7 @@
+Source URL: https://en.wikipedia.org/wiki/Unconformity
+Access date: 2026-05-18
+Diagram: Gallery of nine field photographs including: angular unconformity examples (Scotland, Portugal, New Mexico, China, Ecuador, Arizona); disconformity examples (Czech Republic, Ohio); nonconformity examples (Missouri, Germany). Article also describes paraconformity, buttress unconformity, and blended unconformity.
+
+Description: Wikipedia unconformity article covering six types of unconformity with a gallery of field photographs from multiple continents. Angular unconformity photos from diverse settings illustrate the range of dip angles possible in the lower tilted sequence.
+
+Useful for auditing: The field photographs provide ground-truth for what angular unconformities look like at varying angles of tilting in the lower beds. GeoForge's angular unconformity rendering should show a clearly visible angular discordance — these photos establish what constitutes a "clear" vs "subtle" angle.

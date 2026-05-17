@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Bookshelves/Geology/Physical_Geology_(Earle)/12:_Geological_Structures/12.03:_Fracturing_and_Faulting
+Access date: 2026-05-18
+Diagram: Figure 12.3.5 — reverse, normal, and strike-slip fault block diagrams side by side; Figure 12.3.6 — horst and graben structures; Figure 12.3.7 — thrust fault before/after cross-section.
+
+Description: Covers normal, reverse, thrust, and strike-slip faults with labelled block diagrams showing hanging wall vs footwall movement directions and tectonic context (extension vs compression).
+
+Useful for auditing: Provides clean canonical block-diagram geometry for the four primary fault types. GeoForge renders each as a 2D cross-section, so comparing fault-offset angles, dip directions, and hanging-wall displacement against these figures will identify rendering errors in the normal/reverse/thrust trio.

@@ -1,0 +1,7 @@
+Source URL: https://pubs.usgs.gov/sir/2010/5070/q/sir20105070q.pdf
+Access date: 2026-05-18
+Diagram: USGS Scientific Investigations Report 2010-5070-Q "Descriptive Models for Epithermal Gold-Silver Deposits" — cross-sections showing low-sulfidation (LS) and high-sulfidation (HS) epithermal deposit geometry, alteration zonation, and structural setting within a volcanic edifice.
+
+Description: USGS descriptive models for epithermal gold-silver deposits, covering both low-sulfidation (adularia-sericite, quartz-calcite veins, gold-silver) and high-sulfidation (advanced argillic lithocap, enargite, copper-gold) types. Includes depth-temperature zonation diagrams.
+
+Useful for auditing: The LS vs HS cross-sections establish the two distinct geometries GeoForge must render correctly. Low-sulfidation shows narrow steep veins; high-sulfidation shows a broad lithocap alteration zone above a porphyry-like core. Audit: which subtype does GeoForge render? Does it match the correct geometry?

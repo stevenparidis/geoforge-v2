@@ -1,0 +1,7 @@
+Source URL: https://www.geological-digressions.com/folded-rock-some-terminology/
+Access date: 2026-05-18
+Diagram: Diagram 1 — fold terminology (hinge point, hinge line, axial surface, axial plane, limbs); Diagram 2 — fold axes, axial planes, and younging directions; Diagram 3 — cylindrical fold description schematic; aerial photograph of plunging anticlines and synclines (Belcher Islands, 2-3 km wide folds).
+
+Description: Structural geology terminology reference distinguishing antiform/synform (geometric) from anticline/syncline (stratigraphic younging) and explaining cylindrical fold geometry. Includes real-world aerial photographs at regional scale.
+
+Useful for auditing: Provides the precise geometric definitions (hinge, axial plane, limb) that GeoForge's fold labels should match. The antiform/anticline distinction matters if GeoForge labels folds — synform rendered as syncline is only correct when younging direction is shown.

@@ -1,0 +1,7 @@
+Source URL: https://courses.lumenlearning.com/geo/chapter/reading-folds/
+Access date: 2026-05-18
+Diagram: Figure 1 — anticline block diagram with multiple dipping rock layers; Figure 2 — field photograph of anticline with adjacent syncline; block diagrams of plunging anticlines and synclines (map view + cross-section); Sideling Hill syncline road-cut photograph.
+
+Description: Lumen Learning geology reading with block diagrams and photographs showing anticlines, synclines, and plunging variants. Emphasises visualising 3D structure from map-view patterns (V-shapes for plunging folds).
+
+Useful for auditing: The plunging fold block diagrams (map view + cross-section) are the key reference for GeoForge's fold renderings, because plunge is the most commonly misrepresented aspect. The paired map-view/cross-section format directly mirrors how GeoForge displays fold geometry.

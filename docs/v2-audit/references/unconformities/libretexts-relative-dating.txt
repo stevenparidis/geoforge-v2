@@ -1,0 +1,7 @@
+Source URL: https://geo.libretexts.org/Bookshelves/Geology/Introduction_to_Historical_Geology_(Johnson_et_al.)/09:_Geologic_Time_and_Relative_Dating/9.03:_Relative_Dating_and_Unconformities
+Access date: 2026-05-18
+Diagram: Cross-section diagrams illustrating angular unconformity, disconformity, and nonconformity in the context of relative dating. Shows the sequence of events (deposition, tilting, erosion, renewed deposition) that creates each unconformity type.
+
+Description: Historical geology textbook chapter framing unconformities within the principles of relative dating (Steno, Hutton). Diagrams show the time-sequence of geological events that produce each unconformity type, not just the final geometry.
+
+Useful for auditing: The event-sequence framing is important for GeoForge because the app teaches process as well as form. Auditors should check not only that the geometry looks right but that the implied geological history (tilt then erode then deposit) is consistent with what students would infer from the cross-section.
