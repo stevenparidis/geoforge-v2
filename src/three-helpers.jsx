@@ -1429,6 +1429,31 @@
       const vertex = vertexLocal.clone().applyQuaternion(q);
       const limbLw = limbL.clone().applyQuaternion(q);
       const limbRw = limbR.clone().applyQuaternion(q);
+
+      // D.3: limb planes — two faint translucent planes radiating from the hinge,
+      // one per limb, so the interlimb angle measurement origin is visually concrete.
+      const limbPlaneLen = width * 0.8;  // strike extent
+      const limbPlaneH   = total * 0.7;  // dip extent (along the limb)
+      const limbMatL = new T.MeshBasicMaterial({ color: COLOR.overlay, transparent: true, opacity: 0.10, side: T.DoubleSide, depthWrite: false });
+      const limbMatR = limbMatL.clone();
+
+      // Helper: build a plane mesh whose local Z-axis points along `dir` (the limb direction)
+      // and whose local X-axis is the fold axis (axisTarget), centred at `vertex`.
+      function makeLimbPlane(dir, mat) {
+        const gp = new T.PlaneGeometry(limbPlaneLen, limbPlaneH);
+        // PlaneGeometry lies in XY; we want it in the plane whose normal is perpendicular
+        // to both dir and axisTarget. Rotate so that the plane's local +Y aligns with dir.
+        const up = new T.Vector3(0, 1, 0);
+        const planeQ = new T.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
+        gp.applyQuaternion(planeQ);
+        const m = new T.Mesh(gp, mat);
+        // Offset the plane so its base edge starts at the hinge (vertex) rather than centring there.
+        m.position.copy(vertex.clone().add(dir.clone().multiplyScalar(limbPlaneH / 2)));
+        return m;
+      }
+      overlays.add(makeLimbPlane(limbLw, limbMatL));
+      overlays.add(makeLimbPlane(limbRw, limbMatR));
+
       const arc = arc3D(vertex, limbLw, limbRw, 0.7, COLOR.overlay);
       overlays.add(arc.line);
       overlays.add(arcWedge(vertex, limbLw, limbRw, 0.7, COLOR.overlay, 0.18));
