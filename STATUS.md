@@ -125,3 +125,21 @@
 - Total: 25 formations audited
 
 **Phases B–H unblocked.**
+
+---
+
+## Phase B — Layer age annotation + HW/FW labels
+- [x] B.1 CSS variables + palette extension
+- [x] B.2 Age-ramp side faces
+- [x] B.3 Younging arrow
+- [x] B.4 Age sequence badges
+- [x] B.5 HW/FW labels + mnemonic tooltip
+- [x] B.6 Smoke test + signoff
+
+Audit work list closed:
+- §5.1 age annotation: all layer-bearing formations ✓
+- §5.2 HW/FW labels: all 7 fault formations ✓
+
+v1 smoke test: passing (all 4 tests).
+v2 smoke test: passing (B.age, B.hwfw).
+Phase C unblocked.
