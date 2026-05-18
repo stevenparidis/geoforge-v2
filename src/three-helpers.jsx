@@ -884,12 +884,12 @@
     let hwDir, fwDir;
     if (subtype === 'normal' || subtype === 'listric') {
       // HW moves down-dip; FW moves up-dip (relative to HW)
-      hwDir = new T.Vector3(0, -1, 0);
-      fwDir = new T.Vector3(0, 1, 0);
+      hwDir = downDipVec(dipDeg, dipDir).normalize();
+      fwDir = upDipVec(dipDeg, dipDir).normalize();
     } else if (subtype === 'reverse' || subtype === 'thrust') {
       // HW moves up-dip; FW moves down-dip (relative to HW)
-      hwDir = new T.Vector3(0, 1, 0);
-      fwDir = new T.Vector3(0, -1, 0);
+      hwDir = upDipVec(dipDeg, dipDir).normalize();
+      fwDir = downDipVec(dipDeg, dipDir).normalize();
     } else if (subtype === 'strike-slip') {
       // Horizontal motion along strike
       const sVec = strikeVec(strike).normalize();
@@ -906,8 +906,8 @@
       fwDir = hwDir.clone().negate();
     } else {
       // Default: treat like normal fault
-      hwDir = new T.Vector3(0, -1, 0);
-      fwDir = new T.Vector3(0, 1, 0);
+      hwDir = downDipVec(dipDeg, dipDir).normalize();
+      fwDir = upDipVec(dipDeg, dipDir).normalize();
     }
 
     // For purely vertical faults, use horizontal strike arrows on each side
