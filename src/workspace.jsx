@@ -1148,6 +1148,11 @@ If the model has no structural features to guide prediction, return an empty arr
             <span className="vn-text">{feature.validation_note}</span>
           </div>
         )}
+        {feature.explanation && (
+          <div className="feat-explanation">
+            {feature.explanation}
+          </div>
+        )}
         {isLayer && (
           <>
             <FieldRow label="Thickness" value={feature.thickness} unit="u" inferred={fo.thickness === 'inferred'} onChange={(v) => onChange('thickness', v)} />
