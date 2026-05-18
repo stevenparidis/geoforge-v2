@@ -1474,6 +1474,32 @@
       const wL = makeValueLabel(`Flexure ${w.toFixed(2)} u`, { inferred: evt.field_origin?.flexure_width === 'inferred' });
       wL.position.copy(a.clone().add(b).multiplyScalar(0.5).add(new T.Vector3(0, 0.15, 0)));
       overlays.add(wL);
+
+      // D.4: underlying-step indicator — dashed lines showing the basement step beneath the flexure.
+      const stepH = evt.step_height ?? 0.8;
+      const extend = 0.9; // how far the horizontal lines extend beyond the flexure edges
+      // Positions: all in local frame first, then rotate to world space.
+      const stepColor = 0x5a5648;  // faint warm grey
+      // Upper platform: at y = total/2 (top of layers before step), x from -(w/2 + extend) to -w/2
+      const stepUpL = new T.Vector3(-(w / 2 + extend), total / 2, 0).applyQuaternion(q);
+      const stepUpR = new T.Vector3(-w / 2, total / 2, 0).applyQuaternion(q);
+      // Lower platform: at y = total/2 - stepH, x from w/2 to w/2 + extend
+      const stepDnL = new T.Vector3(w / 2, total / 2 - stepH, 0).applyQuaternion(q);
+      const stepDnR = new T.Vector3(w / 2 + extend, total / 2 - stepH, 0).applyQuaternion(q);
+      // Vertical drop: from upper level to lower level at x = 0 (centre of flexure)
+      const stepVT = new T.Vector3(0, total / 2, 0).applyQuaternion(q);
+      const stepVB = new T.Vector3(0, total / 2 - stepH, 0).applyQuaternion(q);
+      overlays.add(dashedLine(stepUpL, stepUpR, stepColor, { opacity: 0.55 }));
+      overlays.add(dashedLine(stepDnL, stepDnR, stepColor, { opacity: 0.55 }));
+      overlays.add(dashedLine(stepVT, stepVB, stepColor, { opacity: 0.55 }));
+      // Label "underlying step" near the vertical segment
+      const stepLblEl = document.createElement('div');
+      stepLblEl.className = 'monocline-step-lbl';
+      stepLblEl.textContent = 'underlying step';
+      const stepLbl = new window.CSS2DObject(stepLblEl);
+      stepLbl.position.copy(stepVT.clone().add(stepVB).multiplyScalar(0.5).add(new T.Vector3(0.15, 0, 0)));
+      overlays.add(stepLbl);
+      labels.push({ node: stepLbl, data: { kind: 'event', id: evt.id } });
     }
 
     // Fold label
