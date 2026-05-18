@@ -91,6 +91,27 @@
     color, side: T.DoubleSide, transparent: true, opacity: op, depthWrite: false,
   });
 
+  // ---------- E.2 Focus mode tagging ----------
+  // Walks an Object3D subtree and stamps featureId + baseOpacity onto every
+  // Mesh/Line/Points so applyFocusModeToScene can dim non-selected features.
+  function tagFeature(object3D, featureId) {
+    if (!object3D || featureId == null) return;
+    object3D.traverse(node => {
+      if (node.isMesh || node.isLine || node.isPoints) {
+        node.userData.featureId = featureId;
+        if (node.userData.baseOpacity == null) {
+          if (node.material) {
+            // material may be an array (multi-material); use first element's opacity
+            const mat = Array.isArray(node.material) ? node.material[0] : node.material;
+            node.userData.baseOpacity = (mat && mat.opacity != null) ? mat.opacity : 1.0;
+          } else {
+            node.userData.baseOpacity = 1.0;
+          }
+        }
+      }
+    });
+  }
+
   // ---------- Label helpers (CSS2D) ----------
   function makeLabel(text, opts = {}) {
     const el = document.createElement('div');
@@ -358,6 +379,11 @@
       stack.rotateOnWorldAxis(strikeAxis, -rad(dipDeg));
     }
 
+    // Tag each slab with its layer's featureId for focus-mode dimming
+    for (const s of blk.slabs) {
+      tagFeature(s.mesh, s.L.id);
+    }
+
     meshes.add(stack);
 
     // ---- Thickness overlays per layer (computed in tilted world space) ----
@@ -561,11 +587,13 @@
       const fw = new T.Mesh(baseGeom, makeFaultMats(false, clipPlaneFW));
       fw.position.y = y + t / 2;
       fw.userData = { kind: 'layer', side: 'fw', layer: L };
+      tagFeature(fw, L.id);
       // Hanging wall (the half on the "above/positive-normal" side of the plane)
       const hw = new T.Mesh(baseGeom, makeFaultMats(true, clipPlaneHW));
       hw.position.y = y + t / 2;
       hw.position.add(slipVec); // displace HW
       hw.userData = { kind: 'layer', side: 'hw', layer: L };
+      tagFeature(hw, L.id);
 
       meshes.add(fw);
       meshes.add(hw);
@@ -614,9 +642,11 @@
       fp.computeVertexNormals();
       const fpMesh = new T.Mesh(fp, new T.MeshBasicMaterial({ color: COLOR.fault, transparent: true, opacity: 0.22, side: T.DoubleSide, depthWrite: false }));
       fpMesh.renderOrder = 2;
+      tagFeature(fpMesh, evt.id);
       meshes.add(fpMesh);
       // Plane outline
       const outline = solidLine([cornersF[0], cornersF[1], cornersF[2], cornersF[3], cornersF[0]], COLOR.fault, { opacity: 0.9 });
+      tagFeature(outline, evt.id);
       meshes.add(outline);
     } else {
       // ---- Listric: build a curved fault surface using circular-arc geometry ----
@@ -661,6 +691,7 @@
       fg.computeVertexNormals();
       const fpMesh = new T.Mesh(fg, new T.MeshBasicMaterial({ color: COLOR.fault, transparent: true, opacity: 0.25, side: T.DoubleSide, depthWrite: false }));
       fpMesh.renderOrder = 2;
+      tagFeature(fpMesh, evt.id);
       meshes.add(fpMesh);
 
       // Profile trace line as overlay.
@@ -1327,8 +1358,13 @@
         g.computeVertexNormals();
         return new T.Mesh(g, mat);
       }
-      meshes.add(addSurface(tops));
-      meshes.add(addSurface(bots));
+      // Tag and add each fold layer surface mesh with the layer's featureId
+      const topSurf = addSurface(tops);
+      tagFeature(topSurf, slab.L.id);
+      meshes.add(topSurf);
+      const botSurf = addSurface(bots);
+      tagFeature(botSurf, slab.L.id);
+      meshes.add(botSurf);
 
       // Add 4 side strips (front/back/left/right)
       function addStrip(rowA, rowB) {
@@ -1346,15 +1382,23 @@
         g.computeVertexNormals();
         return new T.Mesh(g, mat);
       }
-      meshes.add(addStrip(tops[0], bots[0]));
-      meshes.add(addStrip(tops[nz], bots[nz]));
+      const frontStrip = addStrip(tops[0], bots[0]);
+      tagFeature(frontStrip, slab.L.id);
+      meshes.add(frontStrip);
+      const backStrip = addStrip(tops[nz], bots[nz]);
+      tagFeature(backStrip, slab.L.id);
+      meshes.add(backStrip);
       // left & right edges: x= -w/2 and +w/2
       const leftTop = tops.map((row) => row[0]);
       const leftBot = bots.map((row) => row[0]);
       const rightTop = tops.map((row) => row[nx]);
       const rightBot = bots.map((row) => row[nx]);
-      meshes.add(addStrip(leftTop, leftBot));
-      meshes.add(addStrip(rightTop, rightBot));
+      const leftStrip = addStrip(leftTop, leftBot);
+      tagFeature(leftStrip, slab.L.id);
+      meshes.add(leftStrip);
+      const rightStrip = addStrip(rightTop, rightBot);
+      tagFeature(rightStrip, slab.L.id);
+      meshes.add(rightStrip);
     }
 
     // ---- Apply plunge: rotate entire group so axis points along plungeDir bearing with given plunge angle.
@@ -1742,6 +1786,9 @@
       overlays.add(lbl);
     }
 
+    // Tag all meshes in this intrusion with the intrusion's featureId
+    tagFeature(meshes, intrusion.id);
+
     return { meshes, overlays, labels };
   }
 
@@ -1834,6 +1881,9 @@
       discLbl.position.copy(discArc.midPoint);
       overlays.add(discLbl);
     }
+
+    // Tag all lines/meshes with the unconformity's featureId
+    tagFeature(meshes, unconformity.id);
 
     return { meshes, overlays, labels: [] };
   }
@@ -2033,6 +2083,9 @@
     const lbl = makeLabel(`${capitalise(M.subtype)} — ${M.metals || ''}`, { center: true });
     lbl.position.set(0, oreY + (M.alteration_radius || 0.5) + 0.25, 0);
     labels.push(lbl);
+
+    // Tag all meshes with the mineralisation feature's id
+    tagFeature(meshes, M.id);
 
     return { meshes, overlays, labels };
   }

@@ -675,6 +675,7 @@ If the model has no structural features to guide prediction, return an empty arr
     model, setModel,
     description, setDescription,
     showLabels, showOverlays, showGrid,
+    focusModeOn,
   }) {
     const [interpreting, setInterpreting] = useState(false);
     const [predicting, setPredicting] = useState(false);
@@ -1039,6 +1040,7 @@ If the model has no structural features to guide prediction, return an empty arr
               onSelect={onSelectFeature}
               selectedId={selected?.id}
               selected={selected}
+              focusModeOn={focusModeOn}
             />
           </div>
 
