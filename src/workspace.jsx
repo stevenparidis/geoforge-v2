@@ -447,7 +447,7 @@ If the model has no structural features to guide prediction, return an empty arr
     const sorted = [...STRUCTURAL_TERMS].sort((a, b) => b.length - a.length);
     for (const term of sorted) {
       const regex = new RegExp(`\\b${term}\\b`, 'gi');
-      result = result.replace(regex, `<strong>${term}</strong>`);
+      result = result.replace(regex, '<strong>$&</strong>');
     }
     return result;
   }
