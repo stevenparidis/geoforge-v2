@@ -15,11 +15,7 @@
 - [x] Phase 5 — Acceptance testing and v1 release
 - [x] Phase 6 — Scope expansion: intrusions and unconformities
 - [x] Phase 7 — Mineralisation and ore deposits
-<<<<<<< HEAD
-- [ ] Phase 8 — Prediction, persistence, collaboration (8.2 complete)
-=======
-- [x] Phase 8 — Prediction, persistence, collaboration (in progress)
->>>>>>> 041835b (phase 8.3: share via URL)
+- [x] Phase 8 — Prediction, persistence, collaboration
 
 ## Phase 5 — Acceptance testing and v1 release
 
