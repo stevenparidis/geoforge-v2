@@ -672,6 +672,29 @@
 
       // Dip-at-surface and dip-at-depth overlays.
       addListricDipAnnotations(overlays, labels, evt, total, depth, surfacePt3D, detachPt3D);
+
+      // ---- C.4.b: Detachment surface plane + label + dip-at-depth arc ----
+      const detachY = detachPt3D.y; // Y position in scene
+      const planeGeo = new T.PlaneGeometry(depth * 2, depth * 1.4);
+      planeGeo.rotateX(-Math.PI / 2);
+      const planeMat = new T.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.13, side: T.DoubleSide, depthWrite: false });
+      const planeMesh = new T.Mesh(planeGeo, planeMat);
+      planeMesh.position.set(0, detachY, 0);
+      overlays.add(planeMesh);
+
+      const detachLbl = makeLabel('<span class="lbl">detachment surface</span>', { html: true });
+      detachLbl.position.set(depth * 0.9, detachY, 0);
+      overlays.add(detachLbl);
+      labels.push({ node: detachLbl, data: {} });
+
+      // Arc annotation showing dip angle at detachment point.
+      const dipAtDepth = evt.dip_at_depth ?? 10;
+      const horizVec = new T.Vector3(1, 0, 0);
+      const tangentVec = downDipVec(dipAtDepth, dipDir).normalize();
+      overlays.add(arcWedge(detachPt3D, horizVec, tangentVec, 0.35, COLOR.overlay, 0.06));
+      const dipDepthArcLbl = makeValueLabel(`dip ${dipAtDepth}° at depth`);
+      dipDepthArcLbl.position.copy(detachPt3D.clone().add(new T.Vector3(0.4, 0.1, 0)));
+      overlays.add(dipDepthArcLbl);
     }
 
     // ---- Overlays for the fault: dip / throw / heave / slip / strike ----
@@ -733,12 +756,12 @@
       const a = arrow3D(start, vert, 0xb693ff, { headLength: 0.08, headWidth: 0.05 });
       const b = arrow3D(vert.clone(), vert.clone().add(horiz), 0xb693ff, { headLength: 0.08, headWidth: 0.05 });
       overlays.add(a); overlays.add(b);
-      const dl = makeValueLabel(`throw ${Math.abs(vert.y).toFixed(2)} u`);
-      dl.position.copy(vert.clone().multiplyScalar(0.5).add(new T.Vector3(-0.1, 0, 0)));
-      overlays.add(dl);
-      const hl = makeValueLabel(`offset ${horiz.length().toFixed(2)} u`);
-      hl.position.copy(vert.clone().add(horiz.clone().multiplyScalar(0.5)));
-      overlays.add(hl);
+      const dipSlipLbl = makeValueLabel(`dip-slip component: ${Math.abs(vert.y).toFixed(2)} u`);
+      dipSlipLbl.position.copy(vert.clone().multiplyScalar(0.5).add(new T.Vector3(-0.25, 0, 0)));
+      overlays.add(dipSlipLbl);
+      const strikeSlipLbl = makeValueLabel(`strike-slip component: ${horiz.length().toFixed(2)} u`);
+      strikeSlipLbl.position.copy(vert.clone().add(horiz.clone().multiplyScalar(0.5)).add(new T.Vector3(0, 0.15, 0)));
+      overlays.add(strikeSlipLbl);
     }
 
     // ---- Fault label (primary) ----
@@ -1063,6 +1086,18 @@
     const sLbl = makeValueLabel(`Strike ${fmtBearing(strike)}`, { inferred: evt.field_origin?.strike === 'inferred' });
     sLbl.position.copy(sP1.clone().add(new T.Vector3(0, 0.1, 0)));
     overlays.add(sLbl);
+
+    // C.4.c: Viewpoint indicator label
+    const sense = evt.sense || '';
+    const vpText = sense === 'sinistral'
+      ? 'From this viewpoint, the far side moves to the left → sinistral.'
+      : 'From this viewpoint, the far side moves to the right → dextral.';
+    const vpLbl = makeLabel(
+      `<div class="vp-indicator"><span class="vp-eye">👁</span> <span class="vp-text">${vpText}</span></div>`,
+      { html: true }
+    );
+    vpLbl.position.set(0, -(total / 2 + 0.8), 0);
+    labels.push({ node: vpLbl, data: {} });
   }
 
   // ---- Circular-arc solver for listric fault geometry ----
