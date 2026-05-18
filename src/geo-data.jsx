@@ -712,6 +712,15 @@ const SAMPLE_DESCRIPTIONS = [
   },
 ];
 
+const AGE_RAMP = {
+  old: '#1c2230',
+  mid: '#3a4659',
+  young: '#9eb1ce',
+  oldHW: '#161b25',
+  midHW: '#2c3548',
+  youngHW: '#7d8da6',
+};
+
 window.GD = {
   LITHOLOGY,
   PERIODS,
@@ -719,4 +728,5 @@ window.GD = {
   REFERENCE_FORMATIONS,
   REFERENCE_SECTIONS,
   SAMPLE_DESCRIPTIONS,
+  AGE_RAMP,
 };
