@@ -670,6 +670,32 @@ If the model has no structural features to guide prediction, return an empty arr
     );
   }
 
+  // ---- ViewportTabs (F.1) ----
+  function ViewportTabs({ activeView, onChange, onResetCamera, onSnapshot }) {
+    return (
+      <div className="viewtabs">
+        <button className={`viewtab ${activeView === '3d' ? 'active' : ''}`}
+                onClick={() => onChange('3d')}
+                aria-label="3D view (1)">
+          <span>3D view</span><span className="vt-key">1</span>
+        </button>
+        <button className={`viewtab ${activeView === 'xsection' ? 'active' : ''}`}
+                onClick={() => onChange('xsection')}
+                aria-label="Cross-section (2)">
+          <span>Cross-section</span><span className="vt-key">2</span>
+        </button>
+        <button className={`viewtab ${activeView === 'map' ? 'active' : ''}`}
+                onClick={() => onChange('map')}
+                aria-label="Map view (3)">
+          <span>Map view</span><span className="vt-key">3</span>
+        </button>
+        <div className="vt-spacer" />
+        <button className="vt-action" onClick={onResetCamera}>&#8635; Reset camera</button>
+        <button className="vt-action" onClick={onSnapshot}>&#10515; Snapshot</button>
+      </div>
+    );
+  }
+
   // ---- Workspace ----
   function Workspace({
     model, setModel,
@@ -684,6 +710,11 @@ If the model has no structural features to guide prediction, return an empty arr
     const [inspectorOpen, setInspectorOpen] = useState(true);
     const [stripConfirmed, setStripConfirmed] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
+
+    // F.1: View mode state (3D / cross-section / map)
+    const [viewMode, setViewMode] = useState(
+      localStorage.getItem('geoforge.view_mode_v2') || '3d'
+    );
 
     // History playback
     const eventCount = (model?.events || []).length;
@@ -736,6 +767,24 @@ If the model has no structural features to guide prediction, return an empty arr
       window.__setSelected = (sel) => setSelected(sel);
       return () => { window.__setSelected = null; };
     }, [setSelected]);
+
+    // F.1: Persist viewMode to localStorage whenever it changes
+    useEffect(() => {
+      localStorage.setItem('geoforge.view_mode_v2', viewMode);
+    }, [viewMode]);
+
+    // F.1: Keyboard shortcuts 1/2/3 for tab switching (suppressed inside textarea)
+    useEffect(() => {
+      const handleKeyDown = (e) => {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT' || active.closest?.('.description-area'))) return;
+        if (e.key === '1') setViewMode('3d');
+        else if (e.key === '2') setViewMode('xsection');
+        else if (e.key === '3') setViewMode('map');
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     useEffect(() => {
       if (!error) return;
@@ -881,6 +930,34 @@ If the model has no structural features to guide prediction, return an empty arr
         updateField(kind, id, field, value);
       return () => { window.__testDragChange = null; };
     }, [updateField]);
+
+    // ---- F.1: Reset camera / Snapshot ----
+    const handleResetCamera = () => {
+      const sceneRef = window.__lastGeoScene;
+      if (sceneRef && sceneRef.current && typeof sceneRef.current.resetCamera === 'function') {
+        sceneRef.current.resetCamera();
+      } else {
+        // GeoScene doesn't expose resetCamera yet — emit event for F.2 to wire up
+        window.dispatchEvent(new CustomEvent('geoforge:resetcamera', { detail: { viewMode } }));
+      }
+    };
+
+    const handleSnapshot = async () => {
+      const sceneRef = window.__lastGeoScene;
+      if (!sceneRef || !sceneRef.current || typeof sceneRef.current.captureFrame !== 'function') return;
+      try {
+        const dataUrl = await sceneRef.current.captureFrame();
+        if (!dataUrl) return;
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `geoforge-${viewMode}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (e) {
+        // Snapshot failed silently — not critical
+      }
+    };
 
     // ---- JSON download / upload ----
     const downloadJSON = () => {
@@ -1030,6 +1107,12 @@ If the model has no structural features to guide prediction, return an empty arr
               retryCount={retryCount}
             />
           )}
+          <ViewportTabs
+            activeView={viewMode}
+            onChange={setViewMode}
+            onResetCamera={handleResetCamera}
+            onSnapshot={handleSnapshot}
+          />
           <div className="scene-host">
             <window.GeoScene
               model={playbackModel}
@@ -1041,6 +1124,7 @@ If the model has no structural features to guide prediction, return an empty arr
               selectedId={selected?.id}
               selected={selected}
               focusModeOn={focusModeOn}
+              viewMode={viewMode}
             />
           </div>
 
