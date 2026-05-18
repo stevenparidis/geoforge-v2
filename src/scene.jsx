@@ -83,17 +83,22 @@
     scene.traverse(node => {
       if (node.userData.featureId == null) return;
       const isSelected = node.userData.featureId === selectedId;
-      if (node.isMesh || node.isLine) {
-        if (node.material && node.userData.baseOpacity != null) {
-          if (focusModeOn && selectedId) {
+      if (node.isMesh || node.isLine || node.isPoints) {
+        if (node.userData.baseOpacity != null) {
+          const targetOpacity = (focusModeOn && selectedId)
+            ? (isSelected ? node.userData.baseOpacity : node.userData.baseOpacity * 0.30)
+            : node.userData.baseOpacity;
+          if (Array.isArray(node.material)) {
+            node.material.forEach(m => {
+              m.transparent = true;
+              m.opacity = targetOpacity;
+              m.needsUpdate = true;
+            });
+          } else if (node.material) {
             node.material.transparent = true;
-            node.material.opacity = isSelected
-              ? node.userData.baseOpacity
-              : node.userData.baseOpacity * 0.30;
-          } else {
-            node.material.opacity = node.userData.baseOpacity;
+            node.material.opacity = targetOpacity;
+            node.material.needsUpdate = true;
           }
-          node.material.needsUpdate = true;
         }
       }
     });

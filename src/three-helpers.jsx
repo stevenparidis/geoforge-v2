@@ -646,6 +646,7 @@
       meshes.add(fpMesh);
       // Plane outline
       const outline = solidLine([cornersF[0], cornersF[1], cornersF[2], cornersF[3], cornersF[0]], COLOR.fault, { opacity: 0.9 });
+      tagFeature(outline, evt.id);
       meshes.add(outline);
     } else {
       // ---- Listric: build a curved fault surface using circular-arc geometry ----
