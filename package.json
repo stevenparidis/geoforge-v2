@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "smoke": "node tests/smoke/smoke.test.js",
+    "smoke-v2": "node tests/v2/smoke.test.js",
     "perf": "node tests/smoke/perf.test.js",
     "acceptance": "node tests/acceptance/run-all.js"
   },

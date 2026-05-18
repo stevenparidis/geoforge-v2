@@ -719,6 +719,15 @@ If the model has no structural features to guide prediction, return an empty arr
       });
     };
 
+    // Test hook — allow smoke tests to directly trigger a manual-edit.
+    // Replaces the old drag-handle hook removed in commit 81a1c0c.
+    // The 5th `opts` argument (from the old drag system) is silently ignored.
+    useEffect(() => {
+      window.__testDragChange = (kind, id, field, value /*, opts — ignored */) =>
+        updateField(kind, id, field, value);
+      return () => { window.__testDragChange = null; };
+    }, [updateField]);
+
     // ---- JSON download / upload ----
     const downloadJSON = () => {
       const blob = new Blob([JSON.stringify({ version: '1.0', description, model }, null, 2)], { type: 'application/json' });
