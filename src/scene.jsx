@@ -170,7 +170,10 @@
         if (!st) return;
         st.overlayRoot.visible = showOverlays;
         st.chrome.visible = showGrid;
-        st.modelRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showLabels; });
+        st.modelRoot.traverse((n) => {
+          if (n.isCSS2DObject) n.visible = showLabels;
+          if (n.userData && n.userData.isLabelGroup) n.visible = showLabels;
+        });
         st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
       };
 
@@ -295,7 +298,10 @@
 
       st.overlayRoot.visible = showOverlays;
       st.chrome.visible = showGrid;
-      st.modelRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showLabels; });
+      st.modelRoot.traverse((n) => {
+        if (n.isCSS2DObject) n.visible = showLabels;
+        if (n.userData && n.userData.isLabelGroup) n.visible = showLabels;
+      });
       st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
     }, [model]);
 
@@ -304,7 +310,10 @@
       if (!st) return;
       st.overlayRoot.visible = showOverlays;
       st.chrome.visible = showGrid;
-      st.modelRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showLabels; });
+      st.modelRoot.traverse((n) => {
+        if (n.isCSS2DObject) n.visible = showLabels;
+        if (n.userData && n.userData.isLabelGroup) n.visible = showLabels;
+      });
       st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
     }, [showLabels, showOverlays, showGrid]);
 
