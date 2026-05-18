@@ -209,3 +209,18 @@ Audit work list closed:
 - §7.2 map view V-pattern surfaced ✓
 
 Phase G unblocked.
+
+---
+
+## Phase G — Map-view inset + borehole tool
+- [x] G.1 Map-view inset renderer
+- [x] G.2 Inset positioning + view sync
+- [x] G.3 Borehole tool toggle + click handler
+- [x] G.4 Borehole geometry + lithology readout
+- [x] G.5 Acceptance + smoke test
+
+Audit work list closed:
+- §7.3 map-view inset ✓
+- §7.4 single-borehole tool ✓
+
+Phase H unblocked.

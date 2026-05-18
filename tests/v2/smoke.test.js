@@ -1473,6 +1473,258 @@ async function run() {
       await context.close();
     }
 
+    // -----------------------------------------------------------------------
+    // Test G.inset — insetCamera present on Surface entry after mount
+    //
+    //   1. Load with testmode=1 (inset camera is created on mount, not on model load)
+    //   2. Wait for Three.js ready and React mount
+    //   3. Assert: window.GeoSurface.scenes has at least one entry with insetCamera
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test G.inset: insetCamera present on Surface entry after mount ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      // Allow GeoScene mount effect to run
+      await page.waitForTimeout(300);
+
+      const hasInset = await page.evaluate(() => {
+        if (!window.GeoSurface) return false;
+        for (const e of window.GeoSurface.scenes) {
+          if (e.insetCamera) return true;
+        }
+        return false;
+      });
+
+      if (!hasInset) {
+        const details = await page.evaluate(() => ({
+          hasSurface: !!window.GeoSurface,
+          sceneCount: window.GeoSurface ? window.GeoSurface.scenes.size : 0,
+          entries: window.GeoSurface ? [...window.GeoSurface.scenes].map(e => Object.keys(e)) : [],
+        }));
+        throw new Error(`Test G.inset: No insetCamera found on Surface entry. Details: ${JSON.stringify(details)}`);
+      }
+
+      console.log('PASS [Test G.inset]: insetCamera present on Surface entry');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-g-inset.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test G.borehole-toggle — Boreholes toggle appears when a model is loaded
+    //
+    //   1. Load with testmode=1, submit a two-layer model via stub
+    //   2. Wait for model to appear in inspector
+    //   3. Assert: .scene-toolbar button.toggle with text 'Boreholes' exists
+    //   4. Click it, assert it gains the 'on' class
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test G.borehole-toggle: Boreholes toggle appears and toggles on click ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript((fixtureJson) => {
+        window.claude = { complete: async () => fixtureJson };
+      }, JSON.stringify(LAYERS_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      // Submit model
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('A 1m sandstone over 1m shale.');
+      await page.locator('button.btn.primary').click();
+      console.log('Interpret button clicked');
+
+      // Wait for model to appear in inspector
+      await page.waitForFunction(
+        () => {
+          const lists = document.querySelectorAll('.feat-list');
+          return lists.length >= 1 && lists[0].querySelectorAll('.feat-item').length >= 2;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('Model appeared in inspector');
+
+      await page.waitForTimeout(300);
+
+      // Assert: .scene-toolbar button.toggle exists and contains 'Boreholes'
+      const toggleExists = await page.evaluate(() => {
+        const buttons = document.querySelectorAll('.scene-toolbar button.toggle');
+        return Array.from(buttons).some(b => b.textContent.trim() === 'Boreholes');
+      });
+      if (!toggleExists) {
+        throw new Error('Test G.borehole-toggle: .scene-toolbar button.toggle with text "Boreholes" not found after model load');
+      }
+      console.log('Boreholes toggle found in .scene-toolbar');
+
+      // Click it and assert 'on' class is added
+      const toggleBtn = page.locator('.scene-toolbar button.toggle', { hasText: 'Boreholes' });
+      await toggleBtn.click();
+      await page.waitForTimeout(200);
+
+      const hasOn = await toggleBtn.evaluate(el => el.classList.contains('on'));
+      if (!hasOn) {
+        const cls = await toggleBtn.getAttribute('class');
+        throw new Error(`Test G.borehole-toggle: Expected 'on' class after click, got class="${cls}"`);
+      }
+      console.log('Boreholes toggle has "on" class after click');
+
+      console.log('PASS [Test G.borehole-toggle]: Boreholes toggle present and toggles correctly');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-g-borehole-toggle.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test G.borehole-sample — sampleLithologiesAtPoint returns correct layer order
+    //
+    //   1. Load with testmode=1
+    //   2. Call window.GeoThree.sampleLithologiesAtPoint with a two-layer model
+    //   3. Assert: returns 2 entries with L1 at the top (index 0)
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test G.borehole-sample: sampleLithologiesAtPoint returns correct layer order ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      // sampleLithologiesAtPoint is registered in three-helpers.jsx on script load
+      const result = await page.evaluate(() => {
+        if (!window.GeoThree || typeof window.GeoThree.sampleLithologiesAtPoint !== 'function') return null;
+        const model = {
+          layers: [
+            { id: 'L1', name: 'Sandstone', lithology: 'sandstone', thickness: 2.0 },
+            { id: 'L2', name: 'Shale', lithology: 'shale', thickness: 1.5 },
+          ],
+          events: [],
+        };
+        return window.GeoThree.sampleLithologiesAtPoint(model, { x: 0, z: 0 });
+      });
+
+      if (!result) {
+        throw new Error('Test G.borehole-sample: window.GeoThree.sampleLithologiesAtPoint is not available');
+      }
+      if (result.length !== 2) {
+        throw new Error(`Test G.borehole-sample: expected 2 layers, got ${result.length}`);
+      }
+      if (result[0].id !== 'L1') {
+        throw new Error(`Test G.borehole-sample: expected L1 at top (index 0), got ${result[0].id}`);
+      }
+      if (result[1].id !== 'L2') {
+        throw new Error(`Test G.borehole-sample: expected L2 at index 1, got ${result[1].id}`);
+      }
+
+      console.log(`Layer order: [${result.map(l => l.id).join(', ')}] — correct (top to bottom)`);
+      console.log('PASS [Test G.borehole-sample]: sampleLithologiesAtPoint returns correct layer order');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-g-borehole-sample.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test G.borehole-readout-css — .borehole-readout and .borehole-title CSS classes present
+    //
+    //   1. Load with testmode=1
+    //   2. Assert: .borehole-readout CSS rule is present in page stylesheets
+    //   3. Assert: .borehole-title CSS rule is present in page stylesheets
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test G.borehole-readout-css: borehole readout CSS classes in stylesheet ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const cssOk = await page.evaluate(() => {
+        const sheets = [...document.styleSheets];
+        let hasReadout = false;
+        let hasTitle = false;
+        for (const ss of sheets) {
+          try {
+            const rules = [...(ss.cssRules || [])];
+            for (const r of rules) {
+              if (r.selectorText === '.borehole-readout') hasReadout = true;
+              if (r.selectorText === '.borehole-title') hasTitle = true;
+            }
+          } catch (e) { /* cross-origin sheet — skip */ }
+        }
+        return hasReadout && hasTitle;
+      });
+
+      if (!cssOk) {
+        const details = await page.evaluate(() => {
+          const sheets = [...document.styleSheets];
+          let hasReadout = false;
+          let hasTitle = false;
+          for (const ss of sheets) {
+            try {
+              const rules = [...(ss.cssRules || [])];
+              for (const r of rules) {
+                if (r.selectorText && r.selectorText.includes('borehole-readout')) hasReadout = true;
+                if (r.selectorText && r.selectorText.includes('borehole-title')) hasTitle = true;
+              }
+            } catch (e) {}
+          }
+          return { hasReadout, hasTitle };
+        });
+        throw new Error(`Test G.borehole-readout-css: .borehole-readout and/or .borehole-title CSS not found. Details: ${JSON.stringify(details)}`);
+      }
+
+      console.log('PASS [Test G.borehole-readout-css]: .borehole-readout and .borehole-title CSS classes present in stylesheet');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-g-borehole-readout-css.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
   } catch (err) {
     console.error(`FAIL: ${err.message}`);
     exitCode = 1;
