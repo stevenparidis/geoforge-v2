@@ -1395,21 +1395,40 @@
     }
 
     if (opt.axial !== false && subtype !== 'monocline') {
-      // Axial plane: vertical plane through hinge containing axisTarget.
-      // Local axial plane is YZ plane (x=0). We render as a translucent quad.
+      // D.1: axial plane — translucent, light cyan, gated by Overlays toggle.
+      const AXIAL_COLOR = 0x8db4c2;  // neutral light cyan, distinct from overlay accent
       const axialW = total + 0.6;
       const axialL = length * 0.9;
       const aGeo = new T.PlaneGeometry(axialW, axialL);
-      // PlaneGeometry is in XY plane facing +Z by default; we want it in YZ plane (normal=X).
-      aGeo.rotateY(Math.PI / 2); // now normal is +X, plane is YZ
-      const aMesh = new T.Mesh(aGeo, new T.MeshBasicMaterial({ color: COLOR.axial, transparent: true, opacity: 0.18, side: T.DoubleSide, depthWrite: false }));
+      aGeo.rotateY(Math.PI / 2); // YZ plane (normal=X), so it slices through the fold hinge
+      const aMesh = new T.Mesh(aGeo, new T.MeshBasicMaterial({
+        color: AXIAL_COLOR, transparent: true, opacity: 0.12,
+        side: T.DoubleSide, depthWrite: false, depthTest: true,
+      }));
       aMesh.applyQuaternion(q);
-      meshes.add(aMesh);
-      // Edges
+      overlays.add(aMesh);
       const axialEdges = new T.EdgesGeometry(aGeo);
-      const aEdge = new T.LineSegments(axialEdges, new T.LineBasicMaterial({ color: COLOR.axial, transparent: true, opacity: 0.6 }));
+      const aEdge = new T.LineSegments(axialEdges, new T.LineBasicMaterial({
+        color: AXIAL_COLOR, transparent: true, opacity: 0.5,
+      }));
       aEdge.applyQuaternion(q);
-      meshes.add(aEdge);
+      overlays.add(aEdge);
+
+      // D.2: axial-plane label — identifies fold type + age-in-core principle. Gated by Labels toggle.
+      const isAnticline = subtype === 'anticline';
+      const foldTypeLine = isAnticline ? 'ANTICLINE — axial plane' : 'SYNCLINE — axial plane';
+      const ageLine = isAnticline ? 'oldest beds in core' : 'youngest beds in core';
+      const axLblEl = document.createElement('div');
+      axLblEl.className = 'fold-axial-lbl';
+      axLblEl.innerHTML = `<span class="fal-type">${foldTypeLine}</span><span class="fal-age">${ageLine}</span>`;
+      const axLbl = new window.CSS2DObject(axLblEl);
+      // Position at the top edge of the axial plane, centred horizontally.
+      // In local frame the top of the fold stack is at y = total/2 + crestY.
+      // After quaternion the world position is obtained by rotating that local point.
+      const axLblLocalPos = new T.Vector3(0, total / 2 + Math.abs(foldHeight(0)) + 0.35, 0);
+      axLbl.position.copy(axLblLocalPos.clone().applyQuaternion(q));
+      overlays.add(axLbl);
+      labels.push({ node: axLbl, data: { kind: 'event', id: evt.id } });
     }
 
     if (opt.interlimb !== false && subtype !== 'monocline') {
