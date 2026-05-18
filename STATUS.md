@@ -174,3 +174,20 @@ Audit work list closed:
 BUG-03 (anticline vs syncline at zero plunge) resolved.
 
 Phase E unblocked.
+
+---
+
+## Phase E — Concept primer + focus mode + explanation strip
+- [x] E.1 Concept primer modal (PR #62)
+- [x] E.2 Focus mode (PR #65)
+- [x] E.3 Explanation strip (PR #64)
+- [x] E.4 Inspector explanation paragraphs (PR #63)
+- [x] E.5 Acceptance + smoke test convergence (this PR)
+
+Audit work list closed:
+- §6.1 concept primer ✓
+- §6.2 focus mode ✓
+- §6.3 explanation strip ✓
+- §6.4 inspector explanations ✓
+
+Phase F unblocked.

@@ -927,6 +927,251 @@ async function run() {
       await context.close();
     }
 
+    // -----------------------------------------------------------------------
+    // Test E.primer — first launch shows primer, Got it dismisses permanently
+    //
+    //   1. Load WITHOUT testmode — primer should appear
+    //   2. Click "Got it" — modal should close
+    //   3. localStorage flag should be set to 'true'
+    //   4. Reload — primer should NOT show again
+    //   5. Clean up localStorage for other tests
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test E.primer: primer modal shows on first launch, dismissed permanently ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      // Inject stub (required for the app to mount)
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      // Load WITHOUT testmode — primer should appear
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'networkidle' });
+
+      // Wait for Three.js ready and React mount
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+
+      // Primer overlay should be visible
+      console.log('Waiting for .primer-overlay...');
+      await page.waitForSelector('.primer-overlay', { timeout: 5000 });
+      console.log('.primer-overlay found');
+
+      // Click "Got it" button (permanent dismiss)
+      await page.click('.primer-actions .btn.primary');
+      console.log('Clicked "Got it"');
+
+      // Modal should close (not visible)
+      await page.waitForFunction(
+        () => {
+          const el = document.querySelector('.primer-overlay');
+          return !el || el.style.display === 'none' || !el.offsetParent;
+        },
+        { timeout: 3000 }
+      );
+      console.log('.primer-overlay no longer visible');
+
+      // localStorage flag should be set
+      const flag = await page.evaluate(() => localStorage.getItem('geoforge.primer_seen_v2'));
+      console.log(`localStorage flag: ${flag}`);
+      if (flag !== 'true') {
+        throw new Error(`Test E.primer: Expected localStorage 'geoforge.primer_seen_v2' to be 'true', got '${flag}'`);
+      }
+
+      // Reload — should NOT show primer again
+      await page.reload({ waitUntil: 'networkidle' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+
+      const primerAfterReload = await page.evaluate(() => {
+        const el = document.querySelector('.primer-overlay');
+        return el ? el.offsetParent !== null : false;
+      });
+      if (primerAfterReload) {
+        throw new Error('Test E.primer: primer-overlay should not be visible after reload with seen flag set');
+      }
+      console.log('Primer not shown after reload (flag preserved)');
+
+      // Clean up for other tests
+      await page.evaluate(() => localStorage.removeItem('geoforge.primer_seen_v2'));
+
+      console.log('PASS [Test E.primer]: primer shown on first launch, dismissed permanently, hidden on reload');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-e-primer.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test E.focusmode — focus mode toggle in topbar
+    //
+    //   1. Load with testmode=1 (primer suppressed)
+    //   2. Focus toggle should exist in topbar
+    //   3. Click it — should add 'on' class
+    //   4. Click again — should remove 'on' class
+    //   5. Clean up localStorage
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test E.focusmode: focus mode toggle in topbar ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      // Focus toggle should exist in topbar
+      console.log('Looking for Focus toggle in .topbar-actions...');
+      const focusBtn = await page.waitForFunction(
+        () => {
+          const buttons = document.querySelectorAll('.topbar-actions .toggle');
+          for (const btn of buttons) {
+            if (btn.textContent.trim() === 'Focus') return btn;
+          }
+          return null;
+        },
+        { timeout: 5000 }
+      );
+      console.log('Focus toggle found');
+
+      // Verify it is visible
+      const focusBtnEl = page.locator('.topbar-actions .toggle', { hasText: 'Focus' });
+      const isVisible = await focusBtnEl.isVisible();
+      if (!isVisible) {
+        throw new Error('Test E.focusmode: Focus toggle not visible in topbar');
+      }
+
+      // Record initial class (should not have 'on')
+      const initialClass = await focusBtnEl.getAttribute('class');
+      console.log(`Focus toggle initial class: "${initialClass}"`);
+
+      // Click it — should add 'on' class
+      await focusBtnEl.click();
+      await page.waitForTimeout(200);
+      const classAfterClick = await focusBtnEl.getAttribute('class');
+      console.log(`Focus toggle class after first click: "${classAfterClick}"`);
+      if (!classAfterClick.includes('on')) {
+        throw new Error(`Test E.focusmode: Expected 'on' class after click, got "${classAfterClick}"`);
+      }
+
+      // Click again — should remove 'on' class
+      await focusBtnEl.click();
+      await page.waitForTimeout(200);
+      const classAfterSecondClick = await focusBtnEl.getAttribute('class');
+      console.log(`Focus toggle class after second click: "${classAfterSecondClick}"`);
+      if (classAfterSecondClick.includes('on')) {
+        throw new Error(`Test E.focusmode: Expected 'on' class removed after second click, got "${classAfterSecondClick}"`);
+      }
+
+      // Clean up
+      await page.evaluate(() => localStorage.removeItem('geoforge.focus_mode_v2'));
+
+      console.log('PASS [Test E.focusmode]: Focus toggle found in topbar, toggles on/off correctly');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-e-focusmode.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test E.explanationstrip — explanation-strip CSS class present in stylesheet
+    //
+    //   Verifies that the .explanation-strip CSS class is defined in the page's
+    //   stylesheets (inline or linked). This confirms the E.3 feature is bundled.
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test E.explanationstrip: explanation-strip CSS class in stylesheet ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+
+      const styleExists = await page.evaluate(() => {
+        return Array.from(document.styleSheets).some(ss => {
+          try {
+            return Array.from(ss.cssRules).some(r => r.selectorText && r.selectorText.includes('explanation-strip'));
+          } catch (e) { return false; }
+        });
+      });
+
+      console.log(`explanation-strip CSS class found in stylesheet: ${styleExists}`);
+      if (!styleExists) {
+        throw new Error('Test E.explanationstrip: .explanation-strip CSS rule not found in any stylesheet');
+      }
+
+      console.log('PASS [Test E.explanationstrip]: .explanation-strip CSS class confirmed in stylesheet');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-e-explanationstrip.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test E.inspectorexplanation — feat-explanation CSS class in stylesheet
+    //
+    //   Verifies that the .feat-explanation CSS class is defined in the page's
+    //   stylesheets (inline or linked). This confirms the E.4 feature is bundled.
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test E.inspectorexplanation: feat-explanation CSS class in stylesheet ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+
+      const styleExists = await page.evaluate(() => {
+        return Array.from(document.styleSheets).some(ss => {
+          try {
+            return Array.from(ss.cssRules).some(r => r.selectorText && r.selectorText.includes('feat-explanation'));
+          } catch (e) { return false; }
+        });
+      });
+
+      console.log(`feat-explanation CSS class found in stylesheet: ${styleExists}`);
+      if (!styleExists) {
+        throw new Error('Test E.inspectorexplanation: .feat-explanation CSS rule not found in any stylesheet');
+      }
+
+      console.log('PASS [Test E.inspectorexplanation]: .feat-explanation CSS class confirmed in stylesheet');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-e-inspectorexplanation.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
   } catch (err) {
     console.error(`FAIL: ${err.message}`);
     exitCode = 1;
