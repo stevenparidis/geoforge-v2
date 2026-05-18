@@ -188,7 +188,52 @@ Match modified sentences by their description_source to find the existing id
 to reuse. Added sentences get fresh ids.
 
 In all other respects (defaults, field_origin flags, description_source
-quoting), behave identically to full mode.`;
+quoting), behave identically to full mode.
+
+VALIDATION RULES:
+
+When you detect an inconsistency between the user's stated values and standard
+structural geology, do NOT silently rewrite the user's input. Instead, populate
+a \`validation_note\` field on the affected feature with a one-sentence
+explanation.
+
+Specifically:
+- Thrust with dip > 45°: set validation_note, render as stated.
+- Normal fault with HW physically above FW after slip: validation_note explaining the mismatch.
+- Anticline with younger rocks toward the core: validation_note asking whether the user meant a syncline.
+- Intrusion with order < any layer it cuts: validation_note explaining the cross-cutting age violation.
+- Strike + dip_direction violating right-hand rule (dip_direction should = (strike+90)%360 within ±10°): validation_note.
+
+In every case, render the model AS THE USER DESCRIBED IT. The validation_note
+appears in the inspector as a warning but does not block the render.
+
+EXPLANATION GENERATION:
+
+After producing the model JSON, generate two additional plain-English fields:
+
+1. model.meta.explanation: a 1-3 sentence summary of the model, used in the
+   "Was this what you meant?" strip in the UI. Bold key structural terms with **term**.
+
+2. Per feature, feature.explanation: a 1-2 sentence description of what
+   the feature is and why its values matter. Used in the inspector.
+
+Keep both explanations plain. Avoid jargon the user did not use. Use the
+miner's-lantern phrasing for HW/FW (you hang a lantern on the hanging wall).
+
+MISCONCEPTION AVOIDANCE:
+
+Watch for and avoid reinforcing these common student misconceptions:
+
+1. Hanging wall is always on the left/right of a fault. (No — depends on
+   dip_direction; render as the user described.)
+2. Anticline vs syncline is about shape only. (No — it is about stratigraphic
+   age; oldest rocks in core = anticline, youngest = syncline.)
+3. Strike and dip are independent. (Related by right-hand rule.)
+4. Throw and displacement are the same. (Throw = vertical; displacement =
+   total slip; emit both.)
+
+When the user's description is ambiguous, prefer the interpretation that
+avoids reinforcing one of these misconceptions.`;
 
   const PREDICTION_SYSTEM_PROMPT = `You are GeoForge's geological prediction engine. Given a GeoModel JSON, suggest up to 3 plausible mineral deposit types that could form given the structural setting.
 
@@ -340,6 +385,45 @@ If the model has no structural features to guide prediction, return an empty arr
         }
       }
     });
+
+    // C.4.a: Validate thrust/reverse dip consistency
+    for (const evt of (model.events || [])) {
+      if (evt.type !== 'fault') continue;
+      if (evt.validation_note) continue; // don't overwrite if LLM already set one
+      if (evt.subtype === 'thrust' && evt.dip != null && evt.dip > 45) {
+        evt.validation_note = `Thrust faults dip ≤45° by definition. The stated dip of ${evt.dip}° is more typical of a reverse fault.`;
+      } else if (evt.subtype === 'reverse' && evt.dip != null && evt.dip <= 30) {
+        evt.validation_note = `Reverse faults with dip ≤30° are usually classified as thrusts. Consider 'thrust' if the structural context fits.`;
+      }
+    }
+
+    // C.5.b: Additional validation checks
+    for (const evt of (model.events || [])) {
+      if (evt.type !== 'fault') continue;
+      if (evt.validation_note) continue; // first rule wins
+      // Right-hand rule check
+      if (evt.strike != null && evt.dip_direction != null) {
+        const expected = (evt.strike + 90) % 360;
+        const diff = Math.abs(((evt.dip_direction - expected) + 540) % 360 - 180);
+        if (diff > 10) {
+          evt.validation_note = `Strike ${evt.strike}° and dip direction ${evt.dip_direction}° violate the right-hand rule. By convention, dip direction = (strike + 90°) mod 360°, which gives ${expected}°.`;
+        }
+      }
+    }
+
+    // C.5.b: Fold validation (anticline/syncline age at core)
+    for (const evt of (model.events || [])) {
+      if (evt.type !== 'fold') continue;
+      if (evt.validation_note) continue;
+      // If user explicitly states youngest rocks are in core of an anticline
+      if (evt.subtype === 'anticline' && evt.core_age === 'youngest') {
+        evt.validation_note = 'Anticlines have the oldest rocks in the core. If youngest rocks are in the core, this is a syncline by definition.';
+      }
+      if (evt.subtype === 'syncline' && evt.core_age === 'oldest') {
+        evt.validation_note = 'Synclines have the youngest rocks in the core. If oldest rocks are in the core, this is an anticline by definition.';
+      }
+    }
+
     return model;
   }
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -1054,6 +1138,12 @@ If the model has no structural features to guide prediction, return an empty arr
         </div>
         {feature.description_source && (
           <div className="source-quote" style={{ marginBottom: 10 }}>"{feature.description_source}"</div>
+        )}
+        {feature.validation_note && (
+          <div className="validation-note-pill">
+            <span className="vn-icon">⚠</span>
+            <span className="vn-text">{feature.validation_note}</span>
+          </div>
         )}
         {isLayer && (
           <>
