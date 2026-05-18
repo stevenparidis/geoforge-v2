@@ -115,7 +115,7 @@
 - [x] A.3 Audit template and worked example
 - [x] A.4 Per-formation audit (all 25 formations across 6 feature classes)
 - [x] A.5 Prioritisation and synthesis
-- [ ] A.6 User sign-off (pending)
+- [x] A.6 User sign-off (2026-05-18)
 
 ### Audit summary
 - 0 formations rated correct
@@ -124,4 +124,4 @@
 - 3 rated incorrect
 - Total: 25 formations audited
 
-Phases B–H unblocked pending A.6 sign-off.
+**Phases B–H unblocked.**
