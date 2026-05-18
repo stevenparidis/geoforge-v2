@@ -689,7 +689,7 @@ If the model has no structural features to guide prediction, return an empty arr
                 aria-label="Map view (3)">
           <span>Map view</span><span className="vt-key">3</span>
         </button>
-        <div className="spacer" />
+        <div className="vt-spacer" />
         <button className="vt-action" onClick={onResetCamera}>&#8635; Reset camera</button>
         <button className="vt-action" onClick={onSnapshot}>&#10515; Snapshot</button>
       </div>
@@ -777,7 +777,7 @@ If the model has no structural features to guide prediction, return an empty arr
     useEffect(() => {
       const handleKeyDown = (e) => {
         const active = document.activeElement;
-        if (active && (active.tagName === 'TEXTAREA' || active.closest?.('.description-area'))) return;
+        if (active && (active.tagName === 'TEXTAREA' || active.tagName === 'INPUT' || active.closest?.('.description-area'))) return;
         if (e.key === '1') setViewMode('3d');
         else if (e.key === '2') setViewMode('xsection');
         else if (e.key === '3') setViewMode('map');
@@ -944,7 +944,7 @@ If the model has no structural features to guide prediction, return an empty arr
 
     const handleSnapshot = async () => {
       const sceneRef = window.__lastGeoScene;
-      if (!sceneRef || !sceneRef.current || !sceneRef.current.captureFrame) return;
+      if (!sceneRef || !sceneRef.current || typeof sceneRef.current.captureFrame !== 'function') return;
       try {
         const dataUrl = await sceneRef.current.captureFrame();
         if (!dataUrl) return;
