@@ -685,11 +685,10 @@
       const detachLbl = makeLabel('<span class="lbl">detachment surface</span>', { html: true });
       detachLbl.position.set(depth * 0.9, detachY, 0);
       overlays.add(detachLbl);
-      labels.push({ node: detachLbl, data: {} });
 
       // Arc annotation showing dip angle at detachment point.
       const dipAtDepth = evt.dip_at_depth ?? 10;
-      const horizVec = new T.Vector3(1, 0, 0);
+      const horizVec = bearingVec(dipDir);  // horizontal in the actual dip direction
       const tangentVec = downDipVec(dipAtDepth, dipDir).normalize();
       overlays.add(arcWedge(detachPt3D, horizVec, tangentVec, 0.35, COLOR.overlay, 0.06));
       const dipDepthArcLbl = makeValueLabel(`dip ${dipAtDepth}° at depth`);
