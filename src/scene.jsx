@@ -92,7 +92,7 @@
       camera.lookAt(bounds.cx, bounds.cy, bounds.cz);
       controls.enableRotate = true;
       controls.enableZoom = true;
-      controls.maxPolarAngle = Math.PI;
+      controls.maxPolarAngle = Math.PI - 0.2;
       if (ss.chrome) ss.chrome.visible = true;
       if (renderer) renderer.clippingPlanes = [];
 
