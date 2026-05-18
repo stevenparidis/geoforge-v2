@@ -106,3 +106,22 @@
 - [x] 8.2 Prediction mode (Predict button; model.predictions[]; rendered as purple wireframe) — PR #31
 - [x] 8.3 Share via URL (Share button; base64 URL fragment; toast confirmation) — PR #29
 - [x] 8.4 Export PNG (Export PNG button; canvas2d.toDataURL capture; file download) — PR #30
+
+---
+
+## Phase A — The audit (2026-05-18)
+- [x] A.1 Source selection
+- [x] A.2 v1 screenshot capture (25 formations, 50 screenshots)
+- [x] A.3 Audit template and worked example
+- [x] A.4 Per-formation audit (all 25 formations across 6 feature classes)
+- [x] A.5 Prioritisation and synthesis
+- [ ] A.6 User sign-off (pending)
+
+### Audit summary
+- 0 formations rated correct
+- 7 rated minor-confusion
+- 15 rated misleading
+- 3 rated incorrect
+- Total: 25 formations audited
+
+Phases B–H unblocked pending A.6 sign-off.
