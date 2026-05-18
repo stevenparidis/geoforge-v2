@@ -431,6 +431,63 @@ If the model has no structural features to guide prediction, return an empty arr
   }
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
+  const STRUCTURAL_TERMS = [
+    'anticline', 'syncline', 'monocline',
+    'normal fault', 'reverse fault', 'thrust fault', 'strike-slip fault',
+    'listric fault', 'oblique fault',
+    'hanging wall', 'footwall',
+    'tensional', 'compressional', 'shear',
+    'dyke', 'sill', 'batholith', 'laccolith',
+    'angular unconformity', 'disconformity', 'nonconformity',
+  ];
+
+  function emphasiseStructuralTerms(text) {
+    let result = text;
+    // Sort by length descending so longer matches (e.g. "normal fault") take priority over "fault"
+    const sorted = [...STRUCTURAL_TERMS].sort((a, b) => b.length - a.length);
+    for (const term of sorted) {
+      const regex = new RegExp(`\\b${term}\\b`, 'gi');
+      result = result.replace(regex, '<strong>$&</strong>');
+    }
+    return result;
+  }
+
+  function ExplanationStrip({ model, onRetry, onConfirm, confirmed, retryCount }) {
+    if (!model) return null;
+    const explanation = model.meta?.explanation;
+    const MAX_RETRIES = 3;
+    if (!explanation) {
+      // Legacy model (no explanation field) — show fallback only if model is loaded
+      return (
+        <div className="explanation-strip legacy">
+          <div className="ex-icon">&#182;</div>
+          <div className="ex-body" style={{ color: 'var(--fg-3)' }}>
+            This model was created in an earlier version of GeoForge and has no plain-English summary.
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className={'explanation-strip' + (confirmed ? ' confirmed' : '')}>
+        <div className="ex-icon">&#182;</div>
+        <div className="ex-body" dangerouslySetInnerHTML={{ __html: emphasiseStructuralTerms(explanation) }} />
+        <div className="ex-confirm">
+          {confirmed ? (
+            <span className="ex-confirmed-badge">&#10003; Confirmed</span>
+          ) : (
+            <>
+              <span className="ex-question">Was this what you meant?</span>
+              <button className="ex-yes" onClick={onConfirm}>&#10003; Yes</button>
+              {retryCount < MAX_RETRIES && (
+                <button className="ex-no" onClick={onRetry}>&#10007; No, retry</button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   async function interpret(description, onErr) {
     try {
       const raw = await window.claude.complete({
@@ -624,6 +681,8 @@ If the model has no structural features to guide prediction, return an empty arr
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null); // { kind: 'layer'|'event', id }
     const [inspectorOpen, setInspectorOpen] = useState(true);
+    const [stripConfirmed, setStripConfirmed] = useState(false);
+    const [retryCount, setRetryCount] = useState(0);
 
     // History playback
     const eventCount = (model?.events || []).length;
@@ -770,8 +829,15 @@ If the model has no structural features to guide prediction, return an empty arr
         }
         setModel(json);
         setSelected(null);
+        setStripConfirmed(false);
+        setRetryCount(0);
       }
     }, [description, model, setModel]);
+
+    const onStripRetry = useCallback(() => {
+      setRetryCount(c => c + 1);
+      onInterpret();
+    }, [onInterpret]);
 
     const handlePredict = async () => {
       if (!model || predicting) return;
@@ -954,6 +1020,15 @@ If the model has no structural features to guide prediction, return an empty arr
 
         {/* ============== CENTRE — 3D ============== */}
         <div className="center">
+          {model && (
+            <ExplanationStrip
+              model={model}
+              onConfirm={() => setStripConfirmed(true)}
+              onRetry={onStripRetry}
+              confirmed={stripConfirmed}
+              retryCount={retryCount}
+            />
+          )}
           <div className="scene-host">
             <window.GeoScene
               model={playbackModel}
