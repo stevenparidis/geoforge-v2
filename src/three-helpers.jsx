@@ -544,7 +544,7 @@
       // Build per-face material arrays with age ramp on side faces.
       // BoxGeometry face groups: 0=+X, 1=-X, 2=+Y(top), 3=-Y(bot), 4=+Z(front), 5=-Z(back)
       // Side faces (0, 1, 5) get age ramp; top/bottom/front keep litho colour.
-      function makeFaultMats(isHW, clipPlane) {
+      const makeFaultMats = (isHW, clipPlane) => {
         const ageCol = ageRampColor(L.order ?? 0, faultLayerCount, isHW);
         const lithoMat = new T.MeshStandardMaterial({
           color: new T.Color(color), roughness: 0.92, metalness: 0.02,
@@ -555,7 +555,7 @@
           clippingPlanes: [clipPlane],
         });
         return [ageMat, ageMat, lithoMat, lithoMat, lithoMat, ageMat];
-      }
+      };
 
       // Footwall (the half on the "below/negative-normal" side of the plane)
       const fw = new T.Mesh(baseGeom, makeFaultMats(false, clipPlaneFW));
@@ -1919,6 +1919,11 @@
     const arrowColor = '#9eb1ce';
     const arrowOpacity = 0.85;
 
+    // Wrap the full arrow (stem + arrowhead + CSS2D label) in a group so the
+    // Labels toggle can hide/show all three pieces together.
+    const arrowGroup = new T.Group();
+    arrowGroup.userData.isLabelGroup = true;
+
     // Vertical stem line
     const stemGeo = new T.BufferGeometry().setFromPoints([
       new T.Vector3(xPos, yBot, 0),
@@ -1926,7 +1931,7 @@
     ]);
     const stemMat = new T.LineBasicMaterial({ color: arrowColor, transparent: true, opacity: arrowOpacity });
     const stemLine = new T.Line(stemGeo, stemMat);
-    root.add(stemLine);
+    arrowGroup.add(stemLine);
 
     // Arrowhead triangle at the top
     const arrowHalfW = 0.07;
@@ -1942,7 +1947,7 @@
     arrowGeo.setAttribute('position', new T.Float32BufferAttribute(arrowPositions, 3));
     const arrowMat = new T.MeshBasicMaterial({ color: arrowColor, transparent: true, opacity: arrowOpacity, side: T.DoubleSide });
     const arrowMesh = new T.Mesh(arrowGeo, arrowMat);
-    root.add(arrowMesh);
+    arrowGroup.add(arrowMesh);
 
     // CSS2D "YOUNGING" label at midpoint, rotated 90° to read bottom-to-top
     const midY = (yBot + yTop) / 2;
@@ -1960,8 +1965,10 @@
     lblDiv.textContent = 'YOUNGING';
     const lbl = new window.CSS2DObject(lblDiv);
     lbl.position.set(xPos + 0.28, midY, 0);
-    root.add(lbl);
-    labels.push({ node: lbl, data: { kind: 'younging' } });
+    arrowGroup.add(lbl);
+
+    root.add(arrowGroup);
+    labels.push({ node: arrowGroup, data: { kind: 'younging' } });
   }
 
   // ---- B.4: Age sequence badges (numbered circles) ----
