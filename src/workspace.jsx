@@ -1168,6 +1168,7 @@ If the model has no structural features to guide prediction, return an empty arr
               selected={selected}
               focusModeOn={focusModeOn}
               viewMode={viewMode}
+              borehole={borehole}
             />
           </div>
 
@@ -1320,6 +1321,26 @@ If the model has no structural features to guide prediction, return an empty arr
                 onChange={(field, value) => updateField(selected.kind, selected.id, field, value)}
                 onClose={() => setSelected(null)}
               />
+            )}
+            {borehole && (
+              <div className="borehole-readout">
+                <div className="borehole-title">Borehole at ({borehole.x.toFixed(2)}, {borehole.z.toFixed(2)})</div>
+                <table className="borehole-table">
+                  <thead><tr><th>Depth</th><th>Lithology</th><th>Thickness</th></tr></thead>
+                  <tbody>
+                    {borehole.lithologies.map((L, i) => {
+                      const depth = (borehole.lithologies[0].topY - L.topY).toFixed(1);
+                      return (
+                        <tr key={L.id || i}>
+                          <td>{depth} u</td>
+                          <td>{L.name}</td>
+                          <td>{L.thickness.toFixed(2)} u</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>

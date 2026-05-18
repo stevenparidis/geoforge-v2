@@ -2959,4 +2959,87 @@
   }
 
   window.GeoThree = { ...(window.GeoThree || {}), sampleLithologiesAtPoint };
+
+  // ---- G.4 — Borehole geometry ----
+  function getLithologyColor(lithology) {
+    const MAP = {
+      sandstone: 0xe8c87c, limestone: 0x9ecae1, shale: 0x888888,
+      mudstone: 0xaaa090, granite: 0xe06060, basalt: 0x555555,
+      coal: 0x333333, default: 0x8a8a8a,
+    };
+    return MAP[lithology?.toLowerCase()] ?? MAP.default;
+  }
+
+  function buildBoreholeGeometry(borehole, viewMode) {
+    if (!borehole || !borehole.lithologies) return null;
+    const group = new T.Group();
+
+    const x = borehole.x, z = borehole.z;
+    const topY = borehole.lithologies[0]?.topY ?? 2;
+    const bottomY = borehole.lithologies[borehole.lithologies.length - 1]?.bottomY ?? -2;
+    const totalDepth = topY - bottomY;
+
+    if (viewMode === '3d') {
+      // Thin vertical cylinder, coloured segments per layer
+      for (const layer of borehole.lithologies) {
+        const h = layer.topY - layer.bottomY;
+        if (h <= 0) continue;
+        const midY = (layer.topY + layer.bottomY) / 2;
+        const geo = new T.CylinderGeometry(0.06, 0.06, h, 8, 1);
+        const col = getLithologyColor(layer.lithology);
+        const mat = new T.MeshBasicMaterial({ color: col });
+        const mesh = new T.Mesh(geo, mat);
+        mesh.position.set(x, midY, z);
+        group.add(mesh);
+      }
+      // Cyan outline cylinder (wireframe)
+      const outlineGeo = new T.CylinderGeometry(0.07, 0.07, totalDepth, 8, 1);
+      const outlineMat = new T.MeshBasicMaterial({ color: 0x67e8f9, wireframe: true, transparent: true, opacity: 0.6 });
+      const outline = new T.Mesh(outlineGeo, outlineMat);
+      outline.position.set(x, (topY + bottomY) / 2, z);
+      group.add(outline);
+
+    } else if (viewMode === 'xsection') {
+      // Vertical strip at x-coordinate
+      for (const layer of borehole.lithologies) {
+        const h = layer.topY - layer.bottomY;
+        if (h <= 0) continue;
+        const midY = (layer.topY + layer.bottomY) / 2;
+        const geo = new T.PlaneGeometry(0.12, h);
+        const col = getLithologyColor(layer.lithology);
+        const mat = new T.MeshBasicMaterial({ color: col, side: T.DoubleSide });
+        const mesh = new T.Mesh(geo, mat);
+        mesh.position.set(x, midY, z);
+        group.add(mesh);
+      }
+      // Cyan outline
+      const pts = [
+        new T.Vector3(x, topY, z),
+        new T.Vector3(x, bottomY, z),
+      ];
+      const lineGeo = new T.BufferGeometry().setFromPoints(pts);
+      const lineMat = new T.LineBasicMaterial({ color: 0x67e8f9 });
+      group.add(new T.Line(lineGeo, lineMat));
+
+    } else if (viewMode === 'map') {
+      // Small open circle (well symbol) at (x, z) — manual arc via points
+      const segs = 24;
+      const circlePts = [];
+      for (let i = 0; i <= segs; i++) {
+        const angle = (i / segs) * Math.PI * 2;
+        circlePts.push(new T.Vector3(
+          x + Math.cos(angle) * 0.15,
+          topY + 0.05,
+          z + Math.sin(angle) * 0.15,
+        ));
+      }
+      const circleGeo = new T.BufferGeometry().setFromPoints(circlePts);
+      const circleMat = new T.LineBasicMaterial({ color: 0x67e8f9 });
+      group.add(new T.Line(circleGeo, circleMat));
+    }
+
+    return group;
+  }
+
+  window.GeoThree = { ...(window.GeoThree || {}), buildBoreholeGeometry };
 })();

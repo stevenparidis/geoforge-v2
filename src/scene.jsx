@@ -258,6 +258,7 @@
       viewMode = '3d',
       className = '',
       style = {},
+      borehole = null,
     } = props;
 
     const hostRef = useRef(null);
@@ -658,6 +659,28 @@
       st.scene.selectionGroup = group;
       st.scene.add(group);
     }, [selectedId, viewMode]);
+
+    // G.4 — render borehole group when borehole prop changes
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st) return;
+      // Remove existing borehole group
+      if (st.scene.boreholeGroup) {
+        st.scene.boreholeGroup.traverse(n => {
+          if (n.geometry) n.geometry.dispose?.();
+          if (n.material) {
+            const m = n.material;
+            if (Array.isArray(m)) m.forEach(mm => mm.dispose?.()); else m.dispose?.();
+          }
+        });
+        st.scene.remove(st.scene.boreholeGroup);
+        st.scene.boreholeGroup = null;
+      }
+      if (borehole && typeof window.GeoThree?.buildBoreholeGeometry === 'function') {
+        const g = window.GeoThree.buildBoreholeGeometry(borehole, viewMode);
+        if (g) { st.scene.boreholeGroup = g; st.scene.add(g); }
+      }
+    }, [borehole, viewMode]);
 
     return (
       <div
