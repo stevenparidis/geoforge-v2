@@ -853,6 +853,129 @@
     meshGroup.add(fwLine);
   }
 
+  // ---- C.1: Sense-of-motion arrows on the fault plane ----
+  // Returns { hwArrow, fwArrow } — Three.js ArrowHelper objects to be added to overlays group.
+  function buildSenseOfMotionArrows(faultEvent, model) {
+    const evt = faultEvent;
+    const subtype = evt.subtype;
+    const dipDeg = evt.dip ?? 60;
+    const dipDir = evt.dip_direction ?? 90;
+    const strike = evt.strike ?? 0;
+    const isVertical = dipDeg >= 88;
+
+    const hwColor = 0xd68fff; // --hw purple
+    const fwColor = 0x80e0c0; // --fw teal
+    const arrowLength = 0.5;
+    const headLength = 0.12;
+    const headWidth = 0.08;
+
+    // Determine the fault plane normal to find where to position HW/FW arrows.
+    // HW is on the dip-direction side; FW is on the opposite side.
+    const dipDirRad = rad(dipDir);
+    const hwOffsetDir = new T.Vector3(Math.sin(dipDirRad), 0, Math.cos(dipDirRad)).normalize();
+    const fwOffsetDir = hwOffsetDir.clone().negate();
+    const offsetDist = 0.4;
+
+    // Fault plane centre is at origin (0,0,0)
+    const hwOrigin = hwOffsetDir.clone().multiplyScalar(offsetDist);
+    const fwOrigin = fwOffsetDir.clone().multiplyScalar(offsetDist);
+
+    // Determine arrow direction vectors for HW and FW
+    let hwDir, fwDir;
+    if (subtype === 'normal' || subtype === 'listric') {
+      // HW moves down-dip; FW moves up-dip (relative to HW)
+      hwDir = new T.Vector3(0, -1, 0);
+      fwDir = new T.Vector3(0, 1, 0);
+    } else if (subtype === 'reverse' || subtype === 'thrust') {
+      // HW moves up-dip; FW moves down-dip (relative to HW)
+      hwDir = new T.Vector3(0, 1, 0);
+      fwDir = new T.Vector3(0, -1, 0);
+    } else if (subtype === 'strike-slip') {
+      // Horizontal motion along strike
+      const sVec = strikeVec(strike).normalize();
+      const sense = evt.sense === 'sinistral' ? -1 : 1;
+      // Dextral: HW (moving block as viewed from above) moves in +strike direction
+      hwDir = sVec.clone().multiplyScalar(sense);
+      fwDir = sVec.clone().multiplyScalar(-sense);
+    } else if (subtype === 'oblique') {
+      // Arrow along full slip vector direction
+      const slipDir = downDipVec(dipDeg, dipDir).normalize();
+      const sense = evt.sense === 'sinistral' ? -1 : 1;
+      const strikeComp = strikeVec(strike).normalize().multiplyScalar(sense * 0.5);
+      hwDir = slipDir.add(strikeComp).normalize();
+      fwDir = hwDir.clone().negate();
+    } else {
+      // Default: treat like normal fault
+      hwDir = new T.Vector3(0, -1, 0);
+      fwDir = new T.Vector3(0, 1, 0);
+    }
+
+    // For purely vertical faults, use horizontal strike arrows on each side
+    if (isVertical && subtype !== 'strike-slip') {
+      const sVec = strikeVec(strike).normalize();
+      hwDir = sVec.clone();
+      fwDir = sVec.clone().negate();
+    }
+
+    const makeArrow = (origin, dir, color) => {
+      const ah = new T.ArrowHelper(
+        dir.clone().normalize(),
+        origin.clone(),
+        arrowLength,
+        color,
+        headLength,
+        headWidth,
+      );
+      ah.line.material = lineMat(color, { depthTest: false, opacity: 0.9 });
+      ah.cone.material = new T.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, depthTest: false });
+      ah.renderOrder = 9;
+      return ah;
+    };
+
+    const hwArrow = makeArrow(hwOrigin, hwDir, hwColor);
+    const fwArrow = makeArrow(fwOrigin, fwDir, fwColor);
+
+    return { hwArrow, fwArrow };
+  }
+
+  // ---- C.2: Stress-state badge ----
+  // Returns a CSS2DObject positioned below the model stack.
+  function buildStressBadge(faultEvent, model) {
+    const evt = faultEvent;
+    const subtype = evt.subtype;
+    const total = (model.layers || []).reduce((s, L) => s + (L.thickness || 0.5), 0);
+
+    let state, stateClass, arrowsHTML, subText;
+    if (subtype === 'normal' || subtype === 'listric') {
+      state = 'TENSION';
+      stateClass = 'tension';
+      arrowsHTML = '&#8596;';
+      subText = 'σ₃ horizontal · extensional regime';
+    } else if (subtype === 'reverse' || subtype === 'thrust') {
+      state = 'COMPRESSION';
+      stateClass = 'compression';
+      arrowsHTML = '&#8594;&#8592;';
+      subText = 'σ₁ horizontal · compressional regime';
+    } else {
+      state = 'SHEAR';
+      stateClass = 'shear';
+      arrowsHTML = '&#8593;&#8595;';
+      subText = 'τ1 horizontal · strike-slip regime';
+    }
+
+    const div = document.createElement('div');
+    div.className = `stress-badge stress-badge--${stateClass}`;
+    div.innerHTML = [
+      `<div class="sb-arrows sb-arrows--${stateClass}">${arrowsHTML}</div>`,
+      `<div class="sb-label">${state}</div>`,
+      `<div class="sb-sub">${subText}</div>`,
+    ].join('');
+
+    const obj = new window.CSS2DObject(div);
+    obj.position.set(0, -(total / 2 + 0.6), 0);
+    return obj;
+  }
+
   function addThrowHeaveOverlay(overlays, labels, { slip, strike, dipDeg, dipDir, slabs, total, evt, downSign }) {
     // We'll pick a marker layer (the top of the second layer from bottom) as the datum.
     if (!slabs || slabs.length < 1) return;
@@ -893,6 +1016,17 @@
       heaveLbl.position.copy(heaveStart.clone().add(heaveEnd).multiplyScalar(0.5).add(new T.Vector3(0, -0.15, 0)));
       overlays.add(heaveLbl);
     }
+
+    // C.3 Displacement: diagonal line from fwAnchor to hwAnchor (along fault plane)
+    const dispMag = evt.displacement != null
+      ? evt.displacement
+      : Math.sqrt(slip.y * slip.y + heaveMag * heaveMag);
+    const dispInferred = evt.displacement == null || evt.field_origin?.displacement === 'inferred';
+    const dispLine = dashedLine(fwAnchor, hwAnchor, 0xa3e4ff, { dashSize: 0.07, gapSize: 0.05 });
+    overlays.add(dispLine);
+    const dispLbl = makeValueLabel(`Displacement ${dispMag.toFixed(2)} u`, { inferred: dispInferred });
+    dispLbl.position.copy(fwAnchor.clone().add(hwAnchor).multiplyScalar(0.5).add(new T.Vector3(0, 0.18, 0)));
+    overlays.add(dispLbl);
   }
 
   function addStrikeSlipOverlay(overlays, labels, { slip, strike, dipDir, slabs, total, evt }) {
@@ -2058,9 +2192,25 @@
       labels.push(...res.labels);
 
       // B.5: HW/FW labels for each fault event
+      // C.1: Sense-of-motion arrows (overlays group — hidden by Overlays toggle)
+      // C.2: Stress-state badge (root group — hidden by Labels toggle)
       for (const evt of (model.events || [])) {
         if (evt.type === 'fault') {
           buildHWFWLabels(evt, model, labels, res.meshes);
+
+          // C.1: Sense-of-motion arrows
+          const motionArrows = buildSenseOfMotionArrows(evt, model);
+          if (motionArrows) {
+            res.overlays.add(motionArrows.hwArrow);
+            res.overlays.add(motionArrows.fwArrow);
+          }
+
+          // C.2: Stress-state badge (added to root so Labels toggle controls it)
+          const stressBadge = buildStressBadge(evt, model);
+          if (stressBadge) {
+            root.add(stressBadge);
+            labels.push({ node: stressBadge, data: { kind: 'stress-badge', eventId: evt.id } });
+          }
         }
       }
 
