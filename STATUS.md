@@ -143,3 +143,22 @@ Audit work list closed:
 v1 smoke test: passing (all 4 tests).
 v2 smoke test: passing (B.age, B.hwfw).
 Phase C unblocked.
+
+---
+
+## Phase C — Fault refinements + interpreter validation
+- [x] C.1 Sense-of-motion arrows (PR #55)
+- [x] C.2 Stress-state badge (PR #55)
+- [x] C.3 Throw/heave/displacement triad (PR #55)
+- [x] C.4 Subtype refinements: listric detachment surface, strike-slip viewpoint indicator, oblique decomposition, camera angle fix (PR #56)
+- [x] C.5 Interpreter validation gates (PR #54)
+- [x] C.6 Inspector validation note pill (PR #54)
+- [x] C.7 Smoke test + convergence (this PR)
+
+Audit work list closed:
+- §5.2 motion arrows, stress badge, displacement triad: all 7 fault formations ✓
+- §5.3 subtype-specific refinements: listric, strike-slip, oblique ✓
+- §5.5 right-hand rule check: implemented ✓
+- §9 validation gates: implemented ✓
+
+Phase D unblocked.

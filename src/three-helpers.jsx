@@ -1096,6 +1096,10 @@
       { html: true }
     );
     vpLbl.position.set(0, -(total / 2 + 0.8), 0);
+    // The label must be added to the scene graph so the CSS2DRenderer picks it up.
+    // It is gated by the Labels toggle (overlays group is hidden by Overlays; labels
+    // group is hidden by Labels — both are currently the same overlays Group here).
+    overlays.add(vpLbl);
     labels.push({ node: vpLbl, data: {} });
   }
 
