@@ -1172,6 +1172,307 @@ async function run() {
       await context.close();
     }
 
+    // -----------------------------------------------------------------------
+    // Test F.viewtabs — three viewport tabs are visible
+    //
+    //   1. Load with testmode=1
+    //   2. Assert: exactly 3 .viewtab elements exist
+    //   3. Assert: exactly 1 .viewtab.active element exists
+    //   4. Assert: the active tab text contains '3D view'
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test F.viewtabs: three viewport tabs are visible ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      // Assert: 3 .viewtab elements
+      const tabCount = await page.locator('.viewtab').count();
+      console.log(`viewtab count: ${tabCount}`);
+      if (tabCount !== 3) throw new Error(`Test F.viewtabs: Expected 3 .viewtab elements, got ${tabCount}`);
+
+      // Assert: exactly 1 active tab
+      const activeCount = await page.locator('.viewtab.active').count();
+      console.log(`viewtab.active count: ${activeCount}`);
+      if (activeCount !== 1) throw new Error(`Test F.viewtabs: Expected 1 .viewtab.active element, got ${activeCount}`);
+
+      // Assert: active tab text contains '3D view'
+      const activeText = await page.locator('.viewtab.active').textContent();
+      console.log(`Active tab text: "${activeText}"`);
+      if (!activeText.includes('3D view')) {
+        throw new Error(`Test F.viewtabs: Expected active tab text to include '3D view', got "${activeText}"`);
+      }
+
+      console.log('PASS [Test F.viewtabs]: 3 viewport tabs visible, active tab is 3D view');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-f-viewtabs.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test F.tabswitch — pressing 2 switches to cross-section
+    //
+    //   1. Load with testmode=1
+    //   2. Click body to focus away from textarea
+    //   3. Press keyboard key '2'
+    //   4. Assert: .viewtab.active contains 'Cross-section'
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test F.tabswitch: pressing 2 switches to cross-section ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      // Focus somewhere outside textarea first
+      await page.locator('body').click();
+      await page.keyboard.press('2');
+      await page.waitForTimeout(300);
+
+      const activeText = await page.locator('.viewtab.active').textContent();
+      console.log(`Active tab text after pressing 2: "${activeText}"`);
+      if (!activeText.includes('Cross-section')) {
+        throw new Error(`Test F.tabswitch: Expected active tab to contain 'Cross-section', got "${activeText}"`);
+      }
+
+      console.log('PASS [Test F.tabswitch]: pressing 2 switches active tab to Cross-section');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-f-tabswitch.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test F.tabswitch3 — pressing 3 switches to map view
+    //
+    //   1. Load with testmode=1
+    //   2. Click body to focus away from textarea
+    //   3. Press keyboard key '3'
+    //   4. Assert: .viewtab.active contains 'Map view'
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test F.tabswitch3: pressing 3 switches to map view ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      await page.locator('body').click();
+      await page.keyboard.press('3');
+      await page.waitForTimeout(300);
+
+      const activeText = await page.locator('.viewtab.active').textContent();
+      console.log(`Active tab text after pressing 3: "${activeText}"`);
+      if (!activeText.includes('Map view')) {
+        throw new Error(`Test F.tabswitch3: Expected active tab to contain 'Map view', got "${activeText}"`);
+      }
+
+      console.log('PASS [Test F.tabswitch3]: pressing 3 switches active tab to Map view');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-f-tabswitch3.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test F.viewmode-persist — viewMode persists across reload
+    //
+    //   1. Load with testmode=1, press 2 to switch to cross-section
+    //   2. Reload and navigate to testmode=1 again
+    //   3. Assert: .viewtab.active still contains 'Cross-section'
+    //   4. Press 1 to reset for other tests
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test F.viewmode-persist: viewMode persists across reload ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      // Switch to cross-section
+      await page.locator('body').click();
+      await page.keyboard.press('2');
+      await page.waitForTimeout(300);
+
+      const activeBeforeReload = await page.locator('.viewtab.active').textContent();
+      console.log(`Active tab before reload: "${activeBeforeReload}"`);
+      if (!activeBeforeReload.includes('Cross-section')) {
+        throw new Error(`Test F.viewmode-persist: Could not switch to cross-section first. Got "${activeBeforeReload}"`);
+      }
+
+      // Reload and navigate to testmode=1
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const activeAfterReload = await page.locator('.viewtab.active').textContent();
+      console.log(`Active tab after reload: "${activeAfterReload}"`);
+      if (!activeAfterReload.includes('Cross-section')) {
+        throw new Error(`Test F.viewmode-persist: Expected Cross-section after reload, got "${activeAfterReload}"`);
+      }
+
+      // Reset to 3D for other tests
+      await page.locator('body').click();
+      await page.keyboard.press('1');
+      await page.waitForTimeout(200);
+      console.log('Reset to 3D view');
+
+      console.log('PASS [Test F.viewmode-persist]: viewMode persisted as Cross-section across reload');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-f-viewmode-persist.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test F.sectionmath — window.SectionMath is available
+    //
+    //   1. Load with testmode=1
+    //   2. Assert: window.SectionMath is an object
+    //   3. Assert: window.SectionMath.computeSectionStrike is a function
+    //   4. Assert: window.SectionMath.averageBearing is a function
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test F.sectionmath: window.SectionMath is available ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+
+      const hasSectionMath = await page.evaluate(() => {
+        return typeof window.SectionMath === 'object' &&
+          typeof window.SectionMath.computeSectionStrike === 'function' &&
+          typeof window.SectionMath.averageBearing === 'function';
+      });
+
+      console.log(`window.SectionMath available: ${hasSectionMath}`);
+      if (!hasSectionMath) {
+        const details = await page.evaluate(() => ({
+          type: typeof window.SectionMath,
+          computeSectionStrike: typeof (window.SectionMath || {}).computeSectionStrike,
+          averageBearing: typeof (window.SectionMath || {}).averageBearing,
+        }));
+        throw new Error(`Test F.sectionmath: window.SectionMath not properly available. Details: ${JSON.stringify(details)}`);
+      }
+
+      console.log('PASS [Test F.sectionmath]: window.SectionMath with computeSectionStrike and averageBearing confirmed');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-f-sectionmath.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test F.css — viewport tab CSS classes present in stylesheet
+    //
+    //   1. Load with testmode=1
+    //   2. Assert: .viewtab CSS rule is present in page stylesheets
+    //   3. Assert: .xsection-label CSS rule is present
+    //   4. Assert: .map-north-arrow CSS rule is present
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test F.css: viewport tab CSS classes present in stylesheet ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript(() => {
+        window.claude = { complete: async () => '{}' };
+      });
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+
+      const hasCSS = await page.evaluate(() => {
+        const sheets = [...document.styleSheets];
+        const allRules = sheets.flatMap(s => { try { return [...s.cssRules].map(r => r.cssText); } catch { return []; } });
+        return allRules.some(r => r.includes('.viewtab')) &&
+               allRules.some(r => r.includes('.xsection-label')) &&
+               allRules.some(r => r.includes('.map-north-arrow'));
+      });
+
+      console.log(`Viewport tab CSS classes present: ${hasCSS}`);
+      if (!hasCSS) {
+        const details = await page.evaluate(() => {
+          const sheets = [...document.styleSheets];
+          const allRules = sheets.flatMap(s => { try { return [...s.cssRules].map(r => r.cssText); } catch { return []; } });
+          return {
+            hasViewtab: allRules.some(r => r.includes('.viewtab')),
+            hasXsectionLabel: allRules.some(r => r.includes('.xsection-label')),
+            hasMapNorthArrow: allRules.some(r => r.includes('.map-north-arrow')),
+          };
+        });
+        throw new Error(`Test F.css: Missing CSS rules. Details: ${JSON.stringify(details)}`);
+      }
+
+      console.log('PASS [Test F.css]: .viewtab, .xsection-label, and .map-north-arrow CSS rules confirmed');
+
+      const screenshotPath = require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-f-css.png');
+      await page.screenshot({ path: screenshotPath });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
   } catch (err) {
     console.error(`FAIL: ${err.message}`);
     exitCode = 1;
