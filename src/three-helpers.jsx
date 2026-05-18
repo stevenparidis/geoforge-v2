@@ -264,15 +264,33 @@
     return grp;
   }
 
+  // ---------- Age-ramp colour helper ----------
+  // Computes the interpolated age ramp colour for a layer given its order and total count.
+  // isHW: if true, uses the dimmed hanging-wall variants.
+  function ageRampColor(layerOrder, layerCount, isHW) {
+    const AGE_RAMP = window.GD.AGE_RAMP;
+    const t = layerCount === 1 ? 1.0 : layerOrder / (layerCount - 1);
+    const oldKey = isHW ? AGE_RAMP.oldHW : AGE_RAMP.old;
+    const youngKey = isHW ? AGE_RAMP.youngHW : AGE_RAMP.young;
+    return new T.Color(oldKey).lerp(new T.Color(youngKey), t);
+  }
+
   // ---------- Layer geometry helpers ----------
   // We render a block: a rectangle in plan (X * Z) extruded in Y. Each layer is a
   // slab in that block. We return per-layer meshes so events (fault, fold) can
   // operate on them.
+  //
+  // BoxGeometry face group indices:
+  //   0: +X (right side)  1: -X (left side)  2: +Y (top)
+  //   3: -Y (bottom)      4: +Z (front)       5: -Z (back side)
+  // Side faces (left, right, back = groups 0, 1, 5) get the age ramp colour.
+  // Top (+Y=2), bottom (-Y=3), front (+Z=4) keep the lithology colour.
   function layerBlock(layers, opts = {}) {
     const width = opts.width || 4;    // X extent
     const depth = opts.depth || 4;    // Z extent
     const palette = opts.palette || window.GD.LITHOLOGY;
     const total = layers.reduce((s, L) => s + (L.thickness || 0.5), 0);
+    const layerCount = layers.length;
     let y = -total / 2; // centre stack on origin
     const slabs = [];
     for (const L of layers) {
@@ -280,13 +298,23 @@
       const litho = palette[L.lithology] || { color: '#888' };
       const color = L.color || litho.color || '#888';
       const geo = new T.BoxGeometry(width, t, depth);
-      const mat = new T.MeshStandardMaterial({
+      const lithoMat = new T.MeshStandardMaterial({
         color: new T.Color(color),
         roughness: 0.92,
         metalness: 0.02,
         flatShading: false,
       });
-      const mesh = new T.Mesh(geo, mat);
+      const ageCol = ageRampColor(L.order ?? 0, layerCount, false);
+      const ageMat = new T.MeshStandardMaterial({
+        color: ageCol,
+        roughness: 0.92,
+        metalness: 0.02,
+        flatShading: false,
+      });
+      // Material array: [+X, -X, +Y, -Y, +Z, -Z]
+      // Side faces (indices 0, 1, 5) get age ramp; top/bottom/front keep litho colour.
+      const mats = [ageMat, ageMat, lithoMat, lithoMat, lithoMat, ageMat];
+      const mesh = new T.Mesh(geo, mats);
       mesh.position.y = y + t / 2;
       mesh.userData = { kind: 'layer', layer: L };
       slabs.push({ mesh, top: y + t, bottom: y, thickness: t, L });
@@ -504,6 +532,7 @@
     const clipPlaneFW = new T.Plane(planeN.clone().negate(), 0);
 
     const slabs = [];
+    const faultLayerCount = model.layers.length;
     let y = -total / 2;
     for (const L of model.layers) {
       const t = L.thickness;
@@ -511,20 +540,29 @@
       const color = L.color || litho.color || '#888';
 
       const baseGeom = new T.BoxGeometry(width, t, depth);
-      const matBase = new T.MeshStandardMaterial({
-        color: new T.Color(color), roughness: 0.92, metalness: 0.02,
-        clippingPlanes: [], // set per side
-      });
+
+      // Build per-face material arrays with age ramp on side faces.
+      // BoxGeometry face groups: 0=+X, 1=-X, 2=+Y(top), 3=-Y(bot), 4=+Z(front), 5=-Z(back)
+      // Side faces (0, 1, 5) get age ramp; top/bottom/front keep litho colour.
+      function makeFaultMats(isHW, clipPlane) {
+        const ageCol = ageRampColor(L.order ?? 0, faultLayerCount, isHW);
+        const lithoMat = new T.MeshStandardMaterial({
+          color: new T.Color(color), roughness: 0.92, metalness: 0.02,
+          clippingPlanes: [clipPlane],
+        });
+        const ageMat = new T.MeshStandardMaterial({
+          color: ageCol, roughness: 0.92, metalness: 0.02,
+          clippingPlanes: [clipPlane],
+        });
+        return [ageMat, ageMat, lithoMat, lithoMat, lithoMat, ageMat];
+      }
+
       // Footwall (the half on the "below/negative-normal" side of the plane)
-      const fwMat = matBase.clone();
-      fwMat.clippingPlanes = [clipPlaneFW];
-      const fw = new T.Mesh(baseGeom, fwMat);
+      const fw = new T.Mesh(baseGeom, makeFaultMats(false, clipPlaneFW));
       fw.position.y = y + t / 2;
       fw.userData = { kind: 'layer', side: 'fw', layer: L };
       // Hanging wall (the half on the "above/positive-normal" side of the plane)
-      const hwMat = matBase.clone();
-      hwMat.clippingPlanes = [clipPlaneHW];
-      const hw = new T.Mesh(baseGeom, hwMat);
+      const hw = new T.Mesh(baseGeom, makeFaultMats(true, clipPlaneHW));
       hw.position.y = y + t / 2;
       hw.position.add(slipVec); // displace HW
       hw.userData = { kind: 'layer', side: 'hw', layer: L };
@@ -1857,6 +1895,126 @@
     });
   }
 
+  // ---- B.3: Younging arrow ----
+  // Draws a vertical line with arrowhead and a rotated "YOUNGING" CSS2D label
+  // on the right side of the layer stack.  Gated by the labels array (Labels toggle).
+  function buildYoungingArrow(model, root, labels) {
+    const layers = model.layers || [];
+    if (layers.length < 2) return;
+
+    const sorted = layers.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const total = sorted.reduce((s, L) => s + (L.thickness || 0.5), 0);
+    const yMin = -total / 2;
+    const yMax = total / 2;
+
+    // Determine the stack right-edge X. Default block half-width for layers-only = 2.1;
+    // fault/fold blocks can be wider (up to 2.5). Use the model event to guess.
+    const evt = (model.events || [])[0];
+    const halfW = evt ? 2.5 : 2.1;
+    const xPos = halfW + 0.6;
+
+    const yBot = yMin - 0.1;
+    const yTop = yMax + 0.1;
+
+    const arrowColor = '#9eb1ce';
+    const arrowOpacity = 0.85;
+
+    // Vertical stem line
+    const stemGeo = new T.BufferGeometry().setFromPoints([
+      new T.Vector3(xPos, yBot, 0),
+      new T.Vector3(xPos, yTop - 0.18, 0), // stop just below arrowhead base
+    ]);
+    const stemMat = new T.LineBasicMaterial({ color: arrowColor, transparent: true, opacity: arrowOpacity });
+    const stemLine = new T.Line(stemGeo, stemMat);
+    root.add(stemLine);
+
+    // Arrowhead triangle at the top
+    const arrowHalfW = 0.07;
+    const arrowH = 0.18;
+    const arrowTipY = yTop;
+    const arrowBaseY = arrowTipY - arrowH;
+    const arrowPositions = new Float32Array([
+      xPos,              arrowTipY,  0,   // tip
+      xPos - arrowHalfW, arrowBaseY, 0,   // base left
+      xPos + arrowHalfW, arrowBaseY, 0,   // base right
+    ]);
+    const arrowGeo = new T.BufferGeometry();
+    arrowGeo.setAttribute('position', new T.Float32BufferAttribute(arrowPositions, 3));
+    const arrowMat = new T.MeshBasicMaterial({ color: arrowColor, transparent: true, opacity: arrowOpacity, side: T.DoubleSide });
+    const arrowMesh = new T.Mesh(arrowGeo, arrowMat);
+    root.add(arrowMesh);
+
+    // CSS2D "YOUNGING" label at midpoint, rotated 90° to read bottom-to-top
+    const midY = (yBot + yTop) / 2;
+    const lblDiv = document.createElement('div');
+    lblDiv.style.cssText = [
+      'color:#9eb1ce',
+      'font-size:9.5px',
+      "font-family:'Geist Mono',monospace",
+      'opacity:0.85',
+      'pointer-events:none',
+      'white-space:nowrap',
+      'transform:rotate(-90deg)',
+      'transform-origin:center center',
+    ].join(';');
+    lblDiv.textContent = 'YOUNGING';
+    const lbl = new window.CSS2DObject(lblDiv);
+    lbl.position.set(xPos + 0.28, midY, 0);
+    root.add(lbl);
+    labels.push({ node: lbl, data: { kind: 'younging' } });
+  }
+
+  // ---- B.4: Age sequence badges (numbered circles) ----
+  // Places a CSS2D circle badge showing the layer order number (1-indexed)
+  // on the right side face of each layer.  Gated by the labels array (Labels toggle).
+  function buildAgeBadges(model, root, labels) {
+    const layers = model.layers || [];
+    if (layers.length === 0) return;
+
+    const sorted = layers.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const total = sorted.reduce((s, L) => s + (L.thickness || 0.5), 0);
+    const layerCount = sorted.length;
+
+    // Determine right-edge X (same logic as youngingArrow)
+    const evt = (model.events || [])[0];
+    const halfW = evt ? 2.5 : 2.1;
+    const xPos = halfW + 0.08;
+
+    let y = -total / 2;
+    for (const L of sorted) {
+      const t = L.thickness || 0.5;
+      const centreY = y + t / 2;
+      y += t;
+
+      // Age colour for this layer
+      const ageCol = ageRampColor(L.order ?? 0, layerCount, false);
+      const ageHex = '#' + ageCol.getHexString();
+
+      // Badge div
+      const div = document.createElement('div');
+      div.style.cssText = [
+        'width:22px',
+        'height:22px',
+        'border-radius:50%',
+        'background:#0a0c10',
+        `border:1.5px solid ${ageHex}`,
+        `color:${ageHex}`,
+        "font:600 10px 'Geist Mono',monospace",
+        'display:flex',
+        'align-items:center',
+        'justify-content:center',
+        'pointer-events:none',
+        'transform:translate(-50%,-50%)',
+      ].join(';');
+      div.textContent = String((L.order ?? 0) + 1);
+
+      const badge = new window.CSS2DObject(div);
+      badge.position.set(xPos, centreY, 0);
+      root.add(badge);
+      labels.push({ node: badge, data: { kind: 'age-badge', layerId: L.id } });
+    }
+  }
+
   // ---- Master dispatcher ----
   function buildSceneContents(model, opts = {}) {
     const root = new T.Group();
@@ -1898,6 +2056,12 @@
           buildHWFWLabels(evt, model, labels, res.meshes);
         }
       }
+
+      // B.3: Younging arrow (gated by labels toggle via labels array)
+      buildYoungingArrow(model, root, labels);
+
+      // B.4: Age sequence badges on right side face of each layer
+      buildAgeBadges(model, root, labels);
     }
 
     // Build overlay update functions for the first event (if any).
