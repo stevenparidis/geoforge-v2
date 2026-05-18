@@ -413,6 +413,64 @@
       configureViewMode(st, viewMode, model, selectedId);
     }, [viewMode, model, selectedId]);
 
+    // F.3 — cross-section annotations: add/remove when viewMode changes
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st) return;
+
+      // Remove any existing xsection annotations
+      if (st.scene.xsectionGroup) {
+        st.scene.remove(st.scene.xsectionGroup);
+        st.scene.xsectionGroup.traverse((n) => {
+          if (n.isCSS2DObject && n.element && n.element.parentNode) {
+            n.element.parentNode.removeChild(n.element);
+          }
+          if (n.geometry) n.geometry.dispose?.();
+          if (n.material) {
+            const m = n.material;
+            if (Array.isArray(m)) m.forEach(mm => mm.dispose?.()); else m.dispose?.();
+          }
+        });
+        st.scene.xsectionGroup = null;
+      }
+
+      if (viewMode === 'xsection' && model && window.SectionMath && window.buildCrossSectionAnnotations) {
+        const sectionStrike = window.SectionMath.computeSectionStrike(model, selectedId);
+        const xsectionGroup = window.buildCrossSectionAnnotations(model, sectionStrike);
+        st.scene.xsectionGroup = xsectionGroup;
+        st.scene.add(xsectionGroup);
+      }
+    }, [viewMode, model]);
+
+    // F.4 — map view annotations: add/remove mapGroup when viewMode or model changes
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st || !st.scene) return;
+
+      // Remove existing mapGroup if present
+      if (st.scene.mapGroup) {
+        const mg = st.scene.mapGroup;
+        mg.traverse((n) => {
+          if (n.isCSS2DObject && n.element && n.element.parentNode) {
+            n.element.parentNode.removeChild(n.element);
+          }
+          if (n.geometry) n.geometry.dispose?.();
+          if (n.material) {
+            const m = n.material;
+            if (Array.isArray(m)) m.forEach(mm => mm.dispose?.()); else m.dispose?.();
+          }
+        });
+        st.scene.remove(mg);
+        st.scene.mapGroup = null;
+      }
+
+      if (viewMode === 'map' && model && typeof window.buildMapViewAnnotations === 'function') {
+        const g = window.buildMapViewAnnotations(model);
+        st.scene.mapGroup = g;
+        st.scene.add(g);
+      }
+    }, [viewMode, model]);
+
     // F.2 — listen for geoforge:resetcamera event (emitted by F.1 reset button)
     useEffect(() => {
       const handler = () => {
@@ -423,6 +481,51 @@
       window.addEventListener('geoforge:resetcamera', handler);
       return () => window.removeEventListener('geoforge:resetcamera', handler);
     }, [viewMode, model, selectedId]);
+
+    // F.5 — selection highlight: wireframe outline in xsection and map modes.
+    // In 3d mode the existing focus-mode / emissive halo handles highlighting.
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st) return;
+      const T = st.T;
+
+      // Remove any existing selection outline group
+      if (st.scene.selectionGroup) {
+        st.scene.selectionGroup.traverse((n) => {
+          if (n.geometry) n.geometry.dispose?.();
+          if (n.material) {
+            const m = n.material;
+            if (Array.isArray(m)) m.forEach(mm => mm.dispose?.()); else m.dispose?.();
+          }
+        });
+        st.scene.remove(st.scene.selectionGroup);
+        st.scene.selectionGroup = null;
+      }
+
+      if (!selectedId || viewMode === '3d') return;
+
+      // xsection and map: traverse scene for meshes tagged with the selected featureId
+      // and add a wireframe overlay so the selection is visible from the 2D camera angle.
+      const group = new T.Group();
+      st.scene.traverse(node => {
+        if (node.userData && node.userData.featureId === selectedId && node.isMesh) {
+          node.updateWorldMatrix(true, false);
+          const outlineGeo = node.geometry.clone();
+          const outlineMat = new T.MeshBasicMaterial({
+            color: 0xffffff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.25,
+          });
+          const outline = new T.Mesh(outlineGeo, outlineMat);
+          outline.matrix.copy(node.matrixWorld);
+          outline.matrixAutoUpdate = false;
+          group.add(outline);
+        }
+      });
+      st.scene.selectionGroup = group;
+      st.scene.add(group);
+    }, [selectedId, viewMode]);
 
     return (
       <div
