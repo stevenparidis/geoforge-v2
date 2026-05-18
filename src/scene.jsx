@@ -86,6 +86,81 @@
         const ctx2d = entry.ctx2d;
         ctx2d.clearRect(0, 0, entry.canvas2d.width, entry.canvas2d.height);
         ctx2d.drawImage(this.webglCanvas, 0, 0);
+        // G.2 — view-direction indicator drawn on top of the inset
+        if (entry.insetCamera && entry.viewMode !== 'map' && entry._w >= 200 && entry._h >= 200
+            && entry.indicatorModel) {
+          const insetW = 150, insetH = 150, margin = 10;
+          const ix = entry._w - insetW - margin; // inset left edge (CSS px, from left)
+          const iy = 0;                          // inset top edge in CSS px (y=0 at top for ctx2d)
+          // Note: ctx2d y=0 is TOP (opposite of WebGL). The inset WebGL y-origin was entry._h - insetH - margin,
+          // which in ctx2d coords = margin (from the top).
+          const insetTop = margin; // px from canvas top
+          const cx = ix + insetW / 2; // inset centre x in ctx2d pixels
+          const cy = insetTop + insetH / 2; // inset centre y in ctx2d pixels
+          const r = insetW * 0.30; // indicator line length (30% of inset radius)
+          const pxR = Surface.renderer.getPixelRatio();
+
+          if (entry.viewMode === '3d') {
+            // Eye icon + azimuth arrow pointing in camera's horizontal direction
+            const cam = entry.camera;
+            const dx = cam.position.x - (entry.indicatorModel?.cx ?? 0);
+            const dz = cam.position.z - (entry.indicatorModel?.cz ?? 0);
+            const azimuth = Math.atan2(dx, dz); // angle from north in radians
+            const ctx = entry.ctx2d;
+            ctx.save();
+            ctx.scale(pxR, pxR);
+            // Inset border
+            ctx.strokeStyle = 'rgba(103,232,249,0.5)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(ix, insetTop, insetW, insetH);
+            // Eye/camera symbol: small filled circle at centre
+            ctx.fillStyle = 'rgba(103,232,249,0.85)';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+            ctx.fill();
+            // Azimuth line
+            ctx.strokeStyle = 'rgba(103,232,249,0.85)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.sin(azimuth) * r, cy + Math.cos(azimuth) * r);
+            ctx.stroke();
+            ctx.restore();
+
+          } else if (entry.viewMode === 'xsection') {
+            // A–A′ section trace across the inset
+            const strike = entry.indicatorStrike ?? 0; // degrees, updated per model
+            const rad = (strike - 90) * Math.PI / 180; // perpendicular to strike = along section
+            const ctx = entry.ctx2d;
+            ctx.save();
+            ctx.scale(pxR, pxR);
+            // Inset border
+            ctx.strokeStyle = 'rgba(103,232,249,0.5)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(ix, insetTop, insetW, insetH);
+            // Section line from one edge to the other
+            ctx.strokeStyle = 'rgba(255,220,50,0.9)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            const ax = cx - Math.cos(rad) * insetW * 0.5;
+            const ay = cy - Math.sin(rad) * insetW * 0.5;
+            const bx = cx + Math.cos(rad) * insetW * 0.5;
+            const by = cy + Math.sin(rad) * insetW * 0.5;
+            ctx.moveTo(ax, ay);
+            ctx.lineTo(bx, by);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            // Labels A and A′
+            ctx.fillStyle = 'rgba(255,220,50,0.9)';
+            ctx.font = 'bold 10px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('A', ax, ay);
+            ctx.fillText("A′", bx, by);
+            ctx.restore();
+          }
+        }
         if (entry.labelRenderer) entry.labelRenderer.render(entry.scene, entry.camera);
       }
     },
@@ -457,6 +532,20 @@
       if (!st?._surfaceEntry) return;
       st._surfaceEntry.viewMode = viewMode;
     }, [viewMode]);
+
+    // G.2 — propagate indicatorModel and indicatorStrike to entry for view-direction overlay
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st?._surfaceEntry) return;
+      const entry = st._surfaceEntry;
+      if (model && window.SectionMath) {
+        const b = window.SectionMath.computeModelBounds(model);
+        entry.indicatorModel = { cx: b.cx, cz: b.cz };
+        entry.indicatorStrike = window.SectionMath.computeSectionStrike(model, selectedId);
+      } else {
+        entry.indicatorModel = null;
+      }
+    }, [model, selectedId]);
 
     // F.3 — cross-section annotations: add/remove when viewMode changes
     useEffect(() => {
