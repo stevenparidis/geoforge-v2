@@ -2752,7 +2752,6 @@
 
   // F.3 — expose cross-section annotation builder
   window.buildCrossSectionAnnotations = buildCrossSectionAnnotations;
-
   // ---- F.7 — V-pattern for plunging folds (map view) ----
   function buildFoldVPattern(foldEvent, model) {
     const group = new T.Group();

@@ -441,7 +441,6 @@
         st.scene.add(xsectionGroup);
       }
     }, [viewMode, model]);
-
     // F.4 — map view annotations: add/remove mapGroup when viewMode or model changes
     useEffect(() => {
       const st = stateRef.current;
