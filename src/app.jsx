@@ -45,6 +45,18 @@
       setShowPrimer(false);
     };
 
+    // E.2: Focus mode — dims non-selected features to 30% opacity
+    const [focusModeOn, setFocusModeOn] = useState(() => {
+      const saved = localStorage.getItem('geoforge.focus_mode_v2');
+      return saved === null ? false : saved === 'true';
+    });
+
+    const handleFocusModeToggle = () => {
+      const next = !focusModeOn;
+      setFocusModeOn(next);
+      localStorage.setItem('geoforge.focus_mode_v2', String(next));
+    };
+
     // Restore last session from localStorage on mount
     useEffect(() => {
       try {
@@ -155,6 +167,7 @@
               setTweak('overlaysOn', next);
             }}>Overlays</button>
             <button className={'toggle' + (t.gridOn ? ' on' : '')} onClick={() => setTweak('gridOn', !t.gridOn)}>Grid</button>
+            <button className={'toggle' + (focusModeOn ? ' on' : '')} onClick={handleFocusModeToggle}>Focus</button>
             {model && (
               <button
                 onClick={handleShare}
@@ -183,6 +196,7 @@
               showLabels={t.labelsOn}
               showOverlays={t.overlaysOn}
               showGrid={t.gridOn}
+              focusModeOn={focusModeOn}
             />
           )}
           {tab === 'reference' && (

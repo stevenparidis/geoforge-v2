@@ -77,6 +77,28 @@
   };
   window.GeoSurface = Surface;
 
+  // ---------- E.2 Focus mode: traverse scene and apply opacity by featureId ----------
+  function applyFocusModeToScene(scene, focusModeOn, selectedId) {
+    if (!scene) return;
+    scene.traverse(node => {
+      if (node.userData.featureId == null) return;
+      const isSelected = node.userData.featureId === selectedId;
+      if (node.isMesh || node.isLine) {
+        if (node.material && node.userData.baseOpacity != null) {
+          if (focusModeOn && selectedId) {
+            node.material.transparent = true;
+            node.material.opacity = isSelected
+              ? node.userData.baseOpacity
+              : node.userData.baseOpacity * 0.30;
+          } else {
+            node.material.opacity = node.userData.baseOpacity;
+          }
+          node.material.needsUpdate = true;
+        }
+      }
+    });
+  }
+
   function GeoScene(props) {
     const {
       model,
@@ -87,6 +109,8 @@
       interactive = true,
       onSelect,
       selected,
+      selectedId,
+      focusModeOn = false,
       className = '',
       style = {},
     } = props;
@@ -303,6 +327,9 @@
         if (n.userData && n.userData.isLabelGroup) n.visible = showLabels;
       });
       st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
+
+      // Re-apply focus mode after a scene rebuild so dimming is preserved
+      applyFocusModeToScene(st.scene, focusModeOn, selectedId);
     }, [model]);
 
     useEffect(() => {
@@ -317,10 +344,17 @@
       st.overlayRoot.traverse((n) => { if (n.isCSS2DObject) n.visible = showOverlays; });
     }, [showLabels, showOverlays, showGrid]);
 
+    // Apply focus mode dimming whenever focusModeOn or selectedId changes
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st) return;
+      applyFocusModeToScene(st.scene, focusModeOn, selectedId);
+    }, [focusModeOn, selectedId]);
+
     return (
       <div
         ref={hostRef}
-        className={className}
+        className={`scene${focusModeOn ? ' focus-mode' : ''}${className ? ' ' + className : ''}`}
         style={{ position: 'relative', width: '100%', height: '100%', touchAction: 'none', ...style }}
       >
         <div ref={labelHostRef} />
