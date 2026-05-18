@@ -67,12 +67,12 @@
         }
         if (entry.controls) entry.controls.update();
         r.render(entry.scene, entry.camera);
-        // G.1 — inset mini-map: top-down ortho render in lower-right corner
+        // G.1 — inset mini-map: top-down ortho render in upper-right corner
         // Suppressed in map mode (map IS the main view) and for small canvases
         if (entry.insetCamera && entry.viewMode !== 'map' && entry._w >= 200 && entry._h >= 200) {
           const insetW = 150, insetH = 150, margin = 10;
           const x = entry._w - insetW - margin;
-          const y = margin; // THREE.js setViewport: y=0 is BOTTOM
+          const y = entry._h - insetH - margin; // THREE.js setViewport: y=0 is BOTTOM; subtract to place at top
           r.autoClear = false;
           r.setScissorTest(true);
           r.setScissor(x, y, insetW, insetH);
