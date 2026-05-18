@@ -67,6 +67,21 @@
         }
         if (entry.controls) entry.controls.update();
         r.render(entry.scene, entry.camera);
+        // G.1 — inset mini-map: top-down ortho render in upper-right corner
+        // Suppressed in map mode (map IS the main view) and for small canvases
+        if (entry.insetCamera && entry.viewMode !== 'map' && entry._w >= 200 && entry._h >= 200) {
+          const insetW = 150, insetH = 150, margin = 10;
+          const x = entry._w - insetW - margin;
+          const y = entry._h - insetH - margin; // THREE.js setViewport: y=0 is BOTTOM; subtract to place at top
+          r.autoClear = false;
+          r.setScissorTest(true);
+          r.setScissor(x, y, insetW, insetH);
+          r.setViewport(x, y, insetW, insetH);
+          r.render(entry.scene, entry.insetCamera);
+          r.setScissorTest(false);
+          r.setViewport(0, 0, entry._w, entry._h);
+          r.autoClear = true;
+        }
         // Copy to card's 2D canvas
         const ctx2d = entry.ctx2d;
         ctx2d.clearRect(0, 0, entry.canvas2d.width, entry.canvas2d.height);
@@ -241,6 +256,17 @@
       stateRef.current = { T, ...entry };
       window.__lastGeoScene = stateRef;
 
+      // G.1 — inset camera: top-down mini-map orthographic camera
+      const insetSz = 5; // half-frustum size in world units
+      const insetCam = new T.OrthographicCamera(-insetSz, insetSz, insetSz, -insetSz, 0.1, 200);
+      insetCam.position.set(0, 20, 0);
+      insetCam.up.set(0, 0, -1);
+      insetCam.lookAt(0, 0, 0);
+      entry.insetCamera = insetCam;
+
+      // Store entry ref so later effects can update entry properties
+      stateRef.current._surfaceEntry = entry;
+
       // Expose an imperative visibility setter so the App topbar can update
       // Three.js state directly on the click event, without waiting for React's
       // full render-and-effect cycle (which causes > 200 ms latency on large models).
@@ -385,6 +411,18 @@
 
       // Re-apply focus mode after a scene rebuild so dimming is preserved
       applyFocusModeToScene(st.scene, focusModeOn, selectedId);
+
+      // G.1 — reposition inset camera to model bounds
+      if (st._surfaceEntry?.insetCamera && model && window.SectionMath) {
+        const b = window.SectionMath.computeModelBounds(model);
+        const cam = st._surfaceEntry.insetCamera;
+        const sz = Math.max(3, Math.max(b.depth, 4.5));
+        cam.left = b.cx - sz; cam.right = b.cx + sz;
+        cam.top = b.cz + sz; cam.bottom = b.cz - sz;
+        cam.position.set(b.cx, b.cy + 20, b.cz);
+        cam.lookAt(b.cx, b.cy, b.cz);
+        cam.updateProjectionMatrix();
+      }
     }, [model]);
 
     useEffect(() => {
@@ -412,6 +450,13 @@
       if (!st) return;
       configureViewMode(st, viewMode, model, selectedId);
     }, [viewMode, model, selectedId]);
+
+    // G.1 — propagate viewMode to Surface entry so tick() can suppress the inset in map mode
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st?._surfaceEntry) return;
+      st._surfaceEntry.viewMode = viewMode;
+    }, [viewMode]);
 
     // F.3 — cross-section annotations: add/remove when viewMode changes
     useEffect(() => {
