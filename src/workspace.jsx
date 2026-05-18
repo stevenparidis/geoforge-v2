@@ -1151,7 +1151,7 @@ If the model has no structural features to guide prediction, return an empty arr
               <div className="scene-toolbar">
                 <button
                   className={`toggle${boreholesOn ? ' on' : ''}`}
-                  onClick={() => setBoreholesOn(b => !b)}
+                  onClick={(e) => { e.stopPropagation(); setBoreholesOn(b => !b); }}
                 >
                   Boreholes
                 </button>

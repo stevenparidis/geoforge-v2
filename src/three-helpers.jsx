@@ -2937,13 +2937,14 @@
     const faults = (model.events || []).filter(e => e.type === 'fault');
     for (const fault of faults) {
       const faultX = (fault.position_x ?? 0.5) * 4.2 - 2.1; // normalize to world-space x
-      const disp = fault.displacement ?? fault.displacement_u ?? 0;
+      const disp = fault.throw ?? fault.displacement ?? 0;
       if (disp === 0) continue;
       const subtype = fault.subtype || 'normal';
       if (subtype === 'strike-slip') continue; // no vertical component for strike-slip
       // HW side is typically x > faultX for normal faults
       const onHW = point.x > faultX;
-      const offset = onHW ? -disp : 0; // HW moves down (normal fault)
+      const isNormalFamily = subtype === 'normal' || subtype === 'listric';
+      const offset = onHW ? (isNormalFamily ? -disp : +disp) : 0;
       if (offset !== 0) {
         for (const entry of stack) {
           entry.topY += offset;
