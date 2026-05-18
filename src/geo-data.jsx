@@ -192,7 +192,7 @@ const REFERENCE_FORMATIONS = [
     tag: 'Fault · right-lateral',
     caption: 'Vertical fault; the far side has moved to the right (north) as viewed across the fault. Horizontal offset markers on either wall plus a slip-vector arrow lying in the plane.',
     overlays: ['strike', 'horizontal-offset', 'slip-vector'],
-    cameraHint: { phi: 1.4, theta: 0.0, dist: 9 },
+    cameraHint: { phi: 1.4, theta: 1.2, dist: 9 },
     model: {
       layers: [
         { id: 'L1', name: 'Sandstone', lithology: 'sandstone', thickness: 0.6, order: 0 },
@@ -214,7 +214,7 @@ const REFERENCE_FORMATIONS = [
     tag: 'Fault · left-lateral',
     caption: 'Vertical fault; the far side has moved to the left (south). Same overlays as dextral with the slip arrow reversed.',
     overlays: ['strike', 'horizontal-offset', 'slip-vector'],
-    cameraHint: { phi: 1.4, theta: 0.0, dist: 9 },
+    cameraHint: { phi: 1.4, theta: 1.2, dist: 9 },
     model: {
       layers: [
         { id: 'L1', name: 'Sandstone', lithology: 'sandstone', thickness: 0.6, order: 0 },
