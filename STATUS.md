@@ -191,3 +191,21 @@ Audit work list closed:
 - §6.4 inspector explanations ✓
 
 Phase F unblocked.
+
+---
+
+## Phase F — Cross-section and Map view tabs
+- [x] F.1 Viewport tab strip UI
+- [x] F.2 GeoScene viewMode prop
+- [x] F.3 Cross-section renderer
+- [x] F.4 Map view renderer
+- [x] F.5 Linked selection
+- [x] F.6 Cross-section plane computation
+- [x] F.7 Map V-pattern computation
+- [x] F.8 Acceptance + smoke test
+
+Audit work list closed:
+- §7.1 three-tab viewport ✓
+- §7.2 map view V-pattern surfaced ✓
+
+Phase G unblocked.
