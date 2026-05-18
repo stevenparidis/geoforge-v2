@@ -741,7 +741,6 @@
 
     const dipDeg = evt.dip ?? 60;
     const dipDir = evt.dip_direction ?? 90; // degrees clockwise from north
-    const sense = evt.sense || evt.subtype || '';
     const isVertical = (dipDeg === 90) || (evt.subtype === 'strike-slip');
 
     // Determine HW side direction from dip_direction.
