@@ -596,6 +596,57 @@ If the model has no structural features to guide prediction, return an empty arr
       return () => clearTimeout(t);
     }, [error]);
 
+    // B.5: HW/FW tooltip — delegated listeners on document capture hover over CSS2D labels
+    useEffect(() => {
+      const tooltip = document.getElementById('hwfw-tooltip');
+      if (!tooltip) return;
+
+      const TOOLTIP_HW = '<em>In a fault, the <strong>hanging wall</strong> is the block above the dipping fault plane — where a miner could hang a lantern. The <strong>footwall</strong> is the block below, at the miner\'s feet.</em>';
+      const TOOLTIP_FW = '<em>The <strong>footwall</strong> is the block below the dipping fault plane — at the miner\'s feet. The <strong>hanging wall</strong> is above, where a lantern could be hung.</em>';
+      const TOOLTIP_VERTICAL = ' <em>For vertical strike-slip faults, hanging wall and footwall are not strictly defined.</em>';
+
+      function showTooltip(e) {
+        const label = e.target.closest?.('.hwfw-label');
+        if (!label) return;
+        const role = label.dataset.tooltip; // 'hw' or 'fw'
+        const isVertical = label.dataset.vertical === 'true';
+        let content = role === 'hw' ? TOOLTIP_HW : TOOLTIP_FW;
+        if (isVertical) content += TOOLTIP_VERTICAL;
+        tooltip.innerHTML = content;
+        tooltip.style.display = 'block';
+        tooltip.style.left = (e.clientX + 14) + 'px';
+        tooltip.style.top  = (e.clientY - 8) + 'px';
+      }
+
+      function moveTooltip(e) {
+        const label = e.target.closest?.('.hwfw-label');
+        if (!label) {
+          tooltip.style.display = 'none';
+          return;
+        }
+        tooltip.style.left = (e.clientX + 14) + 'px';
+        tooltip.style.top  = (e.clientY - 8) + 'px';
+      }
+
+      function hideTooltip(e) {
+        const label = e.target.closest?.('.hwfw-label');
+        if (label && !label.contains(e.relatedTarget)) {
+          tooltip.style.display = 'none';
+        }
+      }
+
+      document.addEventListener('mouseover', showTooltip, true);
+      document.addEventListener('mousemove', moveTooltip, true);
+      document.addEventListener('mouseout', hideTooltip, true);
+
+      return () => {
+        document.removeEventListener('mouseover', showTooltip, true);
+        document.removeEventListener('mousemove', moveTooltip, true);
+        document.removeEventListener('mouseout', hideTooltip, true);
+        tooltip.style.display = 'none';
+      };
+    }, []);
+
     const onInterpret = useCallback(async () => {
       if (!description.trim()) return;
       setInterpreting(true);

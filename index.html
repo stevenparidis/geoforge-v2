@@ -709,10 +709,51 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 99px; border: 2px solid var(--bg-1); }
   ::-webkit-scrollbar-thumb:hover { background: var(--fg-3); }
+
+  /* B.5: HW/FW floating labels */
+  .hwfw-label {
+    background: rgba(8,9,13,0.92);
+    border-radius: 5px;
+    padding: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    width: 92px;
+    cursor: pointer;
+    pointer-events: auto;
+    transform: translate(-50%, -100%);
+  }
+  .hwfw-hw { border: 1px solid rgba(214,143,255,0.55); }
+  .hwfw-fw { border: 1px solid rgba(128,224,192,0.55); }
+  .hwfw-long { color: #c9c4b8; font-size: 8px; font-family: 'Geist Mono', monospace; letter-spacing: 0.05em; }
+  .hwfw-short { font-size: 12px; font-weight: 600; font-family: 'Geist Mono', monospace; }
+  .hwfw-hw .hwfw-short { color: #d68fff; }
+  .hwfw-fw .hwfw-short { color: #80e0c0; }
+
+  /* B.5: HW/FW mnemonic tooltip */
+  #hwfw-tooltip {
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    background: rgba(8,9,13,0.95);
+    color: #c9c4b8;
+    padding: 10px 14px;
+    border-radius: 6px;
+    max-width: 280px;
+    font-size: 12px;
+    line-height: 1.5;
+    font-family: var(--sans);
+    border: 1px solid #232a38;
+    display: none;
+  }
+  #hwfw-tooltip em { font-style: italic; color: #e2ddd7; }
+  #hwfw-tooltip strong { color: #f3efe7; font-weight: 600; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
+  <div id="hwfw-tooltip"></div>
   <div id="root">
     <div class="app">
       <div class="topbar">

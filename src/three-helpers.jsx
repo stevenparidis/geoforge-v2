@@ -729,6 +729,92 @@
     return parts.join(' ');
   }
 
+  // ---- B.5: HW/FW floating labels with dashed pointer lines ----
+  // faultEvent: a single fault event from model.events
+  // model: the full model (used for total stack height)
+  // labels: the labels array to push CSS2D objects into (for Labels toggle)
+  // meshGroup: THREE.Group to attach CSS2D objects and lines to
+  function buildHWFWLabels(faultEvent, model, labels, meshGroup) {
+    const evt = faultEvent;
+    const total = (model.layers || []).reduce((s, L) => s + (L.thickness || 0.5), 0);
+    const stackTop = total / 2;
+
+    const dipDeg = evt.dip ?? 60;
+    const dipDir = evt.dip_direction ?? 90; // degrees clockwise from north
+    const isVertical = (dipDeg === 90) || (evt.subtype === 'strike-slip');
+
+    // Determine HW side direction from dip_direction.
+    // dip_direction is a bearing (0=N, 90=E, 180=S, 270=W).
+    // The HW is on the side the fault dips toward.
+    // Coordinate system: +X=east, +Z=north, +Y=up.
+    // dip_direction bearing -> horizontal offset vector
+    const dipDirRad = rad(dipDir);
+    // Bearing: sin(b)=X(east), cos(b)=Z(north)
+    const hwDirX = Math.sin(dipDirRad);
+    const hwDirZ = Math.cos(dipDirRad);
+    const fwDirX = -hwDirX;
+    const fwDirZ = -hwDirZ;
+
+    // Horizontal offset from centre for HW and FW labels
+    const offset = 1.8;
+
+    const hwX = hwDirX * offset;
+    const hwZ = hwDirZ * offset;
+    const fwX = fwDirX * offset;
+    const fwZ = fwDirZ * offset;
+
+    const labelY = stackTop + 1.0;
+    // Midpoint of the slab (approximately centre of stack in Y)
+    const slabMidY = 0;
+
+    const hwColor = 0xd68fff; // --hw purple
+    const fwColor = 0x80e0c0; // --fw teal
+
+    // Helper: make the HTML element for an hwfw label
+    function makeHWFWElement(role, tooltipKey, vertical) {
+      const el = document.createElement('div');
+      el.className = 'hwfw-label hwfw-' + role;
+      el.dataset.tooltip = tooltipKey;
+      if (vertical) el.dataset.vertical = 'true';
+      const longSpan = document.createElement('span');
+      longSpan.className = 'hwfw-long';
+      longSpan.textContent = role === 'hw' ? 'HANGING WALL' : 'FOOTWALL';
+      const shortSpan = document.createElement('span');
+      shortSpan.className = 'hwfw-short';
+      shortSpan.textContent = role === 'hw' ? 'HW' : 'FW';
+      el.appendChild(longSpan);
+      el.appendChild(shortSpan);
+      return el;
+    }
+
+    // HW label
+    const hwEl = makeHWFWElement('hw', 'hw', isVertical);
+    const hwObj = new window.CSS2DObject(hwEl);
+    hwObj.position.set(hwX, labelY, hwZ);
+    meshGroup.add(hwObj);
+    labels.push({ node: hwObj, data: { kind: 'hwfw', role: 'hw', eventId: evt.id } });
+
+    // FW label
+    const fwEl = makeHWFWElement('fw', 'fw', isVertical);
+    const fwObj = new window.CSS2DObject(fwEl);
+    fwObj.position.set(fwX, labelY, fwZ);
+    meshGroup.add(fwObj);
+    labels.push({ node: fwObj, data: { kind: 'hwfw', role: 'fw', eventId: evt.id } });
+
+    // Dashed pointer lines from label down to slab midpoint
+    const hwLabelPt = new T.Vector3(hwX, labelY, hwZ);
+    const hwSlabPt  = new T.Vector3(hwX * 0.6, slabMidY, hwZ * 0.6);
+    const hwLine = dashedLine(hwLabelPt, hwSlabPt, hwColor, { dashSize: 0.12, gapSize: 0.08, opacity: 0.5, depthTest: false });
+    hwLine.renderOrder = 8;
+    meshGroup.add(hwLine);
+
+    const fwLabelPt = new T.Vector3(fwX, labelY, fwZ);
+    const fwSlabPt  = new T.Vector3(fwX * 0.6, slabMidY, fwZ * 0.6);
+    const fwLine = dashedLine(fwLabelPt, fwSlabPt, fwColor, { dashSize: 0.12, gapSize: 0.08, opacity: 0.5, depthTest: false });
+    fwLine.renderOrder = 8;
+    meshGroup.add(fwLine);
+  }
+
   function addThrowHeaveOverlay(overlays, labels, { slip, strike, dipDeg, dipDir, slabs, total, evt, downSign }) {
     // We'll pick a marker layer (the top of the second layer from bottom) as the datum.
     if (!slabs || slabs.length < 1) return;
@@ -1805,6 +1891,13 @@
       root.add(res.meshes);
       overlays.add(res.overlays);
       labels.push(...res.labels);
+
+      // B.5: HW/FW labels for each fault event
+      for (const evt of (model.events || [])) {
+        if (evt.type === 'fault') {
+          buildHWFWLabels(evt, model, labels, res.meshes);
+        }
+      }
     }
 
     // Build overlay update functions for the first event (if any).
