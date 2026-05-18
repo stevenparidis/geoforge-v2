@@ -77,6 +77,55 @@
   };
   window.GeoSurface = Surface;
 
+  // ---------- F.2 configureViewMode: reposition camera for 3d / xsection / map ----------
+  function configureViewMode(ss, mode, model, selectedId) {
+    // ss is the sceneState object (stateRef.current)
+    if (!ss || !ss.camera || !ss.controls || !model) return;
+    const camera = ss.camera;
+    const controls = ss.controls;
+    const renderer = Surface.renderer; // shared off-DOM renderer
+    const bounds = window.SectionMath.computeModelBounds(model);
+
+    if (mode === '3d') {
+      camera.position.set(bounds.cx + 8, bounds.cy + 6, bounds.cz + 10);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(bounds.cx, bounds.cy, bounds.cz);
+      controls.enableRotate = true;
+      controls.enableZoom = true;
+      controls.maxPolarAngle = Math.PI - 0.2;
+      if (ss.chrome) ss.chrome.visible = true;
+      if (renderer) renderer.clippingPlanes = [];
+
+    } else if (mode === 'xsection') {
+      const sectionStrike = window.SectionMath.computeSectionStrike(model, selectedId);
+      const rad = sectionStrike * Math.PI / 180;
+      const dist = 12;
+      camera.position.set(
+        bounds.cx + Math.sin(rad) * dist,
+        bounds.cy,
+        bounds.cz + Math.cos(rad) * dist
+      );
+      camera.up.set(0, 1, 0);
+      camera.lookAt(bounds.cx, bounds.cy, bounds.cz);
+      controls.enableRotate = false;
+      controls.enableZoom = true;
+      if (ss.chrome) ss.chrome.visible = false;
+      if (renderer) renderer.clippingPlanes = []; // F.3 will add clipping planes
+
+    } else if (mode === 'map') {
+      camera.position.set(bounds.cx, bounds.cy + 20, bounds.cz);
+      camera.up.set(0, 0, -1);
+      camera.lookAt(bounds.cx, bounds.cy, bounds.cz);
+      controls.enableRotate = false;
+      controls.enableZoom = true;
+      if (ss.chrome) ss.chrome.visible = true;
+      if (renderer) renderer.clippingPlanes = [];
+    }
+
+    camera.updateProjectionMatrix();
+    controls.update();
+  }
+
   // ---------- E.2 Focus mode: traverse scene and apply opacity by featureId ----------
   function applyFocusModeToScene(scene, focusModeOn, selectedId) {
     if (!scene) return;
@@ -116,6 +165,7 @@
       selected,
       selectedId,
       focusModeOn = false,
+      viewMode = '3d',
       className = '',
       style = {},
     } = props;
@@ -355,6 +405,24 @@
       if (!st) return;
       applyFocusModeToScene(st.scene, focusModeOn, selectedId);
     }, [focusModeOn, selectedId]);
+
+    // F.2 — configure camera/controls for viewMode
+    useEffect(() => {
+      const st = stateRef.current;
+      if (!st) return;
+      configureViewMode(st, viewMode, model, selectedId);
+    }, [viewMode, model, selectedId]);
+
+    // F.2 — listen for geoforge:resetcamera event (emitted by F.1 reset button)
+    useEffect(() => {
+      const handler = () => {
+        const st = stateRef.current;
+        if (!st) return;
+        configureViewMode(st, viewMode, model, selectedId);
+      };
+      window.addEventListener('geoforge:resetcamera', handler);
+      return () => window.removeEventListener('geoforge:resetcamera', handler);
+    }, [viewMode, model, selectedId]);
 
     return (
       <div
