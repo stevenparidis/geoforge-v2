@@ -162,3 +162,19 @@ Audit work list closed:
 - §9 validation gates: implemented ✓
 
 Phase D unblocked.
+
+---
+
+## Phase D — Fold refinements
+- [x] D.1 Axial-plane rendering (light-cyan, gated by Overlays toggle) — PR #58
+- [x] D.2 Axial-plane label with anticline/syncline identification (gated by Labels toggle) — PR #58
+- [x] D.3 Interlimb-angle limb planes (measurement-origin clarity) — PR #59
+- [x] D.4 Monocline step indicator (dashed underlying-step + label) — PR #60
+- [x] D.5 Acceptance + smoke test convergence (this PR)
+
+Audit work list closed:
+- §5.4 fold refinements: all 3 fold formations ✓
+
+BUG-03 (anticline vs syncline at zero plunge) resolved.
+
+Phase E unblocked.

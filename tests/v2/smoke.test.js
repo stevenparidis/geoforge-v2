@@ -203,6 +203,56 @@ const THRUST_FIXTURE = {
   ],
 };
 
+// Anticline at zero plunge — D.anticline test
+const ANTICLINE_FIXTURE = {
+  meta: { name: 'Anticline', description: 'An anticline with zero plunge.' },
+  layers: [
+    { id: 'L1', name: 'Shale',     lithology: 'shale',     thickness: 0.8, order: 0, field_origin: { thickness: 'stated', lithology: 'stated' } },
+    { id: 'L2', name: 'Sandstone', lithology: 'sandstone', thickness: 0.8, order: 1, field_origin: { thickness: 'stated', lithology: 'stated' } },
+    { id: 'L3', name: 'Limestone', lithology: 'limestone', thickness: 0.8, order: 2, field_origin: { thickness: 'stated', lithology: 'stated' } },
+  ],
+  events: [{
+    id: 'E1', type: 'fold', subtype: 'anticline',
+    axis_strike: 0, plunge: 0, plunge_direction: 0,
+    interlimb_angle: 120, amplitude: 0.8, wavelength: 4.0, order: 0,
+    description_source: 'An anticline with zero plunge.',
+    field_origin: { axis_strike: 'stated', plunge: 'stated', interlimb_angle: 'inferred', amplitude: 'inferred', wavelength: 'inferred' },
+  }],
+};
+
+// Syncline at zero plunge — D.syncline test
+const SYNCLINE_FIXTURE = {
+  meta: { name: 'Syncline', description: 'A syncline with zero plunge.' },
+  layers: [
+    { id: 'L1', name: 'Shale',     lithology: 'shale',     thickness: 0.8, order: 0, field_origin: { thickness: 'stated', lithology: 'stated' } },
+    { id: 'L2', name: 'Sandstone', lithology: 'sandstone', thickness: 0.8, order: 1, field_origin: { thickness: 'stated', lithology: 'stated' } },
+    { id: 'L3', name: 'Limestone', lithology: 'limestone', thickness: 0.8, order: 2, field_origin: { thickness: 'stated', lithology: 'stated' } },
+  ],
+  events: [{
+    id: 'E1', type: 'fold', subtype: 'syncline',
+    axis_strike: 0, plunge: 0, plunge_direction: 0,
+    interlimb_angle: 120, amplitude: 0.8, wavelength: 4.0, order: 0,
+    description_source: 'A syncline with zero plunge.',
+    field_origin: { axis_strike: 'stated', plunge: 'stated', interlimb_angle: 'inferred', amplitude: 'inferred', wavelength: 'inferred' },
+  }],
+};
+
+// Monocline — D.monocline test
+const MONOCLINE_FIXTURE = {
+  meta: { name: 'Monocline', description: 'A monocline with a 30 degree flexure dip.' },
+  layers: [
+    { id: 'L1', name: 'Shale',     lithology: 'shale',     thickness: 0.8, order: 0, field_origin: { thickness: 'stated', lithology: 'stated' } },
+    { id: 'L2', name: 'Sandstone', lithology: 'sandstone', thickness: 0.8, order: 1, field_origin: { thickness: 'stated', lithology: 'stated' } },
+    { id: 'L3', name: 'Limestone', lithology: 'limestone', thickness: 0.8, order: 2, field_origin: { thickness: 'stated', lithology: 'stated' } },
+  ],
+  events: [{
+    id: 'E1', type: 'fold', subtype: 'monocline',
+    axis_strike: 0, flexure_dip: 30, flexure_width: 1.2, step_height: 0.8, order: 0,
+    description_source: 'A monocline with a 30 degree flexure dip.',
+    field_origin: { axis_strike: 'stated', flexure_dip: 'stated', flexure_width: 'inferred', step_height: 'inferred' },
+  }],
+};
+
 // ---------------------------------------------------------------------------
 // Main test runner
 // ---------------------------------------------------------------------------
@@ -685,6 +735,194 @@ async function run() {
       await page.screenshot({ path: screenshotPath, fullPage: false });
       console.log(`Screenshot saved to ${screenshotPath}`);
 
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test D.anticline — anticline renders .fold-axial-lbl with 'ANTICLINE'
+    //
+    //   1. Load an anticline fixture via the claude.complete stub
+    //   2. Wait for Three.js ready and the fold model to appear in inspector
+    //   3. Assert: window.__lastModel.events[0].subtype === 'anticline'
+    //   4. Assert: a .fold-axial-lbl element exists in the DOM
+    //   5. Assert: the label text contains 'ANTICLINE'
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test D.anticline: anticline renders axial-plane label ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript((fixtureJson) => {
+        window.claude = { complete: async function () { return fixtureJson; } };
+      }, JSON.stringify(ANTICLINE_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('An anticline with zero plunge.');
+      await page.locator('button.btn.primary').click();
+
+      // Wait for fold event to appear in inspector
+      await page.waitForFunction(
+        () => {
+          const lists = document.querySelectorAll('.feat-list');
+          if (lists.length < 2) return false;
+          return lists[1].querySelectorAll('.feat-item').length >= 1;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      await page.waitForTimeout(600);
+
+      // Assert subtype
+      const subtype = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.events || !m.events.length) return null;
+        return m.events[0].subtype;
+      });
+      if (subtype !== 'anticline') throw new Error(`Test D.anticline: Expected subtype 'anticline', got '${subtype}'`);
+
+      // Assert .fold-axial-lbl exists with ANTICLINE text
+      await page.waitForFunction(
+        () => document.querySelector('.fold-axial-lbl') !== null,
+        { timeout: 5000 }
+      );
+      const lblText = await page.evaluate(() => {
+        const el = document.querySelector('.fold-axial-lbl');
+        return el ? el.textContent : '';
+      });
+      if (!lblText.includes('ANTICLINE')) throw new Error(`Test D.anticline: .fold-axial-lbl missing 'ANTICLINE'. Got: "${lblText}"`);
+
+      console.log('PASS [Test D.anticline]: .fold-axial-lbl with ANTICLINE confirmed in DOM');
+      await page.screenshot({ path: require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-d-anticline.png') });
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test D.syncline — syncline renders .fold-axial-lbl with 'SYNCLINE'
+    //
+    //   1. Load a syncline fixture via the claude.complete stub
+    //   2. Wait for Three.js ready and the fold model to appear in inspector
+    //   3. Assert: window.__lastModel.events[0].subtype === 'syncline'
+    //   4. Assert: a .fold-axial-lbl element exists in the DOM
+    //   5. Assert: the label text contains 'SYNCLINE'
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test D.syncline: syncline renders axial-plane label ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript((fixtureJson) => {
+        window.claude = { complete: async function () { return fixtureJson; } };
+      }, JSON.stringify(SYNCLINE_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('A syncline with zero plunge.');
+      await page.locator('button.btn.primary').click();
+
+      // Wait for fold event to appear in inspector
+      await page.waitForFunction(
+        () => {
+          const lists = document.querySelectorAll('.feat-list');
+          if (lists.length < 2) return false;
+          return lists[1].querySelectorAll('.feat-item').length >= 1;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      await page.waitForTimeout(600);
+
+      // Assert subtype
+      const subtype = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.events || !m.events.length) return null;
+        return m.events[0].subtype;
+      });
+      if (subtype !== 'syncline') throw new Error(`Test D.syncline: Expected subtype 'syncline', got '${subtype}'`);
+
+      // Assert .fold-axial-lbl exists with SYNCLINE text
+      await page.waitForFunction(
+        () => document.querySelector('.fold-axial-lbl') !== null,
+        { timeout: 5000 }
+      );
+      const lblText = await page.evaluate(() => {
+        const el = document.querySelector('.fold-axial-lbl');
+        return el ? el.textContent : '';
+      });
+      if (!lblText.includes('SYNCLINE')) throw new Error(`Test D.syncline: .fold-axial-lbl missing 'SYNCLINE'. Got: "${lblText}"`);
+
+      console.log('PASS [Test D.syncline]: .fold-axial-lbl with SYNCLINE confirmed in DOM');
+      await page.screenshot({ path: require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-d-syncline.png') });
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test D.monocline — monocline renders .monocline-step-lbl
+    //
+    //   1. Load a monocline fixture via the claude.complete stub
+    //   2. Wait for Three.js ready and the fold model to appear in inspector
+    //   3. Assert: window.__lastModel.events[0].subtype === 'monocline'
+    //   4. Assert: a .monocline-step-lbl element exists in the DOM
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test D.monocline: monocline renders underlying-step label ===');
+    {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript((fixtureJson) => {
+        window.claude = { complete: async function () { return fixtureJson; } };
+      }, JSON.stringify(MONOCLINE_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('A monocline with a 30 degree flexure dip.');
+      await page.locator('button.btn.primary').click();
+
+      // Wait for fold event to appear in inspector
+      await page.waitForFunction(
+        () => {
+          const lists = document.querySelectorAll('.feat-list');
+          if (lists.length < 2) return false;
+          return lists[1].querySelectorAll('.feat-item').length >= 1;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      await page.waitForTimeout(600);
+
+      // Assert subtype
+      const subtype = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.events || !m.events.length) return null;
+        return m.events[0].subtype;
+      });
+      if (subtype !== 'monocline') throw new Error(`Test D.monocline: Expected subtype 'monocline', got '${subtype}'`);
+
+      // Assert .monocline-step-lbl exists
+      await page.waitForFunction(
+        () => document.querySelector('.monocline-step-lbl') !== null,
+        { timeout: 5000 }
+      );
+      console.log('PASS [Test D.monocline]: .monocline-step-lbl confirmed in DOM');
+      await page.screenshot({ path: require('path').join(REPO_ROOT, 'tests', 'screenshots', 'smoke-d-monocline.png') });
       await page.close();
       await context.close();
     }
