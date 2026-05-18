@@ -296,7 +296,7 @@ async function run() {
         };
       }, JSON.stringify(LAYERS_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -387,7 +387,7 @@ async function run() {
         };
       }, JSON.stringify(FAULT_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -472,7 +472,7 @@ async function run() {
         };
       }, JSON.stringify(NORMAL_FAULT_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -565,7 +565,7 @@ async function run() {
         };
       }, JSON.stringify(THRUST_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -684,7 +684,7 @@ async function run() {
         };
       }, JSON.stringify(STRIKE_SLIP_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -759,7 +759,7 @@ async function run() {
         window.claude = { complete: async function () { return fixtureJson; } };
       }, JSON.stringify(ANTICLINE_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
       await page.waitForSelector('button.btn.primary', { timeout: 15000 });
 
@@ -824,7 +824,7 @@ async function run() {
         window.claude = { complete: async function () { return fixtureJson; } };
       }, JSON.stringify(SYNCLINE_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
       await page.waitForSelector('button.btn.primary', { timeout: 15000 });
 
@@ -888,7 +888,7 @@ async function run() {
         window.claude = { complete: async function () { return fixtureJson; } };
       }, JSON.stringify(MONOCLINE_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
       await page.waitForSelector('button.btn.primary', { timeout: 15000 });
 

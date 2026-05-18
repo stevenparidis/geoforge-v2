@@ -130,7 +130,7 @@ async function run() {
       };
     }, JSON.stringify(STRESS_FIXTURE));
 
-    await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
     console.log('Waiting for window.__threeReady...');
     await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });

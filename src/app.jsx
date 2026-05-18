@@ -32,6 +32,19 @@
     const [shareToast, setShareToast] = useState(false);
     const [exporting, setExporting] = useState(false);
 
+    // Detect test mode — primer is suppressed in smoke tests
+    const isTestMode = new URLSearchParams(window.location.search).has('testmode');
+
+    const [showPrimer, setShowPrimer] = useState(() => {
+      if (isTestMode) return false;
+      return localStorage.getItem('geoforge.primer_seen_v2') !== 'true';
+    });
+
+    const handlePrimerDismiss = ({ permanent }) => {
+      if (permanent) localStorage.setItem('geoforge.primer_seen_v2', 'true');
+      setShowPrimer(false);
+    };
+
     // Restore last session from localStorage on mount
     useEffect(() => {
       try {
@@ -124,6 +137,12 @@
             <button className={'tab' + (tab === 'reference' ? ' active' : '')} onClick={() => setTab('reference')}>Formation reference</button>
           </div>
           <div className="topbar-actions">
+            <button
+              className="btn icon"
+              onClick={() => setShowPrimer(true)}
+              title="Show concept primer"
+              style={{ fontSize: 13 }}
+            >?</button>
             <button className={'toggle' + (t.labelsOn ? ' on' : '')} onClick={() => setTweak('labelsOn', !t.labelsOn)}>Labels</button>
             <button className={'toggle' + (t.overlaysOn ? ' on' : '')} onClick={() => {
               const next = !t.overlaysOn;
@@ -202,6 +221,91 @@
             Link copied to clipboard!
           </div>
         )}
+        {showPrimer && <ConceptPrimer onDismiss={handlePrimerDismiss} />}
+      </div>
+    );
+  }
+
+  function ConceptCard({ title, children }) {
+    return (
+      <div className="primer-card">
+        <div className="primer-card-title">{title}</div>
+        <div className="primer-card-body">{children}</div>
+      </div>
+    );
+  }
+
+  function ConceptPrimer({ onDismiss }) {
+    return (
+      <div className="primer-overlay">
+        <div className="primer-modal">
+          <h2 className="primer-title">Welcome to GeoForge</h2>
+          <p className="primer-lead">A quick orientation before you start. ~1 minute of reading.</p>
+          <div className="primer-grid">
+            <ConceptCard title="Strike & dip">
+              <p>A bedding plane (or fault plane) is described by <strong>strike</strong> and <strong>dip</strong>.</p>
+              <ul>
+                <li><strong>Strike</strong> is the bearing of the line where the plane meets a horizontal surface (000°–360°).</li>
+                <li><strong>Dip</strong> is the angle the plane makes with horizontal (0°–90°).</li>
+                <li><strong>Dip direction</strong> is always 90° to the right of strike (right-hand rule).</li>
+              </ul>
+              <svg className="primer-diagram" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="10" y="10" width="100" height="4" fill="#8db4c2" opacity="0.6" transform="rotate(0 10 12)"/>
+                <text x="12" y="9" fontSize="9" fill="#8db4c2">strike</text>
+                <line x1="60" y1="12" x2="60" y2="65" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arrow)"/>
+                <text x="63" y="50" fontSize="9" fill="#f59e0b">dip</text>
+                <defs><marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#f59e0b"/></marker></defs>
+              </svg>
+            </ConceptCard>
+            <ConceptCard title="Hanging wall, footwall">
+              <p>Faults divide rock into two blocks. The mnemonic is from miners:</p>
+              <ul>
+                <li>The <strong>hanging wall</strong> (HW) is the block <em>above</em> the dipping fault plane — where a miner could hang a lantern.</li>
+                <li>The <strong>footwall</strong> (FW) is the block <em>below</em> — at the miner's feet.</li>
+              </ul>
+              <p>The names are not tied to which side of the page the block is on.</p>
+              <svg className="primer-diagram" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="20" y1="70" x2="100" y2="10" stroke="#a6adc8" strokeWidth="1.5"/>
+                <text x="22" y="40" fontSize="9" fill="#cba6f7">HW</text>
+                <text x="70" y="72" fontSize="9" fill="#89b4fa">FW</text>
+              </svg>
+            </ConceptCard>
+            <ConceptCard title="Anticline & syncline">
+              <p>Folds are bends in rock. Two basic types:</p>
+              <ul>
+                <li><strong>Anticline:</strong> an "up-fold." The <strong>oldest</strong> rocks sit in the core.</li>
+                <li><strong>Syncline:</strong> a "down-fold." The <strong>youngest</strong> rocks sit in the core.</li>
+              </ul>
+              <p>The shape alone doesn't tell you — <em>the age sequence does.</em></p>
+              <svg className="primer-diagram" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5,60 Q30,15 55,60" stroke="#89b4fa" strokeWidth="1.5" fill="none"/>
+                <text x="22" y="75" fontSize="8" fill="#89b4fa">anticline</text>
+                <text x="16" y="47" fontSize="7" fill="#a6e3a1">old</text>
+                <path d="M65,15 Q90,60 115,15" stroke="#cba6f7" strokeWidth="1.5" fill="none"/>
+                <text x="82" y="75" fontSize="8" fill="#cba6f7">syncline</text>
+                <text x="85" y="40" fontSize="7" fill="#f59e0b">young</text>
+              </svg>
+            </ConceptCard>
+            <ConceptCard title="Plunge & the V-pattern">
+              <p>A fold "plunges" if its hinge line tips into the ground.</p>
+              <p>When erosion exposes a plunging fold from above:</p>
+              <ul>
+                <li><strong>Plunging anticline:</strong> Vs point in the direction of plunge.</li>
+                <li><strong>Plunging syncline:</strong> Vs point <em>opposite</em> to the plunge.</li>
+              </ul>
+              <p>See this in the Map View tab.</p>
+              <svg className="primer-diagram" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20,10 L60,65 L100,10" stroke="#89b4fa" strokeWidth="1.5" fill="none"/>
+                <text x="45" y="78" fontSize="8" fill="#89b4fa">↓ plunge</text>
+                <text x="35" y="8" fontSize="8" fill="#a6adc8">plunging anticline</text>
+              </svg>
+            </ConceptCard>
+          </div>
+          <div className="primer-actions">
+            <button className="btn" onClick={() => onDismiss({ permanent: false })}>Skip for now</button>
+            <button className="btn primary" onClick={() => onDismiss({ permanent: true })}>Got it</button>
+          </div>
+        </div>
       </div>
     );
   }

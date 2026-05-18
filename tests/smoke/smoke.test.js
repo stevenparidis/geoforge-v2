@@ -187,7 +187,7 @@ async function run() {
         };
       }, JSON.stringify(FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -259,7 +259,7 @@ async function run() {
         };
       }, JSON.stringify(FAULT_FIXTURE));
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -441,7 +441,7 @@ async function run() {
         };
       }, { full: FAULT2_FIXTURE, merge: MERGE_FIXTURE });
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
@@ -568,7 +568,7 @@ async function run() {
         window.claude = { complete: async () => '{}' };
       });
 
-      await page.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
 
       console.log('Waiting for window.__threeReady...');
       await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
