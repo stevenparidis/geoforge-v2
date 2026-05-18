@@ -711,6 +711,10 @@ If the model has no structural features to guide prediction, return an empty arr
     const [stripConfirmed, setStripConfirmed] = useState(false);
     const [retryCount, setRetryCount] = useState(0);
 
+    // G.3: Borehole tool
+    const [boreholesOn, setBoreholesOn] = useState(false);
+    const [borehole, setBorehole] = useState(null); // {x, z, lithologies: [...]}
+
     // F.1: View mode state (3D / cross-section / map)
     const [viewMode, setViewMode] = useState(
       localStorage.getItem('geoforge.view_mode_v2') || '3d'
@@ -757,6 +761,11 @@ If the model has no structural features to guide prediction, return an empty arr
       }
       return { phi: 1.1, theta: 0.4, dist: 11 };
     }, [model?.events?.[0]?.subtype]);
+
+    // G.3: Expose borehole for tests
+    useEffect(() => { window.__borehole = borehole; }, [borehole]);
+    // G.3: Clear borehole when toggle turns off
+    useEffect(() => { if (!boreholesOn) setBorehole(null); }, [boreholesOn]);
 
     // Test hooks — expose current model and a way to set the selection from outside.
     // These are used by smoke tests; they are no-ops in production (window.__ are undefined).
@@ -959,6 +968,30 @@ If the model has no structural features to guide prediction, return an empty arr
       }
     };
 
+    // ---- G.3: Borehole click handler ----
+    const handleSceneClick = React.useCallback((e) => {
+      if (!boreholesOn || !playbackModel) return;
+      if (viewMode === '3d') return; // ignore 3D clicks (no tooltip needed for now)
+      // Convert click position to model world-space coordinates
+      const host = e.currentTarget;
+      const rect = host.getBoundingClientRect();
+      const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      // In map view: camera is directly above, so NDC maps to world-space XZ plane
+      // Use SectionMath to get bounds, then map NDC to world coords
+      const b = window.SectionMath?.computeModelBounds(playbackModel);
+      if (!b) return;
+      const halfView = Math.max(3, Math.max(b.depth, 4.5));
+      const worldX = b.cx + ndcX * halfView;
+      const worldZ = b.cz - ndcY * halfView;
+      // clamp to block bounds
+      const wx = Math.max(-2.1, Math.min(2.1, worldX));
+      const wz = Math.max(-2.1, Math.min(2.1, worldZ));
+      const lithologies = window.GeoThree?.sampleLithologiesAtPoint(playbackModel, { x: wx, z: wz });
+      if (!lithologies) return;
+      setBorehole({ x: wx, z: wz, lithologies });
+    }, [boreholesOn, playbackModel, viewMode]);
+
     // ---- JSON download / upload ----
     const downloadJSON = () => {
       const blob = new Blob([JSON.stringify({ version: '1.0', description, model }, null, 2)], { type: 'application/json' });
@@ -1113,7 +1146,17 @@ If the model has no structural features to guide prediction, return an empty arr
             onResetCamera={handleResetCamera}
             onSnapshot={handleSnapshot}
           />
-          <div className="scene-host">
+          <div className="scene-host" onClick={handleSceneClick}>
+            {model && (
+              <div className="scene-toolbar">
+                <button
+                  className={`toggle${boreholesOn ? ' on' : ''}`}
+                  onClick={(e) => { e.stopPropagation(); setBoreholesOn(b => !b); }}
+                >
+                  Boreholes
+                </button>
+              </div>
+            )}
             <window.GeoScene
               model={playbackModel}
               showLabels={showLabels}
