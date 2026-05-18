@@ -470,7 +470,6 @@
         st.scene.add(g);
       }
     }, [viewMode, model]);
-
     // F.2 — listen for geoforge:resetcamera event (emitted by F.1 reset button)
     useEffect(() => {
       const handler = () => {

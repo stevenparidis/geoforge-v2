@@ -2638,6 +2638,102 @@
     return grp;
   }
 
+  // ---------- F.3 Cross-section renderer annotations ----------
+
+  function bearingToCardinal(deg) {
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return dirs[Math.round(deg / 45) % 8];
+  }
+
+  function buildCrossSectionAnnotations(model, sectionStrike) {
+    const group = new T.Group();
+    group.name = 'xsectionAnnotations';
+
+    const halfW = 2.1;
+
+    // Compute topY and bottomY from model layers (centre-anchored)
+    const layers = (model && model.layers) || [];
+    const totalHeight = layers.reduce((sum, l) => sum + (l.thickness || 0), 0) || 4;
+    const topY = totalHeight / 2;
+    const bottomY = -totalHeight / 2;
+
+    // Helper: make a CSS2DObject with a given class and text
+    function makeCSSLabel(text, className) {
+      const div = document.createElement('div');
+      div.className = className;
+      div.textContent = text;
+      return new window.CSS2DObject(div);
+    }
+
+    // ---- 1. Section line at top (A–A') ----
+    const sectionLineY = topY + 0.3;
+    const sectionLineGeo = new T.BufferGeometry().setFromPoints([
+      new T.Vector3(-halfW, sectionLineY, 0),
+      new T.Vector3(halfW, sectionLineY, 0),
+    ]);
+    const sectionLineMat = new T.LineDashedMaterial({ color: 0xa3e4ff, dashSize: 0.1, gapSize: 0.05, transparent: true, opacity: 0.9, depthTest: false });
+    const sectionLine = new T.Line(sectionLineGeo, sectionLineMat);
+    sectionLine.computeLineDistances();
+    group.add(sectionLine);
+
+    // "A" label at left end
+    const lblA = makeCSSLabel('A', 'xsection-label');
+    lblA.position.set(-halfW, sectionLineY, 0);
+    group.add(lblA);
+
+    // "A'" label at right end
+    const lblAPrime = makeCSSLabel("A′", 'xsection-label');
+    lblAPrime.position.set(halfW, sectionLineY, 0);
+    group.add(lblAPrime);
+
+    // Subtitle label (centred above section line)
+    const subtitleText = `SECTION A–A′ · ⟂ STRIKE ${Math.round(sectionStrike)}° · LOOKING ${bearingToCardinal(sectionStrike)}`;
+    const subtitleLbl = makeCSSLabel(subtitleText, 'xsection-title');
+    subtitleLbl.position.set(0, sectionLineY + 0.15, 0);
+    group.add(subtitleLbl);
+
+    // ---- 2. Surface line at topY ----
+    const surfaceGeo = new T.BufferGeometry().setFromPoints([
+      new T.Vector3(-halfW, topY, 0),
+      new T.Vector3(halfW, topY, 0),
+    ]);
+    const surfaceMat = new T.LineDashedMaterial({ color: 0x44bb66, dashSize: 0.1, gapSize: 0.05, transparent: true, opacity: 0.9, depthTest: false });
+    const surfaceLine = new T.Line(surfaceGeo, surfaceMat);
+    surfaceLine.computeLineDistances();
+    group.add(surfaceLine);
+
+    // "SURFACE" label at right end of surface line
+    const surfaceLbl = makeCSSLabel('SURFACE', 'xsection-label');
+    surfaceLbl.position.set(halfW, topY, 0);
+    group.add(surfaceLbl);
+
+    // ---- 3. Depth scale on left edge ----
+    const numTicks = Math.floor(totalHeight) + 1;
+    for (let i = 0; i < numTicks; i++) {
+      const y = topY - i;
+      const tickDepth = i === 0 ? '0' : `−${i}`;
+      const tickLbl = makeCSSLabel(tickDepth, 'depth-tick');
+      tickLbl.position.set(-halfW - 0.3, y, 0);
+      group.add(tickLbl);
+
+      // Small horizontal tick mark
+      const tickGeo = new T.BufferGeometry().setFromPoints([
+        new T.Vector3(-halfW - 0.1, y, 0),
+        new T.Vector3(-halfW, y, 0),
+      ]);
+      const tickLine = new T.Line(tickGeo, new T.LineBasicMaterial({ color: 0x5a5648, transparent: true, opacity: 0.7, depthTest: false }));
+      group.add(tickLine);
+    }
+
+    // ---- 4. Section orientation badge (top-right) ----
+    const badgeText = `↗ ${Math.round(sectionStrike)}°`;
+    const badgeLbl = makeCSSLabel(badgeText, 'section-badge');
+    badgeLbl.position.set(halfW + 0.2, topY + 0.2, 0);
+    group.add(badgeLbl);
+
+    return group;
+  }
+
   // Expose everything
   window.GeoThree = {
     buildSceneContents,
@@ -2653,4 +2749,171 @@
     },
     COLOR,
   };
+
+  // F.3 — expose cross-section annotation builder
+  window.buildCrossSectionAnnotations = buildCrossSectionAnnotations;
+
+  // ---- F.7 — V-pattern for plunging folds (map view) ----
+  function buildFoldVPattern(foldEvent, model) {
+    const group = new T.Group();
+    if (!foldEvent.plunge || foldEvent.plunge <= 0) return group;
+
+    const layers = model.layers || [];
+    const totalH = layers.reduce((s, l) => s + (l.thickness || 1), 0);
+    const topY = totalH / 2;
+
+    // V-pattern apex is at the hinge point where the fold axis meets the erosion surface (topY)
+    // For an anticline: V points in plunge direction. For syncline: V points opposite.
+    const plungeDir = foldEvent.plunge_direction || foldEvent.axis_strike || 0;
+    const plungeRad = plungeDir * Math.PI / 180;
+    const isAnticline = foldEvent.type === 'anticline';
+
+    // The V arm half-angle comes from the interlimb angle
+    const interlimbAngle = foldEvent.interlimb_angle || 60; // degrees
+    const armHalfAngle = (interlimbAngle / 2) * Math.PI / 180;
+
+    const apex = new T.Vector3(0, topY, 0);
+    const armLength = 2.0;
+
+    // Two arms radiate from the apex
+    const arm1 = new T.Vector3(
+      Math.sin(plungeRad + armHalfAngle) * armLength,
+      topY - Math.cos(armHalfAngle) * armLength * 0.5,
+      Math.cos(plungeRad + armHalfAngle) * armLength
+    );
+    const arm2 = new T.Vector3(
+      Math.sin(plungeRad - armHalfAngle) * armLength,
+      topY - Math.cos(armHalfAngle) * armLength * 0.5,
+      Math.cos(plungeRad - armHalfAngle) * armLength
+    );
+
+    // Draw the V
+    const mat = new T.LineBasicMaterial({ color: isAnticline ? 0xff8844 : 0x4488ff, linewidth: 2 });
+    const points = [arm1, apex, arm2];
+    const geo = new T.BufferGeometry().setFromPoints(points);
+    group.add(new T.Line(geo, mat));
+
+    // Label at apex
+    const div = document.createElement('div');
+    div.className = 'map-vpatt-lbl';
+    div.textContent = `${isAnticline ? '∧' : '∨'} plunges ${foldEvent.plunge}° → ${Math.round(plungeDir)}°`;
+    const lbl = new T.CSS2DObject(div);
+    lbl.position.copy(apex);
+    group.add(lbl);
+
+    return group;
+  }
+
+  // ---- F.4 — Map view annotations ----
+  function buildMapViewAnnotations(model) {
+    const group = new T.Group();
+    const halfW = 2.1;
+
+    const layers = model.layers || [];
+    const totalH = layers.reduce((s, l) => s + (l.thickness || 1), 0);
+    const topY = totalH / 2;
+    const bottomY = -totalH / 2;
+
+    // 1. North arrow (top-right corner)
+    const northEl = document.createElement('div');
+    northEl.className = 'map-north-arrow';
+    northEl.innerHTML = 'N<br>↑';
+    const northObj = new T.CSS2DObject(northEl);
+    northObj.position.set(halfW + 0.1, topY + 0.2, 0);
+    group.add(northObj);
+
+    // 2. Scale bar (bottom-left corner)
+    const scaleX = -halfW;
+    const scaleY = bottomY - 0.3;
+    const scalePoints = [
+      new T.Vector3(scaleX, scaleY, 0),
+      new T.Vector3(scaleX + 1, scaleY, 0),
+    ];
+    const scaleGeo = new T.BufferGeometry().setFromPoints(scalePoints);
+    const scaleMat = new T.LineBasicMaterial({ color: 0xaaaaaa });
+    group.add(new T.Line(scaleGeo, scaleMat));
+
+    const scaleLblEl = document.createElement('div');
+    scaleLblEl.className = 'map-scale-lbl';
+    scaleLblEl.textContent = '1 u';
+    const scaleLbl = new T.CSS2DObject(scaleLblEl);
+    scaleLbl.position.set(scaleX + 0.5, scaleY, 0);
+    group.add(scaleLbl);
+
+    // 3. Fault traces
+    const faultColorMap = {
+      normal: 0xff4444,
+      reverse: 0x4444ff,
+      thrust: 0x4444ff,
+      strike_slip: 0x44bbff,
+    };
+    const faultAbbrevMap = {
+      normal: 'N',
+      reverse: 'R',
+      thrust: 'T',
+      strike_slip: 'SS',
+    };
+
+    for (const evt of (model.events || [])) {
+      if (evt.type !== 'fault') continue;
+      const faultZ = (evt.depth_km != null) ? evt.depth_km * 0.1 : 0;
+      const faultColor = faultColorMap[evt.subtype] || 0xaaaaaa;
+      const faultAbbrev = faultAbbrevMap[evt.subtype] || evt.subtype || '?';
+
+      const faultPoints = [
+        new T.Vector3(-halfW, topY, faultZ),
+        new T.Vector3(halfW, topY, faultZ),
+      ];
+      const faultGeo = new T.BufferGeometry().setFromPoints(faultPoints);
+      const faultMat = new T.LineBasicMaterial({ color: faultColor });
+      group.add(new T.Line(faultGeo, faultMat));
+
+      // Label at right end
+      const faultLblEl = document.createElement('div');
+      faultLblEl.className = 'map-fault-lbl';
+      faultLblEl.textContent = `${evt.name || 'Fault'} · ${faultAbbrev}`;
+      const faultLbl = new T.CSS2DObject(faultLblEl);
+      faultLbl.position.set(halfW, topY, faultZ);
+      group.add(faultLbl);
+    }
+
+    // 4. Bedding strike ticks — one per layer with dip > 0
+    let layerY = bottomY;
+    for (const layer of layers) {
+      const layerThick = layer.thickness || 1;
+      layerY += layerThick;
+      const layerCentreY = layerY - layerThick / 2;
+
+      if (layer.dip && layer.dip > 0) {
+        const tickHalf = 0.15;
+        const tickPoints = [
+          new T.Vector3(-tickHalf, layerCentreY, 0),
+          new T.Vector3(tickHalf, layerCentreY, 0),
+        ];
+        const tickGeo = new T.BufferGeometry().setFromPoints(tickPoints);
+        const tickMat = new T.LineBasicMaterial({ color: 0xaaaaaa });
+        group.add(new T.Line(tickGeo, tickMat));
+
+        const dipLblEl = document.createElement('div');
+        dipLblEl.className = 'map-dip-lbl';
+        dipLblEl.textContent = `${layer.dip}°`;
+        const dipLbl = new T.CSS2DObject(dipLblEl);
+        dipLbl.position.set(tickHalf + 0.1, layerCentreY, 0);
+        group.add(dipLbl);
+      }
+    }
+
+    // 5. V-patterns for plunging folds
+    for (const evt of (model.events || [])) {
+      if ((evt.type === 'anticline' || evt.type === 'syncline') && evt.plunge > 0) {
+        const vGroup = buildFoldVPattern(evt, model);
+        group.add(vGroup);
+      }
+    }
+
+    return group;
+  }
+
+  window.buildFoldVPattern = buildFoldVPattern;
+  window.buildMapViewAnnotations = buildMapViewAnnotations;
 })();
