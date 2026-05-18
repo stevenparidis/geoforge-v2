@@ -56,7 +56,8 @@ SCHEMA:
       "step_height": number (monocline only),
       "order": int (sequence; first event=0),
       "description_source": string,
-      "field_origin": { fieldName: "stated"|"inferred" }
+      "field_origin": { fieldName: "stated"|"inferred" },
+      "validation_note": string (optional) — set this when you detect a geological inconsistency per the VALIDATION RULES section below. Leave absent when input is consistent.
     }, ...
   ],
   "tilt": {
@@ -401,8 +402,11 @@ If the model has no structural features to guide prediction, return an empty arr
     for (const evt of (model.events || [])) {
       if (evt.type !== 'fault') continue;
       if (evt.validation_note) continue; // first rule wins
-      // Right-hand rule check
-      if (evt.strike != null && evt.dip_direction != null) {
+      // Right-hand rule check — only fire when both fields were explicitly stated by the user
+      if (
+        evt.strike != null && evt.dip_direction != null &&
+        evt.field_origin?.strike === 'stated' && evt.field_origin?.dip_direction === 'stated'
+      ) {
         const expected = (evt.strike + 90) % 360;
         const diff = Math.abs(((evt.dip_direction - expected) + 540) % 360 - 180);
         if (diff > 10) {
@@ -418,8 +422,7 @@ If the model has no structural features to guide prediction, return an empty arr
       // If user explicitly states youngest rocks are in core of an anticline
       if (evt.subtype === 'anticline' && evt.core_age === 'youngest') {
         evt.validation_note = 'Anticlines have the oldest rocks in the core. If youngest rocks are in the core, this is a syncline by definition.';
-      }
-      if (evt.subtype === 'syncline' && evt.core_age === 'oldest') {
+      } else if (evt.subtype === 'syncline' && evt.core_age === 'oldest') {
         evt.validation_note = 'Synclines have the youngest rocks in the core. If oldest rocks are in the core, this is an anticline by definition.';
       }
     }
