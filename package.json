@@ -7,7 +7,8 @@
     "smoke-v2": "node tests/v2/smoke.test.js",
     "perf": "node tests/smoke/perf.test.js",
     "acceptance": "node tests/acceptance/run-all.js",
-    "smoke-v2-regression": "node tests/v2/textbook-regression/run-all.js"
+    "smoke-v2-regression": "node tests/v2/textbook-regression/run-all.js",
+    "smoke-v2-misconceptions": "node tests/v2/misconception-checks/run-all.js"
   },
   "devDependencies": {
     "playwright": "^1.44.0"
