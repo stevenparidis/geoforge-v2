@@ -251,3 +251,11 @@ Phase I unblocked.
 - [x] AC1–AC14 verified by source-code inspection (2026-05-19)
 - [x] `tests/v2/v1-regression-check.md` written
 - Result: 14 PASS / 0 RISK / 0 FAIL
+
+---
+
+## Phase I.3 — Full acceptance walkthrough
+- [x] tests/v2/acceptance-walkthrough.md written (2026-05-19)
+- §13.1–§13.4, §13.8: all PASS
+- §13.5–§13.6: suites exist; live run pending
+- §13.7: awaiting Phase I.4 dogfooding sign-off
