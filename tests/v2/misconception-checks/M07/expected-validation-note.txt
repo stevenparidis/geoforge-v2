@@ -1,0 +1,1 @@
+Throw equals net displacement only for vertical faults (dip = 90°). At 45° dip, net displacement ≈ throw / sin(dip) ≈ 7.1 m.

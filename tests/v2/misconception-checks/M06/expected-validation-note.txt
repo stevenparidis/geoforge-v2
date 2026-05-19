@@ -1,0 +1,1 @@
+By the principle of cross-cutting relationships, an intrusion must be younger than the rocks it cuts.
