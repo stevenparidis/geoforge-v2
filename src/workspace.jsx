@@ -350,6 +350,14 @@ If the model has no structural features to guide prediction, return an empty arr
       if (U.subtype === 'angular' && U.angular_discordance == null) {
         U.angular_discordance = 30; U.field_origin.angular_discordance = 'inferred';
       }
+      // H.4: Validate nonconformity has crystalline basement
+      if (U.subtype === 'nonconformity' && !U.validation_note) {
+        const crystallineLithos = ['granite', 'gneiss', 'schist', 'marble', 'quartzite'];
+        const belowLayer = (model.layers || []).find(L => L.id === U.below_layer_id);
+        if (belowLayer && !crystallineLithos.includes(belowLayer.lithology)) {
+          U.validation_note = 'Nonconformity basement should be crystalline (granite/gneiss/schist/marble/quartzite)';
+        }
+      }
     });
     const MINERAL_DEFAULTS = {
       porphyry:      { metals: 'Cu-Au',    alteration_radius: 1.0 },
@@ -1350,6 +1358,65 @@ If the model has no structural features to guide prediction, return an empty arr
     );
   }
 
+  // H.3 — Geological time-scale strip shown when an unconformity is selected.
+  function GeologicalTimeStrip({ unconformity }) {
+    const periods = (window.GD && window.GD.ICS_PERIODS) || [];
+    const timeGap = unconformity.time_gap_ma;
+
+    // Identify lower and upper period names from layer ages (may not be present)
+    const lowerAge = unconformity.lower_age_ma ?? null;
+    const upperAge = unconformity.upper_age_ma ?? null;
+
+    function periodFor(ageMa) {
+      if (ageMa == null) return null;
+      return periods.find(p => ageMa <= p.start && ageMa >= p.end) || null;
+    }
+
+    const lowerPeriod = periodFor(lowerAge);
+    const upperPeriod = periodFor(upperAge);
+
+    // Build a schematic strip: show 3 periods below the gap and 3 above,
+    // or use identified periods if age data is available.
+
+    return React.createElement('div', { className: 'time-strip-container' },
+      React.createElement('div', { className: 'time-strip' },
+        // Left half: older periods (lower beds)
+        periods.slice(0, Math.ceil(periods.length / 2)).map(p =>
+          React.createElement('div', {
+            key: p.name,
+            title: p.name,
+            style: {
+              flex: String(p.start - p.end),
+              background: p.colour,
+              opacity: lowerPeriod && lowerPeriod.name === p.name ? 1 : 0.55,
+              transition: 'opacity 0.2s',
+            }
+          })
+        ),
+        // Gap indicator
+        React.createElement('div', { className: 'time-strip-gap' }, '∿∿∿'),
+        // Right half: younger periods (upper beds)
+        periods.slice(Math.ceil(periods.length / 2)).map(p =>
+          React.createElement('div', {
+            key: p.name,
+            title: p.name,
+            style: {
+              flex: String(p.start - p.end),
+              background: p.colour,
+              opacity: upperPeriod && upperPeriod.name === p.name ? 1 : 0.55,
+              transition: 'opacity 0.2s',
+            }
+          })
+        )
+      ),
+      React.createElement('div', { className: 'time-strip-label' },
+        timeGap != null
+          ? `Gap: ~${timeGap} Ma${lowerPeriod ? ` | Lower: ${lowerPeriod.name}` : ''}${upperPeriod ? ` | Upper: ${upperPeriod.name}` : ''}`
+          : 'Time gap unknown'
+      )
+    );
+  }
+
   function FeatureInspector({ feature, kind, onChange, onClose }) {
     const fo = feature.field_origin || {};
     const isLayer = kind === 'layer';
@@ -1423,6 +1490,7 @@ If the model has no structural features to guide prediction, return an empty arr
             <FieldRow label="Subtype" value={feature.subtype} inferred={false} />
             {feature.time_gap_ma != null && <FieldRow label="Time gap" value={feature.time_gap_ma} unit="Ma" inferred={fo.time_gap_ma === 'inferred'} />}
             {feature.angular_discordance != null && <FieldRow label="Angular discordance" value={feature.angular_discordance} unit="°" inferred={fo.angular_discordance === 'inferred'} />}
+            <GeologicalTimeStrip unconformity={feature} />
           </>
         )}
         {kind === 'mineralisation' && (

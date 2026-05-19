@@ -1892,16 +1892,20 @@
     // Sort layers by order ascending (bottom = 0, top = N)
     const sorted = [...(model.layers || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const totalHeight = sorted.reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+    const halfW = 2.1; // matches fixed block half-width in layerBlock
 
     // Find the contact Y: top of the 'below' layer.
     // Layers are centred on origin: base starts at -totalHeight/2.
     let contactY = 0;
     let cumY = -totalHeight / 2;
     let found = false;
-    for (const L of sorted) {
+    let belowLayerIdx = -1;
+    for (let i = 0; i < sorted.length; i++) {
+      const L = sorted[i];
       cumY += L.thickness ?? 1.0;
       if (L.id === unconformity.below_layer_id) {
         contactY = cumY; // top of the 'below' layer in scene coords
+        belowLayerIdx = i;
         found = true;
         break;
       }
@@ -1909,8 +1913,78 @@
     // Fallback: if IDs don't match, use midpoint
     if (!found) contactY = 0;
 
+    // ---- H.1: Angular unconformity — tilted lower bed block ----
+    if (unconformity.subtype === 'angular') {
+      const discordance = Math.max(1, unconformity.angular_discordance ?? 30);
+      const palette = window.GD.LITHOLOGY;
+      const layerCount = sorted.length;
+
+      // Build lower layers (order <= belowLayerIdx) as individual slabs, group and tilt
+      const lowerGroup = new T.Group();
+      let lyBase = -totalHeight / 2;
+      let lowerLayers = belowLayerIdx >= 0 ? sorted.slice(0, belowLayerIdx + 1) : [];
+      for (let i = 0; i < lowerLayers.length; i++) {
+        const L = lowerLayers[i];
+        const t = L.thickness ?? 1.0;
+        const litho = palette[L.lithology] || { color: '#888' };
+        const color = L.color || litho.color || '#888';
+        const geo = new T.BoxGeometry(halfW * 2, t, 4.2);
+        const lithoMat = new T.MeshStandardMaterial({ color: new T.Color(color), roughness: 0.92, metalness: 0.02 });
+        const ageCol = ageRampColor(L.order ?? i, layerCount, false);
+        const ageMat = new T.MeshStandardMaterial({ color: ageCol, roughness: 0.92, metalness: 0.02 });
+        const mats = [ageMat, ageMat, lithoMat, lithoMat, lithoMat, ageMat];
+        const mesh = new T.Mesh(geo, mats);
+        // Position slab in local space relative to contactY pivot
+        mesh.position.y = lyBase + t / 2 - contactY;
+        lyBase += t;
+        lowerGroup.add(mesh);
+      }
+      // Rotate the lower group around Z-axis by discordance, pivot at contact surface
+      lowerGroup.rotation.z = T.MathUtils.degToRad(discordance);
+      lowerGroup.position.y = contactY;
+
+      // Clip the lower block at the contact plane (don't show above contactY).
+      // Normal=(0,-1,0), constant=contactY → positive side is -y + contactY >= 0 → y <= contactY.
+      const clipPlane = new T.Plane(new T.Vector3(0, -1, 0), contactY);
+      lowerGroup.traverse(obj => {
+        if (obj.isMesh) {
+          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+          mats.forEach(m => {
+            m.clippingPlanes = [clipPlane];
+            m.clipShadows = true;
+          });
+        }
+      });
+
+      meshes.add(lowerGroup);
+      tagFeature(lowerGroup, unconformity.id);
+    }
+
+    // ---- H.4: Nonconformity — crystalline basement hatching overlay ----
+    if (unconformity.subtype === 'nonconformity') {
+      // Draw cross-hatch lines across the lowest (basement) layer region
+      const baseLayer = belowLayerIdx >= 0 ? sorted[belowLayerIdx] : null;
+      if (baseLayer) {
+        const baseBottom = contactY - (baseLayer.thickness ?? 1.0);
+        const baseTop = contactY;
+        const hatchColor = 0xC4A882;
+        const hatchSpacing = 0.18;
+        const hatchAngle = rad(35);
+        // Horizontal passes across the basement block
+        for (let y = baseBottom + hatchSpacing / 2; y < baseTop; y += hatchSpacing) {
+          // Line from left edge to right edge, offset vertically by y
+          const x0 = -halfW;
+          const x1 = halfW;
+          const pts = [
+            new T.Vector3(x0, y, 0.01),
+            new T.Vector3(x1, y + 2 * halfW * Math.tan(hatchAngle), 0.01),
+          ];
+          overlays.add(solidLine(pts, hatchColor, { opacity: 0.35, depthTest: false }));
+        }
+      }
+    }
+
     // Draw the wavy line across the full scene width
-    const halfW = 2.1; // matches fixed block half-width in layerBlock
     const N = 24;
     const amplitude = 0.08;
     const frequency = 4;
@@ -1927,7 +2001,7 @@
     // For angular subtype: add a second parallel faint line to suggest the angular cut
     if (unconformity.subtype === 'angular') {
       const wavePoints2 = wavePoints.map(p => new T.Vector3(p.x, p.y + 0.04, 0));
-      const waveLine2 = solidLine(wavePoints2, 0xFFAA00, { linewidth: 1, opacity: 0.4, transparent: true });
+      const waveLine2 = solidLine(wavePoints2, 0xFFAA00, { linewidth: 1, opacity: 0.4 });
       meshes.add(waveLine2);
     }
 
@@ -1944,29 +2018,52 @@
     overlays.add(timeLbl);
 
     // Unconformity type label — left end of wavy line, slightly above
-    const typeLbl = makeLabel(
-      unconformity.subtype === 'angular' ? 'Angular Unconformity'
-      : unconformity.subtype === 'nonconformity' ? 'Nonconformity'
-      : 'Disconformity'
-    );
+    // H.4: Nonconformity gets expanded two-line label
+    let typeLblText;
+    if (unconformity.subtype === 'angular') {
+      typeLblText = 'Angular Unconformity';
+    } else if (unconformity.subtype === 'nonconformity') {
+      typeLblText = 'Nonconformity\n(sedimentary on crystalline basement)';
+    } else {
+      typeLblText = 'Disconformity';
+    }
+    const typeLblEl = document.createElement('div');
+    typeLblEl.className = 'label3d';
+    typeLblEl.style.whiteSpace = 'pre';
+    typeLblEl.textContent = typeLblText;
+    const typeLbl = new window.CSS2DObject(typeLblEl);
     typeLbl.position.set(-2.1, contactY + 0.15, 0);
     overlays.add(typeLbl);
 
-    // Angular subtype: discordance arc showing the angle between upper and lower beds
+    // ---- H.2: Angular subtype — discordance arc with extension lines in cyan ----
     if (unconformity.subtype === 'angular') {
       const discordance = Math.max(1, unconformity.angular_discordance ?? 30);
+      const arcCyan = 0x00d4ff;
+      // Arc vertex: left side of the contact surface
       const centre = new T.Vector3(-1.5, contactY, 0);
       const dipRad = rad(discordance);
-      // Upper beds are horizontal; lower beds dip at discordance degrees
-      const discordanceFromDir = new T.Vector3(1, 0, 0);
-      const discordanceToDir = new T.Vector3(Math.cos(-dipRad), Math.sin(-dipRad), 0).normalize();
 
-      const discArc = arc3D(centre, discordanceFromDir, discordanceToDir, 0.4, 0xFFAA00);
+      // Upper bed direction: horizontal (right)
+      const upperDir = new T.Vector3(1, 0, 0);
+      // Lower bed direction: tilted by discordance degrees upward from horizontal
+      // (lower beds dip so their top surface runs at discordance angle)
+      const lowerDir = new T.Vector3(Math.cos(dipRad), Math.sin(dipRad), 0).normalize();
+
+      // Extension lines — faint translucent lines showing each bedding plane direction
+      const extLen = 0.7;
+      const upperExtPts = [centre.clone(), centre.clone().add(upperDir.clone().multiplyScalar(extLen))];
+      const lowerExtPts = [centre.clone(), centre.clone().add(lowerDir.clone().multiplyScalar(extLen))];
+      overlays.add(solidLine(upperExtPts, arcCyan, { opacity: 0.3, depthTest: false }));
+      overlays.add(solidLine(lowerExtPts, arcCyan, { opacity: 0.3, depthTest: false }));
+
+      // Arc between the two bedding planes
+      const discArc = arc3D(centre, upperDir, lowerDir, 0.4, arcCyan, { depthTest: false });
       overlays.add(discArc.line);
 
       // Discordance angle label at the arc midpoint
       const discLbl = makeValueLabel(`${discordance}°`, { inferred: fo.angular_discordance === 'inferred' });
       discLbl.position.copy(discArc.midPoint);
+      discLbl.position.x += 0.12;
       overlays.add(discLbl);
     }
 
@@ -2807,6 +2904,30 @@
       root.add(ur.meshes);
       overlays.add(ur.overlays);
       labels.push(...ur.labels);
+
+      // Bug 2 fix (Option A): for angular unconformities, the tilted lower block is
+      // already rendered by buildUnconformityGeometry. The flat layer stack from
+      // buildLayersOnly still contains the same lower layers, causing z-fighting.
+      // Suppress flat meshes below the contact by applying a clipping plane that
+      // only shows fragments at or above contactY (positive side: y >= contactY).
+      if (U.subtype === 'angular' && res && res.meshes) {
+        const sorted = [...(model.layers || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const totalHeight = sorted.reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+        let contactY = 0;
+        let cumY = -totalHeight / 2;
+        for (let i = 0; i < sorted.length; i++) {
+          cumY += sorted[i].thickness ?? 1.0;
+          if (sorted[i].id === U.below_layer_id) { contactY = cumY; break; }
+        }
+        // suppressClip: positive side y >= contactY — only shows flat layers ABOVE contact
+        const suppressClip = new T.Plane(new T.Vector3(0, 1, 0), -contactY);
+        res.meshes.traverse(obj => {
+          if (obj.isMesh && obj.position.y < contactY) {
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            mats.forEach(m => { m.clippingPlanes = [suppressClip]; });
+          }
+        });
+      }
     });
 
     // Render mineralisation
