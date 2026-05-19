@@ -374,7 +374,7 @@ const REFERENCE_FORMATIONS = [
       ],
       events: [],
       intrusions: [
-        { id: 'I1', subtype: 'dyke', rock_type: 'basalt', strike: 0, dip: 90, thickness: 0.4, description_source: 'A basalt dyke cuts across the layers.', field_origin: { strike: 'stated', dip: 'stated', thickness: 'stated', rock_type: 'stated' } },
+        { id: 'I1', subtype: 'dyke', rock_type: 'basalt', strike: 0, dip: 90, thickness: 0.4, order: 3, description_source: 'A basalt dyke cuts across the layers.', field_origin: { strike: 'stated', dip: 'stated', thickness: 'stated', rock_type: 'stated' } },
       ],
     },
   },
@@ -394,7 +394,7 @@ const REFERENCE_FORMATIONS = [
       ],
       events: [],
       intrusions: [
-        { id: 'I1', subtype: 'sill', rock_type: 'basalt', strike: 0, dip: 0, thickness: 0.3, description_source: 'A basalt sill was injected along the bedding.', field_origin: { strike: 'inferred', dip: 'inferred', thickness: 'stated', rock_type: 'stated' } },
+        { id: 'I1', subtype: 'sill', rock_type: 'basalt', strike: 0, dip: 0, thickness: 0.3, order: 3, description_source: 'A basalt sill was injected along the bedding.', field_origin: { strike: 'inferred', dip: 'inferred', thickness: 'stated', rock_type: 'stated' } },
       ],
     },
   },
@@ -414,7 +414,7 @@ const REFERENCE_FORMATIONS = [
       ],
       events: [],
       intrusions: [
-        { id: 'I1', subtype: 'batholith', rock_type: 'granite', depth: 3.0, description_source: 'A large granite batholith underlies the sequence.', field_origin: { rock_type: 'stated', depth: 'stated' } },
+        { id: 'I1', subtype: 'batholith', rock_type: 'granite', depth: 3.0, order: 3, description_source: 'A large granite batholith underlies the sequence.', field_origin: { rock_type: 'stated', depth: 'stated' } },
       ],
     },
   },
@@ -434,7 +434,7 @@ const REFERENCE_FORMATIONS = [
       ],
       events: [],
       intrusions: [
-        { id: 'I1', subtype: 'laccolith', rock_type: 'granite', depth: 1.5, description_source: 'A granite laccolith pushed the layers into a dome.', field_origin: { rock_type: 'stated', depth: 'stated' } },
+        { id: 'I1', subtype: 'laccolith', rock_type: 'granite', depth: 1.5, order: 3, description_source: 'A granite laccolith pushed the layers into a dome.', field_origin: { rock_type: 'stated', depth: 'stated' } },
       ],
     },
   },

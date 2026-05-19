@@ -1599,6 +1599,26 @@
     return { meshes, overlays, labels };
   }
 
+  // ---- H.5: Cross-cutting age tag helper ----
+  // Returns a CSS2DObject badge listing the layers this intrusion cross-cuts,
+  // or null if no layers are older than (below in order) the intrusion.
+  function buildIntrusionAgeTag(intrusion, model) {
+    const cutLayers = (model.layers || []).filter(l =>
+      l.order !== undefined && intrusion.order !== undefined && l.order < intrusion.order
+    );
+    if (cutLayers.length === 0) return null;
+
+    const ids = cutLayers.map(l => `L${l.order + 1}`).join(', ');
+    const text = cutLayers.length === 1 ? `post-${ids}` : `cuts ${ids}`;
+
+    const div = document.createElement('div');
+    div.className = 'intrusion-age-tag';
+    div.textContent = text;
+    div.title = `Cross-cutting relationship: this intrusion is younger than ${ids}. Its order in the history is ${(intrusion.order ?? 0) + 1}.`;
+
+    return new window.CSS2DObject(div);
+  }
+
   // ---- Intrusion geometry builder ----
   // Returns { meshes, overlays, labels } for one intrusion.
   function buildIntrusionGeometry(intrusion, model) {
@@ -1636,6 +1656,7 @@
 
     } else if (subtype === 'sill') {
       // Thin horizontal plane between layers (at mid-stack by default).
+      // H.6: Apply same tilt as the layer stack so the sill is concordant with bedding.
       const sillW = Math.max(2 * totalHeight, 5);
       const geo = new T.BoxGeometry(sillW, intrusion.thickness || 0.3, sillW);
       const mat = new T.MeshLambertMaterial({
@@ -1649,6 +1670,14 @@
       });
       const mesh = new T.Mesh(geo, mat);
       mesh.position.y = 0;
+      // H.6 tilt fix: match the layer stack rotation so sill tilts concordantly
+      const tilt = model.tilt || { strike: 0, dip: 0, dip_direction: 0 };
+      const sillDipDeg = tilt.dip || 0;
+      if (sillDipDeg !== 0) {
+        const sillStrike = tilt.strike != null ? tilt.strike : ((tilt.dip_direction || 0) + 90) % 360;
+        const sillStrikeAxis = strikeVec(sillStrike).normalize();
+        mesh.rotateOnWorldAxis(sillStrikeAxis, -rad(sillDipDeg));
+      }
       meshes.add(mesh);
 
     } else if (subtype === 'batholith') {
@@ -1667,11 +1696,9 @@
 
     } else if (subtype === 'laccolith') {
       // Dome shape at emplacement depth, pushing layers up.
-      // Use a smaller radius (0.4) so it fits between layers, dome protruding upward.
+      // H.7: Remove depth clamp — use intrusion.depth directly so the label is accurate.
       const laccRadius = totalHeight * 0.4;
-      const rawDepth = intrusion.depth ?? halfH * 0.5;
-      const minProtrusion = laccRadius * 0.2;
-      const effectiveDepth = Math.min(rawDepth, laccRadius - minProtrusion);
+      const effectiveDepth = intrusion.depth ?? halfH * 0.5;
       const geo = new T.SphereGeometry(laccRadius, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
       const mat = new T.MeshLambertMaterial({
         color: rockColor,
@@ -1682,6 +1709,24 @@
       const mesh = new T.Mesh(geo, mat);
       mesh.position.y = halfH - effectiveDepth; // flat base at emplacement depth, dome upward
       meshes.add(mesh);
+
+      // H.7: Schematic arch overlay above the laccolith to indicate domed host layers
+      const archY = halfH - effectiveDepth + laccRadius;
+      const archHalfW = laccRadius * 0.9;
+      const archSegs = 20;
+      const archPts = [];
+      for (let i = 0; i <= archSegs; i++) {
+        const t = (i / archSegs) * 2 - 1; // -1 to 1
+        const x = t * archHalfW;
+        const dy = (1 - t * t) * Math.min(effectiveDepth * 0.3, 0.25);
+        archPts.push(new T.Vector3(x, archY + dy, 0));
+      }
+      const archLine = solidLine(archPts, 0xffd700, { opacity: 0.6 });
+      overlays.add(archLine);
+      // Domed layers note label
+      const domeLbl = makeValueLabel('Domed host layers', { muted: true });
+      domeLbl.position.set(0, archY + Math.min(effectiveDepth * 0.3, 0.25) + 0.2, 0);
+      overlays.add(domeLbl);
     }
 
     // ---- Measurement-origin overlays ----
@@ -1719,6 +1764,18 @@
       lbl.position.set(0, halfH + 0.25, 0);
       overlays.add(lbl);
 
+      // H.5: Discordant orientation note
+      const discLbl = makeValueLabel('discordant — cuts across bedding', { muted: true });
+      discLbl.position.set(0, halfH + 0.55, 0);
+      overlays.add(discLbl);
+
+      // H.5: Cross-cutting age tag
+      const ageTag = buildIntrusionAgeTag(intrusion, model);
+      if (ageTag) {
+        ageTag.position.set(0, halfH + 0.85, 0);
+        overlays.add(ageTag);
+      }
+
     } else if (subtype === 'sill') {
       const sillY = 0; // mesh position.y
       const fo = intrusion.field_origin || {};
@@ -1739,19 +1796,36 @@
       lbl.position.set(0, sillY + 0.25, 0);
       overlays.add(lbl);
 
+      // H.5: Concordant orientation note
+      const concLbl = makeValueLabel('concordant — parallel to bedding', { muted: true });
+      concLbl.position.set(0, sillY + 0.55, 0);
+      overlays.add(concLbl);
+
+      // H.5: Cross-cutting age tag
+      const ageTag = buildIntrusionAgeTag(intrusion, model);
+      if (ageTag) {
+        ageTag.position.set(0, sillY + 0.85, 0);
+        overlays.add(ageTag);
+      }
+
     } else if (subtype === 'batholith') {
-      const domeTopY = -halfH + totalHeight * 0.8;
+      // The batholith is a lower-hemisphere sphere centred at y = -halfH.
+      // Its flat equatorial face (local y=0) is the geological contact with overlying rock,
+      // which sits at world y = -halfH. That contact is the "top" of the batholith.
+      const domeTopY = -halfH;   // equatorial flat face = actual contact between batholith and host rock
       const fo = intrusion.field_origin || {};
 
-      // Depth label: dashed line from surface to dome top
+      // Depth label: dashed line from surface to dome contact
       const surfaceY = halfH;
+      const actualDepthToTop = surfaceY - domeTopY; // = 2*halfH = totalHeight
       const depthLine = dashedLine(
         new T.Vector3(halfH * 0.8, surfaceY, 0),
         new T.Vector3(halfH * 0.8, domeTopY, 0),
         COLOR.overlay
       );
       overlays.add(depthLine);
-      const depthLbl = makeValueLabel(`depth ${(intrusion.depth ?? totalHeight).toFixed(1)} u`, { inferred: fo.depth === 'inferred' });
+      // H: Use actual rendered geometry depth, not raw intrusion.depth
+      const depthLbl = makeValueLabel(`Depth to top: ${actualDepthToTop.toFixed(1)} u (schematic)`, { inferred: fo.depth === 'inferred' });
       depthLbl.position.set(halfH * 0.8 + 0.15, (surfaceY + domeTopY) / 2, 0);
       overlays.add(depthLbl);
 
@@ -1760,11 +1834,17 @@
       lbl.position.set(0, domeTopY - 0.3, 0);
       overlays.add(lbl);
 
+      // H.5: Cross-cutting age tag
+      const ageTag = buildIntrusionAgeTag(intrusion, model);
+      if (ageTag) {
+        ageTag.position.set(0, domeTopY - 0.6, 0);
+        overlays.add(ageTag);
+      }
+
     } else if (subtype === 'laccolith') {
+      // H.7: Use effectiveDepth (no clamp) — matches mesh placement above
       const laccRadius = totalHeight * 0.4;
-      const rawDepth = intrusion.depth ?? halfH * 0.5;
-      const minProtrusion = laccRadius * 0.2;
-      const effectiveDepth = Math.min(rawDepth, laccRadius - minProtrusion);
+      const effectiveDepth = intrusion.depth ?? halfH * 0.5;
       const laccY = halfH - effectiveDepth;
       const fo = intrusion.field_origin || {};
 
@@ -1776,6 +1856,7 @@
         COLOR.overlay
       );
       overlays.add(depthLine);
+      // H.7: Use intrusion.depth directly — no clamp, so label matches geometry
       const depthLbl = makeValueLabel(`depth ${(intrusion.depth ?? halfH).toFixed(1)} u`, { inferred: fo.depth === 'inferred' });
       depthLbl.position.set(laccRadius + 0.5, (surfaceY + laccY + laccRadius) / 2, 0);
       overlays.add(depthLbl);
@@ -1784,6 +1865,13 @@
       const lbl = makeLabel(`Laccolith (${intrusion.rock_type || 'granite'})`);
       lbl.position.set(0, laccY + laccRadius + 0.2, 0);
       overlays.add(lbl);
+
+      // H.5: Cross-cutting age tag
+      const ageTag = buildIntrusionAgeTag(intrusion, model);
+      if (ageTag) {
+        ageTag.position.set(0, laccY + laccRadius + 0.5, 0);
+        overlays.add(ageTag);
+      }
     }
 
     // Tag all meshes in this intrusion with the intrusion's featureId
