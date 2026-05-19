@@ -1809,16 +1809,15 @@
       }
 
     } else if (subtype === 'batholith') {
-      // H: Batholith depth label fix — derive from actual rendered geometry position
-      // The dome is a lower-hemisphere sphere centred at y = -halfH with radius totalHeight*0.8.
-      // Its top (highest rendered point) is at y = -halfH + totalHeight*0.8.
-      const bathRadius = totalHeight * 0.8;
-      const domeTopY = -halfH + bathRadius;
+      // The batholith is a lower-hemisphere sphere centred at y = -halfH.
+      // Its flat equatorial face (local y=0) is the geological contact with overlying rock,
+      // which sits at world y = -halfH. That contact is the "top" of the batholith.
+      const domeTopY = -halfH;   // equatorial flat face = actual contact between batholith and host rock
       const fo = intrusion.field_origin || {};
 
-      // Depth label: dashed line from surface to dome top
+      // Depth label: dashed line from surface to dome contact
       const surfaceY = halfH;
-      const actualDepthToTop = surfaceY - domeTopY; // positive = below surface
+      const actualDepthToTop = surfaceY - domeTopY; // = 2*halfH = totalHeight
       const depthLine = dashedLine(
         new T.Vector3(halfH * 0.8, surfaceY, 0),
         new T.Vector3(halfH * 0.8, domeTopY, 0),
