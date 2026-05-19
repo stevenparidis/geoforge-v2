@@ -1992,9 +1992,8 @@
 
       case 'porphyry': {
         // Four concentric transparent ellipsoidal shells:
-        // propylitic (outer) → argillic → phyllic → potassic (inner core)
-        // Offset to x=1.5 so shells protrude from the side of the layer block (halfWidth ~2.1),
-        // making them visible from the default 3/4 camera angle.
+        // potassic (innermost) → phyllic → argillic → propylitic (outermost)
+        // Centred at x=0 so shells are centred within the model.
         const R = M.alteration_radius || 1.0;
         const zones = [
           { f: 1.00, color: COLOR.minPropyl,  op: 0.10 },
@@ -2007,10 +2006,25 @@
           const mat = new T.MeshBasicMaterial({ color, transparent: true, opacity: op, side: T.DoubleSide, depthWrite: false });
           const mesh = new T.Mesh(geo, mat);
           mesh.scale.y = 1.4; // elongate vertically to represent plunge
-          mesh.position.set(1.5, oreY, 0); // offset so shells protrude from side of layer block
+          mesh.position.set(0, oreY, 0); // centred in the model
           mesh.renderOrder = 1;
           meshes.add(mesh);
         });
+        // Porphyry stock — vertically elongated ellipsoid inside the innermost (potassic) shell
+        const stockGeom = new T.SphereGeometry(0.15, 16, 12);
+        const stockMat = new T.MeshStandardMaterial({ color: 0xD8C0B0, transparent: true, opacity: 0.8 });
+        const stockMesh = new T.Mesh(stockGeom, stockMat);
+        stockMesh.scale.y = 2.5; // elongate vertically
+        stockMesh.position.set(0, oreY, 0);
+        stockMesh.renderOrder = 2;
+        meshes.add(stockMesh);
+        // Porphyry stock label
+        const stockDiv = document.createElement('div');
+        stockDiv.className = 'intrusion-stock-lbl';
+        stockDiv.textContent = 'Porphyry stock';
+        const stockLbl = new window.CSS2DObject(stockDiv);
+        stockLbl.position.set(0.5, oreY + 0.7, 0);
+        labels.push(stockLbl);
         break;
       }
 
@@ -2037,17 +2051,46 @@
           mesh.renderOrder = 1;
           meshes.add(mesh);
         }
+        // Carbonate alteration halo around vein array
+        const veinsWidth = R * 2.5 + veinSpacing * 2;
+        const veinsHeight = totalHeight * 1.1;
+        const haloGeom = new T.BoxGeometry(veinsWidth * 1.4, veinsHeight, 0.3);
+        const haloMat = new T.MeshBasicMaterial({ color: 0xD4C5A9, transparent: true, opacity: 0.18, side: T.DoubleSide, depthWrite: false });
+        const haloMesh = new T.Mesh(haloGeom, haloMat);
+        haloMesh.position.set(0, oreY, 0);
+        haloMesh.renderOrder = 1;
+        meshes.add(haloMesh);
+        // Shear zone structural control label
+        const shearDiv = document.createElement('div');
+        shearDiv.className = 'orogenic-carb-lbl';
+        shearDiv.textContent = 'Shear zone (structural control)';
+        const shearLbl = new window.CSS2DObject(shearDiv);
+        shearLbl.position.set(veinsWidth * 0.7 + 0.15, oreY + veinsHeight * 0.4, 0);
+        labels.push(shearLbl);
         break;
       }
 
       case 'vms': {
-        // Lens-shaped (flattened sphere) massive sulphide body just below the base of the stack
+        // Lens-shaped (flattened sphere) massive sulphide body at the top of the footwall sequence
+        // (the L2/L3 contact = seafloor). Layer order: L1=basalt footwall (order 0, bottom),
+        // L2=rhyolite (order 1, middle), L3=basalt hangingwall (order 2, top).
         const R = M.alteration_radius || 0.5;
+        // Calculate Y position of the L2/L3 contact (top of rhyolite = seafloor)
+        // Layers are stacked from bottom: L1 at -halfH, L2 above L1, contact at -halfH + th(L1) + th(L2)
+        const layers = model.layers || [];
+        const sortedLayers = layers.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+        let seafloorY = -halfH;
+        // Add thickness of all layers except the topmost (hangingwall)
+        for (let li = 0; li < sortedLayers.length - 1; li++) {
+          seafloorY += sortedLayers[li].thickness || 1.0;
+        }
+        const lensX = 0;
+        const lensY = seafloorY;
         const geo = new T.SphereGeometry(R, 16, 12);
         const mat = new T.MeshBasicMaterial({ color: COLOR.minVMS, transparent: true, opacity: 0.40, side: T.DoubleSide, depthWrite: false });
         const mesh = new T.Mesh(geo, mat);
         mesh.scale.y = 0.35; // flatten into a lens
-        mesh.position.set(0, -halfH - R * 0.1, 0); // just below base of stack — visible from below
+        mesh.position.set(lensX, lensY, 0);
         mesh.renderOrder = 1;
         meshes.add(mesh);
         // Alteration (chlorite) halo
@@ -2055,34 +2098,103 @@
         const haloMat = new T.MeshBasicMaterial({ color: 0x3c6e3c, transparent: true, opacity: 0.10, side: T.DoubleSide, depthWrite: false });
         const halo = new T.Mesh(haloGeo, haloMat);
         halo.scale.y = 0.5;
-        halo.position.set(0, -halfH - R * 0.1, 0);
+        halo.position.set(lensX, lensY, 0);
         halo.renderOrder = 1;
         meshes.add(halo);
+        // Stringer/feeder zone below the lens
+        const stringerGeom = new T.CylinderGeometry(0.08, 0.15, halfH * 0.6, 8);
+        const stringerMat = new T.MeshStandardMaterial({ color: 0x8B4513, transparent: true, opacity: 0.6 });
+        const stringerMesh = new T.Mesh(stringerGeom, stringerMat);
+        stringerMesh.position.set(lensX, lensY - halfH * 0.3, 0);
+        stringerMesh.renderOrder = 1;
+        meshes.add(stringerMesh);
+        // Exhalite apron — thin wide horizontal disc above lens
+        const exhaliteGeom = new T.CylinderGeometry(R * 1.8, R * 1.8, 0.05, 32);
+        const exhaliteMat = new T.MeshStandardMaterial({ color: 0x8B7355, transparent: true, opacity: 0.4 });
+        const exhaliteMesh = new T.Mesh(exhaliteGeom, exhaliteMat);
+        exhaliteMesh.position.set(lensX, lensY + 0.1, 0);
+        exhaliteMesh.renderOrder = 1;
+        meshes.add(exhaliteMesh);
+        // Stringer label
+        const stringerDiv = document.createElement('div');
+        stringerDiv.className = 'vms-stringer-lbl';
+        stringerDiv.textContent = 'Stringer (feeder) zone';
+        const stringerLbl = new window.CSS2DObject(stringerDiv);
+        stringerLbl.position.set(lensX + 0.2, lensY - halfH * 0.3, 0);
+        labels.push(stringerLbl);
+        // Exhalite label
+        const exhaliteDiv = document.createElement('div');
+        exhaliteDiv.className = 'vms-exhalite-lbl';
+        exhaliteDiv.textContent = 'Exhalite apron';
+        const exhaliteLbl = new window.CSS2DObject(exhaliteDiv);
+        exhaliteLbl.position.set(lensX + R * 1.8 + 0.15, lensY + 0.1, 0);
+        labels.push(exhaliteLbl);
         break;
       }
 
       case 'skarn': {
-        // Irregular calc-silicate zone at intrusion contact, offset to edge of block
+        // Granite intrusion body (batholith/stock) with endo and exo skarn zones
         const R = M.alteration_radius || 0.4;
-        const geo = new T.SphereGeometry(R, 12, 10);
-        const mat = new T.MeshBasicMaterial({ color: COLOR.minSkarn, transparent: true, opacity: 0.35, side: T.DoubleSide, depthWrite: false });
-        const mesh = new T.Mesh(geo, mat);
-        mesh.scale.set(1.5, 0.6, 0.8); // flatten and widen to represent contact zone
-        mesh.position.set(1.5, oreY, 0); // offset toward edge of block so it protrudes visibly
-        mesh.renderOrder = 1;
-        meshes.add(mesh);
+        // Intrusion body (granite stock/batholith) — granite colour, semi-opaque
+        const intrusionGeom = new T.SphereGeometry(R * 1.2, 16, 12);
+        const intrusionMat = new T.MeshStandardMaterial({ color: 0xD8C0B0, transparent: true, opacity: 0.75 });
+        const intrusionMesh = new T.Mesh(intrusionGeom, intrusionMat);
+        intrusionMesh.scale.set(1.0, 1.4, 1.0); // slightly elongated vertically
+        intrusionMesh.position.set(0, oreY, 0);
+        intrusionMesh.renderOrder = 2;
+        meshes.add(intrusionMesh);
+        // Exoskarn zone (in limestone host) — translucent warm yellow-brown shell outside intrusion
+        const exoGeom = new T.SphereGeometry(R * 1.9, 16, 12);
+        const exoMat = new T.MeshBasicMaterial({ color: 0xC8A060, transparent: true, opacity: 0.22, side: T.DoubleSide, depthWrite: false });
+        const exoMesh = new T.Mesh(exoGeom, exoMat);
+        exoMesh.scale.set(1.0, 1.4, 1.0);
+        exoMesh.position.set(0, oreY, 0);
+        exoMesh.renderOrder = 1;
+        meshes.add(exoMesh);
+        // Endoskarn zone (inside intrusion) — amber-red inner zone just inside intrusion contact
+        const endoGeom = new T.SphereGeometry(R * 0.9, 14, 10);
+        const endoMat = new T.MeshBasicMaterial({ color: 0xB06030, transparent: true, opacity: 0.30, side: T.DoubleSide, depthWrite: false });
+        const endoMesh = new T.Mesh(endoGeom, endoMat);
+        endoMesh.scale.set(1.0, 1.4, 1.0);
+        endoMesh.position.set(0, oreY, 0);
+        endoMesh.renderOrder = 3;
+        meshes.add(endoMesh);
+        // Labels for endo/exo zones
+        const exoDiv = document.createElement('div');
+        exoDiv.className = 'intrusion-stock-lbl';
+        exoDiv.textContent = 'Exoskarn (in limestone)';
+        const exoLbl = new window.CSS2DObject(exoDiv);
+        exoLbl.position.set(R * 2.1, oreY + 0.3, 0);
+        labels.push(exoLbl);
+        const endoDiv = document.createElement('div');
+        endoDiv.className = 'intrusion-stock-lbl';
+        endoDiv.textContent = 'Endoskarn (in granite)';
+        const endoLbl = new window.CSS2DObject(endoDiv);
+        endoLbl.position.set(R * 1.1, oreY - 0.2, 0);
+        labels.push(endoLbl);
+        // Contact label
+        const contactDiv = document.createElement('div');
+        contactDiv.className = 'intrusion-stock-lbl';
+        contactDiv.textContent = 'Granite–carbonate contact';
+        const contactLbl = new window.CSS2DObject(contactDiv);
+        contactLbl.position.set(R * 1.4, oreY + R * 0.7, 0);
+        labels.push(contactLbl);
         break;
       }
 
       case 'epithermal': {
-        // Shallow sub-vertical vein set near top of section, protruding above layer block
+        // Shallow sub-vertical vein set extending from upper section down to the boiling zone
         const R = M.alteration_radius || 0.5;
-        const veinH = totalHeight * 0.4;
+        const boilingY = halfH * 0.3; // boiling zone level (same as overlay)
+        const veinTop = halfH * 0.9;  // vein top near surface
+        const veinBot = boilingY;     // vein bottom terminates at boiling zone
+        const veinH = veinTop - veinBot;
+        const veinCentreY = (veinTop + veinBot) / 2;
         for (let i = 0; i < 3; i++) {
           const geo = new T.BoxGeometry(0.05, veinH, R * 1.2);
           const mat = new T.MeshBasicMaterial({ color: COLOR.minEpi, transparent: true, opacity: 0.28, side: T.DoubleSide, depthWrite: false });
           const mesh = new T.Mesh(geo, mat);
-          mesh.position.set((i - 1) * 0.3, halfH * 0.8, 0); // near top so veins protrude above stack
+          mesh.position.set((i - 1) * 0.3, veinCentreY, 0); // centred between surface and boiling zone
           mesh.rotation.y = rad(10 * (i - 1)); // slight spread
           mesh.renderOrder = 1;
           meshes.add(mesh);
@@ -2135,11 +2247,20 @@
       const envLbl = makeValueLabel('Ore envelope', { inferred: false });
       envLbl.position.set(R + 0.12, oreY, 0);
       overlays.add(envLbl);
+      const carbLbl = makeValueLabel('Carbonate alteration', { inferred: false });
+      carbLbl.position.set(-R - 0.12, oreY - envHalfH * 0.5, 0);
+      overlays.add(carbLbl);
     }
 
     if (M.subtype === 'vms') {
       const R = M.alteration_radius || 0.5;
-      const lensY = -halfH + R * 0.35;
+      // Calculate seafloor Y (top of footwall = L2/L3 contact), same as in mesh case
+      const vmsLayers = (model.layers || []).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+      let vmsSeafloorY = -halfH;
+      for (let li = 0; li < vmsLayers.length - 1; li++) {
+        vmsSeafloorY += vmsLayers[li].thickness || 1.0;
+      }
+      const lensY = vmsSeafloorY;
       overlays.add(horizontalDisc(new T.Vector3(0, lensY, 0), R, COLOR.minVMS, 0.22));
       const lensLbl = makeValueLabel('VMS lens', { inferred: false });
       lensLbl.position.set(R + 0.12, lensY, 0);
@@ -2148,13 +2269,18 @@
       const chlorLbl = makeValueLabel('Chlorite halo', { inferred: false });
       chlorLbl.position.set(R * 1.5 + 0.12, lensY, 0);
       overlays.add(chlorLbl);
+      // Paleo-seafloor indicator
+      const seafloorLbl = makeValueLabel('Paleo-seafloor', { inferred: true });
+      seafloorLbl.position.set(-R - 0.12, lensY, 0);
+      overlays.add(seafloorLbl);
     }
 
     if (M.subtype === 'skarn') {
       const R = M.alteration_radius || 0.4;
-      overlays.add(horizontalDisc(new T.Vector3(0.8, oreY, 0), R * 1.4, COLOR.minSkarn, 0.20));
+      // Contact zone boundary — centred at x=0 matching the new geometry
+      overlays.add(horizontalDisc(new T.Vector3(0, oreY, 0), R * 1.9, COLOR.minSkarn, 0.20));
       const skLbl = makeValueLabel('Skarn contact zone', { inferred: false });
-      skLbl.position.set(0.8 + R * 1.4 + 0.12, oreY, 0);
+      skLbl.position.set(R * 1.9 + 0.12, oreY, 0);
       overlays.add(skLbl);
     }
 
@@ -2168,7 +2294,8 @@
     }
 
     // Feature label
-    const lbl = makeLabel(`${capitalise(M.subtype)} — ${M.metals || ''}`, { center: true });
+    const subtypeDisplay = (M.subtype || '').replace(/_/g, ' ');
+    const lbl = makeLabel(`${capitalise(subtypeDisplay)} — ${M.metals || ''}`, { center: true });
     lbl.position.set(0, oreY + (M.alteration_radius || 0.5) + 0.25, 0);
     labels.push(lbl);
 

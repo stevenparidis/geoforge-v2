@@ -21,6 +21,7 @@ const LITHOLOGY = {
   diorite:     { name: 'Diorite',     color: '#7C7066', class: 'ign' },
   gabbro:      { name: 'Gabbro',      color: '#3C463C', class: 'ign' },
   basalt:      { name: 'Basalt',      color: '#2C2C2C', class: 'ign' },
+  andesite:    { name: 'Andesite',   color: '#A08070', class: 'ign' },
   rhyolite:    { name: 'Rhyolite',    color: '#E8D0C8', class: 'ign' },
   schist:      { name: 'Schist',      color: '#7C6C5C', class: 'met' },
   gneiss:      { name: 'Gneiss',      color: '#B4A090', class: 'met' },
@@ -554,7 +555,7 @@ const REFERENCE_FORMATIONS = [
         { id: 'L3', name: 'Gneiss',     lithology: 'gneiss',     thickness: 1.0, order: 2, description_source: 'gneiss', field_origin: { thickness: 'stated', lithology: 'stated' } },
       ],
       events: [
-        { id: 'E1', type: 'fault', subtype: 'normal', strike: 0, dip: 70, dip_direction: 90, throw: 0.4, order: 0, description_source: 'Shear zone dipping 70° east.', field_origin: { dip: 'stated', strike: 'stated', dip_direction: 'stated' } },
+        { id: 'E1', type: 'fault', subtype: 'strike-slip', label: 'Shear zone', strike: 0, dip: 70, dip_direction: 90, throw: 0.4, order: 0, description_source: 'Shear zone dipping 70° east.', field_origin: { dip: 'stated', strike: 'stated', dip_direction: 'stated' } },
       ],
       mineralisation: [
         {
@@ -625,8 +626,7 @@ const REFERENCE_FORMATIONS = [
       meta: { name: 'Skarn', description: 'Fe-Cu skarn at an igneous–carbonate contact.' },
       layers: [
         { id: 'L1', name: 'Limestone',  lithology: 'limestone', thickness: 1.0, order: 0, description_source: 'limestone', field_origin: { thickness: 'stated', lithology: 'stated' } },
-        { id: 'L2', name: 'Granite',    lithology: 'granite',   thickness: 0.9, order: 1, description_source: 'granite', field_origin: { thickness: 'stated', lithology: 'stated' } },
-        { id: 'L3', name: 'Mudstone',   lithology: 'mudstone',  thickness: 0.8, order: 2, description_source: 'mudstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L2', name: 'Mudstone',   lithology: 'mudstone',  thickness: 0.8, order: 1, description_source: 'mudstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
       ],
       events: [],
       mineralisation: [
@@ -660,9 +660,9 @@ const REFERENCE_FORMATIONS = [
     model: {
       meta: { name: 'Epithermal Au-Ag', description: 'Shallow gold-silver epithermal deposit.' },
       layers: [
-        { id: 'L1', name: 'Andesite',  lithology: 'basalt',    thickness: 0.9, order: 0, description_source: 'andesite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L1', name: 'Andesite',  lithology: 'andesite',  thickness: 0.9, order: 0, description_source: 'andesite', field_origin: { thickness: 'stated', lithology: 'stated' } },
         { id: 'L2', name: 'Rhyolite',  lithology: 'rhyolite',  thickness: 0.8, order: 1, description_source: 'rhyolite', field_origin: { thickness: 'stated', lithology: 'stated' } },
-        { id: 'L3', name: 'Andesite',  lithology: 'basalt',    thickness: 1.0, order: 2, description_source: 'andesite', field_origin: { thickness: 'stated', lithology: 'stated' } },
+        { id: 'L3', name: 'Andesite',  lithology: 'andesite',  thickness: 1.0, order: 2, description_source: 'andesite', field_origin: { thickness: 'stated', lithology: 'stated' } },
       ],
       events: [],
       mineralisation: [
