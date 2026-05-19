@@ -1,0 +1,1 @@
+Hanging wall position is determined by dip direction geometry, not by the stated side. The hanging wall is the block above the fault plane.
