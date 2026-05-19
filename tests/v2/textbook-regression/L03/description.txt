@@ -1,0 +1,2 @@
+Three sedimentary layers from bottom to top: limestone (oldest), sandstone, shale (youngest), each 1m thick.
+Expected: 3 layers ordered 0/1/2 with limestone at order 0, sandstone at order 1, shale at order 2.

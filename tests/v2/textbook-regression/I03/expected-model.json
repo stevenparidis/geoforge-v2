@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Granite Batholith", "description": "A granite batholith emplaced at depth below the sedimentary sequence." },
+  "layers": [
+    { "id": "L1", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "sandstone", "field_origin": { "thickness": "inferred", "lithology": "inferred" } },
+    { "id": "L2", "name": "Shale", "lithology": "shale", "thickness": 1.0, "order": 1, "description_source": "shale", "field_origin": { "thickness": "inferred", "lithology": "inferred" } }
+  ],
+  "events": [],
+  "intrusions": [
+    { "id": "I1", "subtype": "batholith", "lithology": "granite", "depth": 2.0, "order": 2, "description_source": "A granite batholith emplaced at depth below the sedimentary sequence.", "field_origin": { "lithology": "stated", "depth": "stated" } }
+  ],
+  "unconformities": [],
+  "mineralisation": []
+}

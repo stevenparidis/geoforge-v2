@@ -1,0 +1,2 @@
+A left-lateral (sinistral) strike-slip fault, striking north-south.
+Expected: 1 fault event, subtype strike_slip_sinistral, strike 0.

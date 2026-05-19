@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Limestone-Sandstone Stack with Laccolith", "description": "A limestone-sandstone stack intruded by a granite laccolith." },
+  "layers": [
+    { "id": "L1", "name": "Limestone", "lithology": "limestone", "thickness": 1.0, "order": 0, "description_source": "A limestone-sandstone stack intruded by a granite laccolith.", "field_origin": { "thickness": "inferred", "lithology": "stated" } },
+    { "id": "L2", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 1, "description_source": "A limestone-sandstone stack intruded by a granite laccolith.", "field_origin": { "thickness": "inferred", "lithology": "stated" } }
+  ],
+  "events": [],
+  "intrusions": [
+    { "id": "I1", "subtype": "laccolith", "lithology": "granite", "depth": 1.5, "order": 2, "description_source": "A limestone-sandstone stack intruded by a granite laccolith.", "field_origin": { "lithology": "stated", "depth": "inferred" } }
+  ],
+  "unconformities": [],
+  "mineralisation": []
+}

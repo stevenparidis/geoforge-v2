@@ -1,0 +1,2 @@
+A skarn deposit at the contact between granite and limestone.
+Expected: 1 mineralisation entry, subtype skarn, metals [Cu, Fe].

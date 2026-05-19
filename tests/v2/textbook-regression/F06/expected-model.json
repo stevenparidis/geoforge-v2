@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Oblique-Slip Fault", "description": "An oblique-slip fault with both dip-slip and strike-slip components, dipping 45 degrees east." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "oblique_slip", "strike": 0, "dip": 45, "dip_direction": 90, "order": 0, "description_source": "An oblique-slip fault with both dip-slip and strike-slip components, dipping 45 degrees east.", "field_origin": { "strike": "inferred", "dip": "stated", "dip_direction": "stated" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

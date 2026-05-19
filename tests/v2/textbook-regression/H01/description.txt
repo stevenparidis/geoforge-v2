@@ -1,0 +1,2 @@
+First, mudstone was deposited. Then it was folded into a syncline. A granite dyke then intruded. Finally a normal fault cut through everything.
+Expected: 1 layer (order 0) + syncline event (order 1) + dyke intrusion (order 2) + normal fault event (order 3).

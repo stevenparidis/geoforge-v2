@@ -1,0 +1,2 @@
+A basalt sill intruded concordantly between sandstone layers.
+Expected: 1 intrusion, subtype sill, lithology basalt.

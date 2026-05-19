@@ -1,0 +1,12 @@
+{
+  "meta": { "name": "Three Sedimentary Layers", "description": "Three sedimentary layers from bottom to top: limestone, sandstone, shale." },
+  "layers": [
+    { "id": "L1", "name": "Limestone", "lithology": "limestone", "thickness": 1.0, "order": 0, "description_source": "Three sedimentary layers from bottom to top: limestone (oldest), sandstone, shale (youngest), each 1m thick.", "field_origin": { "thickness": "stated", "lithology": "stated" } },
+    { "id": "L2", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 1, "description_source": "Three sedimentary layers from bottom to top: limestone (oldest), sandstone, shale (youngest), each 1m thick.", "field_origin": { "thickness": "stated", "lithology": "stated" } },
+    { "id": "L3", "name": "Shale", "lithology": "shale", "thickness": 1.0, "order": 2, "description_source": "Three sedimentary layers from bottom to top: limestone (oldest), sandstone, shale (youngest), each 1m thick.", "field_origin": { "thickness": "stated", "lithology": "stated" } }
+  ],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

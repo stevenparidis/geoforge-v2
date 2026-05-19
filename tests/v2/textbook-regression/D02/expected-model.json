@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Non-Plunging Syncline", "description": "A syncline with the youngest rocks in the core, non-plunging." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fold", "subtype": "syncline", "axis_strike": 0, "plunge": 0, "plunge_direction": 0, "interlimb_angle": 110, "order": 0, "description_source": "A syncline with the youngest rocks in the core, non-plunging.", "field_origin": { "axis_strike": "inferred", "plunge": "stated", "plunge_direction": "inferred", "interlimb_angle": "inferred" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

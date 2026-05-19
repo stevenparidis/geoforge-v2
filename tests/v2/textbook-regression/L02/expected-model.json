@@ -1,0 +1,11 @@
+{
+  "meta": { "name": "Dipping Sandstone Layer", "description": "A sandstone layer dipping 35 degrees east, 2m thick." },
+  "layers": [
+    { "id": "L1", "name": "Sandstone", "lithology": "sandstone", "thickness": 2.0, "order": 0, "description_source": "A sandstone layer dipping 35 degrees east, 2m thick.", "field_origin": { "thickness": "stated", "lithology": "stated" } }
+  ],
+  "events": [],
+  "tilt": { "strike": 0, "dip": 35, "dip_direction": 90, "field_origin": { "strike": "inferred", "dip": "stated", "dip_direction": "stated" } },
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

@@ -1,0 +1,15 @@
+{
+  "meta": { "name": "Historical Sequence", "description": "First mudstone deposited, then folded into syncline, then granite dyke intruded, then normal fault cut through." },
+  "layers": [
+    { "id": "L1", "name": "Mudstone", "lithology": "mudstone", "thickness": 1.0, "order": 0, "description_source": "First, mudstone was deposited.", "field_origin": { "thickness": "inferred", "lithology": "stated" } }
+  ],
+  "events": [
+    { "id": "E1", "type": "fold", "subtype": "syncline", "axis_strike": 0, "plunge": 0, "plunge_direction": 0, "interlimb_angle": 110, "order": 1, "description_source": "Then it was folded into a syncline.", "field_origin": { "axis_strike": "inferred", "plunge": "inferred", "plunge_direction": "inferred", "interlimb_angle": "inferred" } },
+    { "id": "E2", "type": "fault", "subtype": "normal", "strike": 0, "dip": 60, "dip_direction": 90, "throw": 0.5, "order": 3, "description_source": "Finally a normal fault cut through everything.", "field_origin": { "strike": "inferred", "dip": "inferred", "dip_direction": "inferred", "throw": "inferred" } }
+  ],
+  "intrusions": [
+    { "id": "I1", "subtype": "dyke", "lithology": "granite", "strike": 0, "dip": 90, "thickness": 0.4, "order": 2, "description_source": "A granite dyke then intruded.", "field_origin": { "lithology": "stated", "dip": "inferred" } }
+  ],
+  "unconformities": [],
+  "mineralisation": []
+}

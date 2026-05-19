@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Skarn Deposit", "description": "A skarn deposit at the contact between granite and limestone." },
+  "layers": [],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": [
+    { "id": "M1", "subtype": "skarn", "metals": ["Cu", "Fe"], "deposit_name": "Cu-Fe Skarn", "description_source": "A skarn deposit at the contact between granite and limestone.", "field_origin": { "metals": "stated" } }
+  ]
+}

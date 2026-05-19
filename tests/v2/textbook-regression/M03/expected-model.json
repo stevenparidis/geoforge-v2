@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "VMS Deposit", "description": "A volcanogenic massive sulphide (VMS) deposit at the paleo-seafloor." },
+  "layers": [],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": [
+    { "id": "M1", "subtype": "vms", "metals": ["Cu", "Zn"], "deposit_name": "VMS Deposit", "description_source": "A volcanogenic massive sulphide (VMS) deposit at the paleo-seafloor.", "field_origin": { "metals": "stated" } }
+  ]
+}

@@ -1,0 +1,2 @@
+An angular unconformity where upper beds are horizontal but lower beds dip 25 degrees east.
+Expected: 1 unconformity, subtype angular, angular_discordance 25.

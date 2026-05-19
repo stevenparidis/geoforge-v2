@@ -1,0 +1,2 @@
+A basalt dyke cutting vertically through sandstone and limestone layers.
+Expected: 1 intrusion, subtype dyke, lithology basalt.

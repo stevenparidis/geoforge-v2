@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Porphyry Cu-Au Deposit", "description": "A porphyry copper-gold deposit centred on a causative stock." },
+  "layers": [],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": [
+    { "id": "M1", "subtype": "porphyry", "metals": ["Cu", "Au"], "deposit_name": "Porphyry Cu-Au", "description_source": "A porphyry copper-gold deposit centred on a causative stock.", "field_origin": { "metals": "stated" } }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Orogenic Gold Deposit", "description": "An orogenic gold deposit hosted in a shear zone with quartz veins." },
+  "layers": [],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": [
+    { "id": "M1", "subtype": "orogenic_gold", "metals": ["Au"], "deposit_name": "Orogenic Gold", "description_source": "An orogenic gold deposit hosted in a shear zone with quartz veins.", "field_origin": { "metals": "stated" } }
+  ]
+}

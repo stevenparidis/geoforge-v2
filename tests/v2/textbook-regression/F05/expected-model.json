@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Sinistral Strike-Slip Fault", "description": "A left-lateral (sinistral) strike-slip fault, striking north-south." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "strike_slip_sinistral", "strike": 0, "dip": 90, "dip_direction": 90, "order": 0, "description_source": "A left-lateral (sinistral) strike-slip fault, striking north-south.", "field_origin": { "strike": "stated", "dip": "inferred", "dip_direction": "inferred" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

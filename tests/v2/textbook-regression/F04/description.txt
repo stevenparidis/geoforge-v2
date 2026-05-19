@@ -1,0 +1,2 @@
+A right-lateral (dextral) strike-slip fault.
+Expected: 1 fault event, subtype strike_slip_dextral, dip 90.

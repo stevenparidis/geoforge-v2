@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Basalt Dyke", "description": "A basalt dyke cutting vertically through sandstone and limestone layers." },
+  "layers": [
+    { "id": "L1", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "sandstone layer", "field_origin": { "thickness": "inferred", "lithology": "stated" } },
+    { "id": "L2", "name": "Limestone", "lithology": "limestone", "thickness": 1.0, "order": 1, "description_source": "limestone layer", "field_origin": { "thickness": "inferred", "lithology": "stated" } }
+  ],
+  "events": [],
+  "intrusions": [
+    { "id": "I1", "subtype": "dyke", "lithology": "basalt", "strike": 0, "dip": 90, "thickness": 0.4, "order": 2, "description_source": "A basalt dyke cutting vertically through sandstone and limestone layers.", "field_origin": { "lithology": "stated", "dip": "stated" } }
+  ],
+  "unconformities": [],
+  "mineralisation": []
+}

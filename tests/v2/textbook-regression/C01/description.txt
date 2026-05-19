@@ -1,0 +1,2 @@
+A sandstone layer cut by a normal fault with 0.5m throw.
+Expected: 1 layer + 1 fault event (normal, throw 0.5).

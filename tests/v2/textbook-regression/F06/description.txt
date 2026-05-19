@@ -1,0 +1,2 @@
+An oblique-slip fault with both dip-slip and strike-slip components, dipping 45 degrees east.
+Expected: 1 fault event, subtype oblique_slip, dip 45, dip_direction 90.

@@ -1,0 +1,2 @@
+A monocline - a one-limbed fold where strata step down to one side.
+Expected: 1 fold event, subtype monocline.

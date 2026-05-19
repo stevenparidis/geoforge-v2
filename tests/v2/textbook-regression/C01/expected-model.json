@@ -1,0 +1,12 @@
+{
+  "meta": { "name": "Sandstone Cut by Normal Fault", "description": "A sandstone layer cut by a normal fault with 0.5m throw." },
+  "layers": [
+    { "id": "L1", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "A sandstone layer cut by a normal fault with 0.5m throw.", "field_origin": { "thickness": "inferred", "lithology": "stated" } }
+  ],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "normal", "strike": 0, "dip": 60, "dip_direction": 90, "throw": 0.5, "order": 1, "description_source": "A sandstone layer cut by a normal fault with 0.5m throw.", "field_origin": { "strike": "inferred", "dip": "inferred", "dip_direction": "inferred", "throw": "stated" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Epithermal Au-Ag Deposit", "description": "An epithermal gold-silver deposit with low-sulphidation quartz veins." },
+  "layers": [],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": [
+    { "id": "M1", "subtype": "epithermal", "metals": ["Au", "Ag"], "deposit_name": "Epithermal Au-Ag", "description_source": "An epithermal gold-silver deposit with low-sulphidation quartz veins.", "field_origin": { "metals": "stated" } }
+  ]
+}

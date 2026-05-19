@@ -1,0 +1,2 @@
+Two horizontal sandstone layers, each 1m thick.
+Expected: 2 layers, no events, flat-lying (dip 0).

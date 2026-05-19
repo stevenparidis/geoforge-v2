@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Nonconformity", "description": "A nonconformity where sedimentary rocks overlie a granite basement." },
+  "layers": [
+    { "id": "L1", "name": "Granite Basement", "lithology": "granite", "thickness": 1.5, "order": 0, "description_source": "granite basement", "field_origin": { "thickness": "inferred", "lithology": "stated" } },
+    { "id": "L2", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 1, "description_source": "sedimentary rocks above", "field_origin": { "thickness": "inferred", "lithology": "inferred" } }
+  ],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [
+    { "id": "U1", "subtype": "nonconformity", "above_layer_id": "L2", "below_layer_id": "L1", "description_source": "A nonconformity where sedimentary rocks overlie a granite basement.", "field_origin": {} }
+  ],
+  "mineralisation": []
+}

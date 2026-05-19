@@ -1,0 +1,11 @@
+{
+  "meta": { "name": "Two Horizontal Sandstone Layers", "description": "Two horizontal sandstone layers, each 1m thick." },
+  "layers": [
+    { "id": "L1", "name": "Lower Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "Two horizontal sandstone layers, each 1m thick.", "field_origin": { "thickness": "stated", "lithology": "stated" } },
+    { "id": "L2", "name": "Upper Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 1, "description_source": "Two horizontal sandstone layers, each 1m thick.", "field_origin": { "thickness": "stated", "lithology": "stated" } }
+  ],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

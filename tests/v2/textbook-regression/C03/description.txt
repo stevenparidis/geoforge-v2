@@ -1,0 +1,2 @@
+A limestone-sandstone stack intruded by a granite laccolith.
+Expected: 2 layers + 1 laccolith intrusion.

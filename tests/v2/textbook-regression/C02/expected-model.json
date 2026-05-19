@@ -1,0 +1,14 @@
+{
+  "meta": { "name": "Three Layers Folded into Anticline", "description": "Three layers folded into an anticline." },
+  "layers": [
+    { "id": "L1", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "Three layers folded into an anticline.", "field_origin": { "thickness": "inferred", "lithology": "inferred" } },
+    { "id": "L2", "name": "Shale", "lithology": "shale", "thickness": 0.8, "order": 1, "description_source": "Three layers folded into an anticline.", "field_origin": { "thickness": "inferred", "lithology": "inferred" } },
+    { "id": "L3", "name": "Limestone", "lithology": "limestone", "thickness": 1.0, "order": 2, "description_source": "Three layers folded into an anticline.", "field_origin": { "thickness": "inferred", "lithology": "inferred" } }
+  ],
+  "events": [
+    { "id": "E1", "type": "fold", "subtype": "anticline", "axis_strike": 0, "plunge": 0, "plunge_direction": 0, "interlimb_angle": 110, "order": 3, "description_source": "Three layers folded into an anticline.", "field_origin": { "axis_strike": "inferred", "plunge": "inferred", "plunge_direction": "inferred", "interlimb_angle": "inferred" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

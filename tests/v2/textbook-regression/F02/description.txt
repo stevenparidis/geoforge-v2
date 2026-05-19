@@ -1,0 +1,2 @@
+A reverse fault dipping 30 degrees west with 0.3m heave.
+Expected: 1 fault event, subtype reverse, dip 30, dip_direction 270, heave 0.3.

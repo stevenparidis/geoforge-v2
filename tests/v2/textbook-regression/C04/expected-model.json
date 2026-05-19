@@ -1,0 +1,15 @@
+{
+  "meta": { "name": "Angular Unconformity Cut by Normal Fault", "description": "An angular unconformity cut by a subsequent normal fault." },
+  "layers": [
+    { "id": "L1", "name": "Lower Shale", "lithology": "shale", "thickness": 1.0, "order": 0, "description_source": "lower tilted beds", "field_origin": { "thickness": "inferred", "lithology": "inferred" } },
+    { "id": "L2", "name": "Upper Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 1, "description_source": "upper horizontal beds", "field_origin": { "thickness": "inferred", "lithology": "inferred" } }
+  ],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "normal", "strike": 0, "dip": 60, "dip_direction": 90, "throw": 0.5, "order": 1, "description_source": "An angular unconformity cut by a subsequent normal fault.", "field_origin": { "strike": "inferred", "dip": "inferred", "dip_direction": "inferred", "throw": "inferred" } }
+  ],
+  "intrusions": [],
+  "unconformities": [
+    { "id": "U1", "subtype": "angular", "above_layer_id": "L2", "below_layer_id": "L1", "angular_discordance": 25, "description_source": "An angular unconformity cut by a subsequent normal fault.", "field_origin": { "angular_discordance": "inferred" } }
+  ],
+  "mineralisation": []
+}

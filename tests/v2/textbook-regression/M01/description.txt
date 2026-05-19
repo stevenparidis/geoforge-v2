@@ -1,0 +1,2 @@
+A porphyry copper-gold deposit centred on a causative stock.
+Expected: 1 mineralisation entry, subtype porphyry, metals [Cu, Au].

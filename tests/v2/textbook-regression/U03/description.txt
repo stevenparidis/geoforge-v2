@@ -1,0 +1,2 @@
+A nonconformity where sedimentary rocks overlie a granite basement.
+Expected: 1 unconformity, subtype nonconformity, basement_lithology granite.
