@@ -224,3 +224,23 @@ Audit work list closed:
 - §7.4 single-borehole tool ✓
 
 Phase H unblocked.
+
+---
+
+## Phase H — Unconformity / intrusion / mineralisation fixes
+- [x] H.1 Angular unconformity: tilted lower beds + THREE.Plane clipping
+- [x] H.2 Discordance arc: connects actual upper/lower bedding planes
+- [x] H.3 Geological time-scale strip (ICS periods)
+- [x] H.4 Nonconformity: crystalline texture + expanded label
+- [x] H.5 Intrusion cross-cutting age tags (all 4 subtypes)
+- [x] H.6 Sill tilt fix + concordance/discordance labels
+- [x] H.7 Laccolith: depth clamp removed + schematic domed-layer arch
+- [x] H.8 Mineralisation audit follow-up (VMS, skarn, orogenic gold, porphyry, epithermal)
+- [x] H.9 Acceptance + smoke test convergence
+
+Audit work list closed:
+- §5.6 unconformities ✓
+- §5.7 intrusions ✓
+- §5.8 mineralisation (audit subset) ✓
+
+Phase I unblocked.

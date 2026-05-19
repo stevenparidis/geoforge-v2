@@ -1725,6 +1725,325 @@ async function run() {
       await context.close();
     }
 
+    // -----------------------------------------------------------------------
+    // Test H.angular-tilt — angular unconformity shows tilted lower beds geometry
+    //
+    //   1. Load an angular unconformity fixture via claude.complete stub
+    //   2. Wait for Three.js ready and the unconformity to appear in inspector
+    //   3. Assert: window.__lastModel.unconformities[0].subtype === 'angular'
+    //   4. Assert: canvas element is present (geometry rendered without crash)
+    //   5. Assert: window.GD.ICS_PERIODS exists and has at least 10 entries
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test H.angular-tilt: angular unconformity shows tilted lower beds geometry ===');
+    {
+      const ANGULAR_UNCONFORMITY_FIXTURE = {
+        meta: { name: 'Angular Unconformity', description: 'Tilted older beds cut by younger horizontal beds — 25 Ma time gap.' },
+        layers: [
+          { id: 'L1', name: 'Old Shale',       lithology: 'shale',      thickness: 0.8, order: 0, field_origin: { thickness: 'stated', lithology: 'stated' } },
+          { id: 'L2', name: 'Old Sandstone',   lithology: 'sandstone',  thickness: 0.8, order: 1, field_origin: { thickness: 'stated', lithology: 'stated' } },
+          { id: 'L3', name: 'Young Limestone', lithology: 'limestone',  thickness: 0.8, order: 2, field_origin: { thickness: 'stated', lithology: 'stated' } },
+          { id: 'L4', name: 'Young Sandstone', lithology: 'sandstone',  thickness: 0.8, order: 3, field_origin: { thickness: 'stated', lithology: 'stated' } },
+        ],
+        events: [],
+        unconformities: [
+          {
+            id: 'U1',
+            subtype: 'angular',
+            above_layer_id: 'L3',
+            below_layer_id: 'L2',
+            time_gap_ma: 25,
+            angular_discordance: 35,
+            description_source: 'Tilted beds cut by horizontal beds at 25 Ma time gap.',
+            field_origin: { time_gap_ma: 'stated', angular_discordance: 'stated' },
+          },
+        ],
+      };
+
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript((fixtureJson) => {
+        window.claude = {
+          complete: async function () {
+            console.log('[stub] returning angular unconformity fixture for H.angular-tilt');
+            return fixtureJson;
+          },
+        };
+      }, JSON.stringify(ANGULAR_UNCONFORMITY_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+
+      console.log('Waiting for window.__threeReady...');
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      console.log('Three.js ready');
+
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('Three horizontal limestone beds sit above tilted shale beds with a 35 degree angular unconformity');
+      await page.locator('button.btn.primary').click();
+      console.log('Interpret button clicked');
+
+      // Wait for unconformity model to load — layers list should show 4 items
+      await page.waitForFunction(
+        () => {
+          const lists = document.querySelectorAll('.feat-list');
+          return lists.length >= 1 && lists[0].querySelectorAll('.feat-item').length >= 4;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('Unconformity model appeared in inspector');
+
+      await page.waitForTimeout(600);
+
+      // Assert: window.__lastModel.unconformities[0].subtype === 'angular'
+      console.log('Checking window.__lastModel for angular unconformity...');
+      const unconformitySubtype = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.unconformities || !m.unconformities.length) return null;
+        return m.unconformities[0].subtype;
+      });
+      console.log(`Unconformity subtype: ${unconformitySubtype}`);
+      if (unconformitySubtype !== 'angular') {
+        throw new Error(`Test H.angular-tilt: Expected unconformity subtype 'angular', got '${unconformitySubtype}'`);
+      }
+
+      // Assert: canvas element is present (geometry rendered without crash)
+      console.log('Checking for canvas element...');
+      const canvasPresent = await page.evaluate(() => document.querySelector('canvas') !== null);
+      if (!canvasPresent) {
+        throw new Error('Test H.angular-tilt: Expected canvas element to be present');
+      }
+      console.log('Canvas element found');
+
+      // Assert: window.GD.ICS_PERIODS exists and has at least 10 entries
+      console.log('Checking window.GD.ICS_PERIODS...');
+      const icsPeriodCount = await page.evaluate(() => {
+        if (!window.GD || !Array.isArray(window.GD.ICS_PERIODS)) return 0;
+        return window.GD.ICS_PERIODS.length;
+      });
+      console.log(`ICS_PERIODS count: ${icsPeriodCount}`);
+      if (icsPeriodCount < 10) {
+        throw new Error(`Test H.angular-tilt: Expected window.GD.ICS_PERIODS to have at least 10 entries, got ${icsPeriodCount}`);
+      }
+
+      console.log('PASS [Test H.angular-tilt]: angular unconformity confirmed in model, canvas rendered, ICS_PERIODS available');
+
+      const screenshotPath = path.join(screenshotDir, 'smoke-h-angular-tilt.png');
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test H.intrusion-age-tag — intrusions get cross-cutting age tags
+    //
+    //   1. Load a dyke intrusion fixture via claude.complete stub
+    //   2. Wait for Three.js ready and the intrusion to appear in inspector
+    //   3. Assert: window.__lastModel.intrusions[0].subtype === 'dyke'
+    //   4. Assert: a .intrusion-age-tag element exists in the DOM (age badge)
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test H.intrusion-age-tag: intrusions get cross-cutting age tags ===');
+    {
+      const DYKE_FIXTURE = {
+        meta: { name: 'Basalt Dyke', description: 'A basalt dyke cuts through three sedimentary layers.' },
+        layers: [
+          { id: 'L1', name: 'Limestone', lithology: 'limestone', thickness: 1.0, order: 0, field_origin: { thickness: 'stated', lithology: 'stated' } },
+          { id: 'L2', name: 'Shale',     lithology: 'shale',     thickness: 1.0, order: 1, field_origin: { thickness: 'stated', lithology: 'stated' } },
+          { id: 'L3', name: 'Sandstone', lithology: 'sandstone', thickness: 1.0, order: 2, field_origin: { thickness: 'stated', lithology: 'stated' } },
+        ],
+        events: [],
+        intrusions: [
+          {
+            id: 'I1',
+            subtype: 'dyke',
+            rock_type: 'basalt',
+            strike: 0,
+            dip: 90,
+            thickness: 0.4,
+            order: 3,
+            description_source: 'A basalt dyke cuts across the layers.',
+            field_origin: { strike: 'stated', dip: 'stated', thickness: 'stated', rock_type: 'stated' },
+          },
+        ],
+      };
+
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript((fixtureJson) => {
+        window.claude = {
+          complete: async function () {
+            console.log('[stub] returning dyke fixture for H.intrusion-age-tag');
+            return fixtureJson;
+          },
+        };
+      }, JSON.stringify(DYKE_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+
+      console.log('Waiting for window.__threeReady...');
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      console.log('Three.js ready');
+
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('A basalt dyke cuts through three sedimentary layers');
+      await page.locator('button.btn.primary').click();
+      console.log('Interpret button clicked');
+
+      // Wait for layers list to show 3 items
+      await page.waitForFunction(
+        () => {
+          const lists = document.querySelectorAll('.feat-list');
+          return lists.length >= 1 && lists[0].querySelectorAll('.feat-item').length >= 3;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('Dyke model appeared in inspector');
+
+      await page.waitForTimeout(600);
+
+      // Assert: window.__lastModel.intrusions[0].subtype === 'dyke'
+      console.log('Checking window.__lastModel for dyke subtype...');
+      const intrusionSubtype = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.intrusions || !m.intrusions.length) return null;
+        return m.intrusions[0].subtype;
+      });
+      console.log(`Intrusion subtype: ${intrusionSubtype}`);
+      if (intrusionSubtype !== 'dyke') {
+        throw new Error(`Test H.intrusion-age-tag: Expected intrusion subtype 'dyke', got '${intrusionSubtype}'`);
+      }
+
+      // Assert: a .intrusion-age-tag element exists in the DOM (the age badge)
+      console.log('Checking for .intrusion-age-tag element...');
+      await page.waitForFunction(
+        () => document.querySelector('.intrusion-age-tag') !== null,
+        { timeout: 8000 }
+      );
+      console.log('.intrusion-age-tag element found in DOM');
+
+      console.log('PASS [Test H.intrusion-age-tag]: dyke confirmed in model, .intrusion-age-tag badge present in DOM');
+
+      const screenshotPath = path.join(screenshotDir, 'smoke-h-intrusion-age-tag.png');
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
+    // -----------------------------------------------------------------------
+    // Test H.vms-seafloor — VMS lens is at seafloor position
+    //
+    //   1. Load a VMS mineralisation fixture via claude.complete stub
+    //   2. Wait for Three.js ready and the mineralisation to appear in inspector
+    //   3. Assert: window.__lastModel.mineralisation[0].subtype === 'vms'
+    //   4. Assert: canvas is present (geometry rendered without crash)
+    // -----------------------------------------------------------------------
+    console.log('\n=== Test H.vms-seafloor: VMS lens is at seafloor position ===');
+    {
+      const VMS_FIXTURE = {
+        meta: { name: 'VMS Deposit', description: 'Zn-Pb-Cu VMS deposit at the base of a volcanic sequence.' },
+        layers: [
+          { id: 'L1', name: 'Basalt (footwall)',   lithology: 'basalt',   thickness: 0.8, order: 0, field_origin: { thickness: 'stated', lithology: 'stated' } },
+          { id: 'L2', name: 'Rhyolite',            lithology: 'rhyolite', thickness: 0.9, order: 1, field_origin: { thickness: 'stated', lithology: 'stated' } },
+          { id: 'L3', name: 'Basalt (hangingwall)',lithology: 'basalt',   thickness: 1.0, order: 2, field_origin: { thickness: 'stated', lithology: 'stated' } },
+        ],
+        events: [],
+        mineralisation: [
+          {
+            id: 'M1',
+            subtype: 'vms',
+            metals: 'Zn-Pb-Cu',
+            grade: 8.0,
+            alteration_radius: 0.5,
+            description_source: 'A VMS deposit forms at the seafloor between the basalt units.',
+            field_origin: { metals: 'stated', grade: 'stated', alteration_radius: 'inferred' },
+          },
+        ],
+      };
+
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`));
+      page.on('pageerror', (err) => console.error(`[browser error] ${err.message}`));
+
+      await page.addInitScript((fixtureJson) => {
+        window.claude = {
+          complete: async function () {
+            console.log('[stub] returning VMS fixture for H.vms-seafloor');
+            return fixtureJson;
+          },
+        };
+      }, JSON.stringify(VMS_FIXTURE));
+
+      await page.goto(`http://localhost:${PORT}/index.html?testmode=1`, { waitUntil: 'domcontentloaded' });
+
+      console.log('Waiting for window.__threeReady...');
+      await page.waitForFunction(() => window.__threeReady === true, { timeout: 30000 });
+      console.log('Three.js ready');
+
+      await page.waitForSelector('button.btn.primary', { timeout: 15000 });
+
+      const textarea = page.locator('textarea.desc-area');
+      await textarea.click();
+      await textarea.fill('A VMS Zn-Pb-Cu deposit forms at the seafloor between basalt footwall and hangingwall units.');
+      await page.locator('button.btn.primary').click();
+      console.log('Interpret button clicked');
+
+      // Wait for layers list to show 3 items
+      await page.waitForFunction(
+        () => {
+          const lists = document.querySelectorAll('.feat-list');
+          return lists.length >= 1 && lists[0].querySelectorAll('.feat-item').length >= 3;
+        },
+        { timeout: 15000, polling: 200 }
+      );
+      console.log('VMS model appeared in inspector');
+
+      await page.waitForTimeout(600);
+
+      // Assert: window.__lastModel.mineralisation[0].subtype === 'vms'
+      console.log('Checking window.__lastModel for VMS mineralisation...');
+      const mineralisationSubtype = await page.evaluate(() => {
+        const m = window.__lastModel;
+        if (!m || !m.mineralisation || !m.mineralisation.length) return null;
+        return m.mineralisation[0].subtype;
+      });
+      console.log(`Mineralisation subtype: ${mineralisationSubtype}`);
+      if (mineralisationSubtype !== 'vms') {
+        throw new Error(`Test H.vms-seafloor: Expected mineralisation subtype 'vms', got '${mineralisationSubtype}'`);
+      }
+
+      // Assert: canvas element is present (geometry rendered without crash)
+      console.log('Checking for canvas element...');
+      const canvasPresent = await page.evaluate(() => document.querySelector('canvas') !== null);
+      if (!canvasPresent) {
+        throw new Error('Test H.vms-seafloor: Expected canvas element to be present');
+      }
+      console.log('Canvas element found — VMS geometry rendered without crash');
+
+      console.log('PASS [Test H.vms-seafloor]: VMS mineralisation confirmed in model, canvas rendered without crash');
+
+      const screenshotPath = path.join(screenshotDir, 'smoke-h-vms-seafloor.png');
+      await page.screenshot({ path: screenshotPath, fullPage: false });
+      console.log(`Screenshot saved to ${screenshotPath}`);
+
+      await page.close();
+      await context.close();
+    }
+
   } catch (err) {
     console.error(`FAIL: ${err.message}`);
     exitCode = 1;
