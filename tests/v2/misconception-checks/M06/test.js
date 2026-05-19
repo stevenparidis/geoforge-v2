@@ -51,8 +51,9 @@ const FIXTURE = {
   events: [],
   intrusions: [
     {
-      id: 'I1', subtype: 'dyke', lithology: 'granite', order: 2,
+      id: 'I1', subtype: 'dyke', rock_type: 'granite', order: 2,
       description_source: 'A granite dyke that is older than the sandstone it cuts through.',
+      field_origin: { rock_type: 'stated' },
       validation_note: 'By the principle of cross-cutting relationships, an intrusion must be younger than the rocks it cuts.',
     },
   ],

@@ -56,8 +56,9 @@ const FIXTURE = {
   events: [],
   intrusions: [
     {
-      id: 'I1', subtype: 'batholith', lithology: 'granite', order: 2,
+      id: 'I1', subtype: 'batholith', rock_type: 'granite', order: 2,
       description_source: 'A granite batholith intruding into pre-existing limestone and shale layers.',
+      field_origin: { rock_type: 'stated' },
     },
   ],
 };
