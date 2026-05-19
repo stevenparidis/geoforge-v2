@@ -351,7 +351,7 @@ If the model has no structural features to guide prediction, return an empty arr
         U.angular_discordance = 30; U.field_origin.angular_discordance = 'inferred';
       }
       // H.4: Validate nonconformity has crystalline basement
-      if (U.subtype === 'nonconformity') {
+      if (U.subtype === 'nonconformity' && !U.validation_note) {
         const crystallineLithos = ['granite', 'gneiss', 'schist', 'marble', 'quartzite'];
         const belowLayer = (model.layers || []).find(L => L.id === U.below_layer_id);
         if (belowLayer && !crystallineLithos.includes(belowLayer.lithology)) {
@@ -1377,7 +1377,6 @@ If the model has no structural features to guide prediction, return an empty arr
 
     // Build a schematic strip: show 3 periods below the gap and 3 above,
     // or use identified periods if age data is available.
-    const totalSpan = periods.length > 0 ? periods[0].start - periods[periods.length - 1].end : 541;
 
     return React.createElement('div', { className: 'time-strip-container' },
       React.createElement('div', { className: 'time-strip' },

@@ -1855,8 +1855,9 @@
       lowerGroup.rotation.z = T.MathUtils.degToRad(discordance);
       lowerGroup.position.y = contactY;
 
-      // Clip the lower block at the contact plane (don't show above contactY)
-      const clipPlane = new T.Plane(new T.Vector3(0, 1, 0), -contactY);
+      // Clip the lower block at the contact plane (don't show above contactY).
+      // Normal=(0,-1,0), constant=contactY → positive side is -y + contactY >= 0 → y <= contactY.
+      const clipPlane = new T.Plane(new T.Vector3(0, -1, 0), contactY);
       lowerGroup.traverse(obj => {
         if (obj.isMesh) {
           const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -1878,23 +1879,17 @@
       if (baseLayer) {
         const baseBottom = contactY - (baseLayer.thickness ?? 1.0);
         const baseTop = contactY;
-        const hatchLines = new T.Group();
         const hatchColor = 0xC4A882;
         const hatchSpacing = 0.18;
         const hatchAngle = rad(35);
-        const cosA = Math.cos(hatchAngle);
-        const sinA = Math.sin(hatchAngle);
         // Horizontal passes across the basement block
         for (let y = baseBottom + hatchSpacing / 2; y < baseTop; y += hatchSpacing) {
-          // Line along the tilted direction across full width
+          // Line from left edge to right edge, offset vertically by y
           const x0 = -halfW;
           const x1 = halfW;
-          // Offset perpendicular to hatch direction
-          const dx = (y - baseBottom) * sinA;
-          const dy = (y - baseBottom) * cosA;
           const pts = [
-            new T.Vector3(x0, baseBottom + (x0 + halfW) * Math.tan(hatchAngle), 0.01),
-            new T.Vector3(x1, baseBottom + (x1 + halfW) * Math.tan(hatchAngle), 0.01),
+            new T.Vector3(x0, y, 0.01),
+            new T.Vector3(x1, y + 2 * halfW * Math.tan(hatchAngle), 0.01),
           ];
           overlays.add(solidLine(pts, hatchColor, { opacity: 0.35, depthTest: false }));
         }
@@ -2694,6 +2689,30 @@
       root.add(ur.meshes);
       overlays.add(ur.overlays);
       labels.push(...ur.labels);
+
+      // Bug 2 fix (Option A): for angular unconformities, the tilted lower block is
+      // already rendered by buildUnconformityGeometry. The flat layer stack from
+      // buildLayersOnly still contains the same lower layers, causing z-fighting.
+      // Suppress flat meshes below the contact by applying a clipping plane that
+      // only shows fragments at or above contactY (positive side: y >= contactY).
+      if (U.subtype === 'angular' && res && res.meshes) {
+        const sorted = [...(model.layers || [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const totalHeight = sorted.reduce((s, L) => s + (L.thickness ?? 1.0), 0) || 3;
+        let contactY = 0;
+        let cumY = -totalHeight / 2;
+        for (let i = 0; i < sorted.length; i++) {
+          cumY += sorted[i].thickness ?? 1.0;
+          if (sorted[i].id === U.below_layer_id) { contactY = cumY; break; }
+        }
+        // suppressClip: positive side y >= contactY — only shows flat layers ABOVE contact
+        const suppressClip = new T.Plane(new T.Vector3(0, 1, 0), -contactY);
+        res.meshes.traverse(obj => {
+          if (obj.isMesh && obj.position.y < contactY) {
+            const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+            mats.forEach(m => { m.clippingPlanes = [suppressClip]; });
+          }
+        });
+      }
     });
 
     // Render mineralisation
