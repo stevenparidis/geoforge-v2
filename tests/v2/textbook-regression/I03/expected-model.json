@@ -6,7 +6,7 @@
   ],
   "events": [],
   "intrusions": [
-    { "id": "I1", "subtype": "batholith", "lithology": "granite", "depth": 2.0, "order": 2, "description_source": "A granite batholith emplaced at depth below the sedimentary sequence.", "field_origin": { "lithology": "stated", "depth": "stated" } }
+    { "id": "I1", "subtype": "batholith", "rock_type": "granite", "depth": 2.0, "order": 2, "description_source": "A granite batholith emplaced at depth below the sedimentary sequence.", "field_origin": { "rock_type": "stated", "depth": "stated" } }
   ],
   "unconformities": [],
   "mineralisation": []

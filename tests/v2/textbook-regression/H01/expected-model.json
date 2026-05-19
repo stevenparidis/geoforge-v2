@@ -8,7 +8,7 @@
     { "id": "E2", "type": "fault", "subtype": "normal", "strike": 0, "dip": 60, "dip_direction": 90, "throw": 0.5, "order": 3, "description_source": "Finally a normal fault cut through everything.", "field_origin": { "strike": "inferred", "dip": "inferred", "dip_direction": "inferred", "throw": "inferred" } }
   ],
   "intrusions": [
-    { "id": "I1", "subtype": "dyke", "lithology": "granite", "strike": 0, "dip": 90, "thickness": 0.4, "order": 2, "description_source": "A granite dyke then intruded.", "field_origin": { "lithology": "stated", "dip": "inferred" } }
+    { "id": "I1", "subtype": "dyke", "rock_type": "granite", "strike": 0, "dip": 90, "thickness": 0.4, "order": 2, "description_source": "A granite dyke then intruded.", "field_origin": { "rock_type": "stated", "dip": "inferred" } }
   ],
   "unconformities": [],
   "mineralisation": []

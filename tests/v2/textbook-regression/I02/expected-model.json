@@ -6,7 +6,7 @@
   ],
   "events": [],
   "intrusions": [
-    { "id": "I1", "subtype": "sill", "lithology": "basalt", "strike": 0, "dip": 0, "thickness": 0.3, "order": 2, "description_source": "A basalt sill intruded concordantly between sandstone layers.", "field_origin": { "lithology": "stated", "dip": "inferred" } }
+    { "id": "I1", "subtype": "sill", "rock_type": "basalt", "strike": 0, "dip": 0, "thickness": 0.3, "order": 2, "description_source": "A basalt sill intruded concordantly between sandstone layers.", "field_origin": { "rock_type": "stated", "dip": "inferred" } }
   ],
   "unconformities": [],
   "mineralisation": []

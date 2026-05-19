@@ -6,7 +6,7 @@
   ],
   "events": [],
   "intrusions": [
-    { "id": "I1", "subtype": "laccolith", "lithology": "granite", "depth": 1.5, "order": 2, "description_source": "A laccolith of granite doming the overlying sedimentary layers.", "field_origin": { "lithology": "stated", "depth": "stated" } }
+    { "id": "I1", "subtype": "laccolith", "rock_type": "granite", "depth": 1.5, "order": 2, "description_source": "A laccolith of granite doming the overlying sedimentary layers.", "field_origin": { "rock_type": "stated", "depth": "stated" } }
   ],
   "unconformities": [],
   "mineralisation": []
