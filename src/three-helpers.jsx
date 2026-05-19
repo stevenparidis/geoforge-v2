@@ -1923,7 +1923,7 @@
           meshes.add(mesh);
         });
         // Porphyry stock — vertically elongated ellipsoid inside the innermost (potassic) shell
-        const stockGeom = new T.SphereGeometry(0.35, 16, 12);
+        const stockGeom = new T.SphereGeometry(0.15, 16, 12);
         const stockMat = new T.MeshStandardMaterial({ color: 0xD8C0B0, transparent: true, opacity: 0.8 });
         const stockMesh = new T.Mesh(stockGeom, stockMat);
         stockMesh.scale.y = 2.5; // elongate vertically

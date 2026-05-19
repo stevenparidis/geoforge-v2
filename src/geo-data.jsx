@@ -629,9 +629,6 @@ const REFERENCE_FORMATIONS = [
         { id: 'L2', name: 'Mudstone',   lithology: 'mudstone',  thickness: 0.8, order: 1, description_source: 'mudstone', field_origin: { thickness: 'stated', lithology: 'stated' } },
       ],
       events: [],
-      intrusions: [
-        { id: 'I1', subtype: 'batholith', rock_type: 'granite', order: 3, depth: 1.2, description_source: 'A granite batholith intrudes the limestone.', field_origin: { rock_type: 'stated', depth: 'inferred' } },
-      ],
       mineralisation: [
         {
           id: 'M1',
