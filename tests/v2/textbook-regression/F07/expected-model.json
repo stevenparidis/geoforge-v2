@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Listric Fault", "description": "A listric fault that flattens at depth." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "listric", "strike": 0, "dip": 60, "dip_direction": 90, "order": 0, "description_source": "A listric fault that flattens at depth.", "field_origin": { "strike": "inferred", "dip": "stated", "dip_direction": "inferred" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Thrust Fault", "description": "A low-angle thrust fault dipping 15 degrees north." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "thrust", "strike": 90, "dip": 15, "dip_direction": 0, "order": 0, "description_source": "A low-angle thrust fault dipping 15 degrees north.", "field_origin": { "strike": "inferred", "dip": "stated", "dip_direction": "stated" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

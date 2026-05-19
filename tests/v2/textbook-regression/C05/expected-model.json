@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "VMS in Volcanic Sequence", "description": "A VMS deposit hosted in basalt and rhyolite volcanic layers at the seafloor." },
+  "layers": [
+    { "id": "L1", "name": "Basalt", "lithology": "basalt", "thickness": 1.0, "order": 0, "description_source": "basalt volcanic layer", "field_origin": { "thickness": "inferred", "lithology": "stated" } },
+    { "id": "L2", "name": "Rhyolite", "lithology": "rhyolite", "thickness": 0.9, "order": 1, "description_source": "rhyolite volcanic layer", "field_origin": { "thickness": "inferred", "lithology": "stated" } }
+  ],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": [
+    { "id": "M1", "subtype": "vms", "metals": ["Cu", "Zn"], "deposit_name": "VMS Deposit", "description_source": "A VMS deposit hosted in basalt and rhyolite volcanic layers at the seafloor.", "field_origin": { "metals": "inferred" } }
+  ]
+}

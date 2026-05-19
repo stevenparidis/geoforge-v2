@@ -1,0 +1,2 @@
+A low-angle thrust fault dipping 15 degrees north.
+Expected: 1 fault event, subtype thrust, dip 15, dip_direction 0.

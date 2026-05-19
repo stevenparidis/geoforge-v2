@@ -1,0 +1,2 @@
+An angular unconformity cut by a subsequent normal fault.
+Expected: 1 unconformity + 1 normal fault event.

@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Angular Unconformity", "description": "An angular unconformity where upper beds are horizontal but lower beds dip 25 degrees east." },
+  "layers": [
+    { "id": "L1", "name": "Lower Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "lower tilted beds", "field_origin": { "thickness": "inferred", "lithology": "inferred" } },
+    { "id": "L2", "name": "Upper Limestone", "lithology": "limestone", "thickness": 1.0, "order": 1, "description_source": "upper horizontal beds", "field_origin": { "thickness": "inferred", "lithology": "inferred" } }
+  ],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [
+    { "id": "U1", "subtype": "angular", "above_layer_id": "L2", "below_layer_id": "L1", "angular_discordance": 25, "description_source": "An angular unconformity where upper beds are horizontal but lower beds dip 25 degrees east.", "field_origin": { "angular_discordance": "stated" } }
+  ],
+  "mineralisation": []
+}

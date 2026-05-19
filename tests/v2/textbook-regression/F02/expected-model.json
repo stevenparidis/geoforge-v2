@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Reverse Fault", "description": "A reverse fault dipping 30 degrees west with 0.3m heave." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "reverse", "strike": 0, "dip": 30, "dip_direction": 270, "heave": 0.3, "order": 0, "description_source": "A reverse fault dipping 30 degrees west with 0.3m heave.", "field_origin": { "strike": "inferred", "dip": "stated", "dip_direction": "stated", "heave": "stated" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

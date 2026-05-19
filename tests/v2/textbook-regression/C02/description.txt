@@ -1,0 +1,2 @@
+Three layers folded into an anticline.
+Expected: 3 layers + 1 anticline fold event.

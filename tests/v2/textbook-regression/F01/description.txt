@@ -1,0 +1,2 @@
+A normal fault dipping 60 degrees east with 0.5m throw.
+Expected: 1 fault event, subtype normal, dip 60, dip_direction 90, throw 0.5.

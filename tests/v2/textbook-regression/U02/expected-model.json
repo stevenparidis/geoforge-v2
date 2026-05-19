@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Disconformity", "description": "A disconformity representing a 15-million-year gap in the rock record." },
+  "layers": [
+    { "id": "L1", "name": "Lower Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "lower beds", "field_origin": { "thickness": "inferred", "lithology": "inferred" } },
+    { "id": "L2", "name": "Upper Shale", "lithology": "shale", "thickness": 1.0, "order": 1, "description_source": "upper beds", "field_origin": { "thickness": "inferred", "lithology": "inferred" } }
+  ],
+  "events": [],
+  "intrusions": [],
+  "unconformities": [
+    { "id": "U1", "subtype": "disconformity", "above_layer_id": "L2", "below_layer_id": "L1", "gap_ma": 15, "description_source": "A disconformity representing a 15-million-year gap in the rock record.", "field_origin": { "gap_ma": "stated" } }
+  ],
+  "mineralisation": []
+}

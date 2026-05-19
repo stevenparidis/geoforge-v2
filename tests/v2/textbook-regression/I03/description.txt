@@ -1,0 +1,2 @@
+A granite batholith emplaced at depth below the sedimentary sequence.
+Expected: 1 intrusion, subtype batholith, lithology granite, depth 2.0.

@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Normal Fault", "description": "A normal fault dipping 60 degrees east with 0.5m throw." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "normal", "strike": 0, "dip": 60, "dip_direction": 90, "throw": 0.5, "order": 0, "description_source": "A normal fault dipping 60 degrees east with 0.5m throw.", "field_origin": { "strike": "inferred", "dip": "stated", "dip_direction": "stated", "throw": "stated" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

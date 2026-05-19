@@ -1,0 +1,2 @@
+A plunging anticline with the oldest rocks in the core, plunging 10 degrees north, interlimb angle 120 degrees.
+Expected: 1 fold event, subtype anticline, plunge 10, plunge_direction 0, interlimb_angle 120.

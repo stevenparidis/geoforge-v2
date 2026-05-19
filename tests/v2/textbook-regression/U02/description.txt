@@ -1,0 +1,2 @@
+A disconformity representing a 15-million-year gap in the rock record.
+Expected: 1 unconformity, subtype disconformity, gap_ma 15.

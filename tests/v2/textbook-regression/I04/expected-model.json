@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Granite Laccolith", "description": "A laccolith of granite doming the overlying sedimentary layers." },
+  "layers": [
+    { "id": "L1", "name": "Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "sandstone", "field_origin": { "thickness": "inferred", "lithology": "inferred" } },
+    { "id": "L2", "name": "Shale", "lithology": "shale", "thickness": 1.0, "order": 1, "description_source": "shale", "field_origin": { "thickness": "inferred", "lithology": "inferred" } }
+  ],
+  "events": [],
+  "intrusions": [
+    { "id": "I1", "subtype": "laccolith", "rock_type": "granite", "depth": 1.5, "order": 2, "description_source": "A laccolith of granite doming the overlying sedimentary layers.", "field_origin": { "rock_type": "stated", "depth": "stated" } }
+  ],
+  "unconformities": [],
+  "mineralisation": []
+}

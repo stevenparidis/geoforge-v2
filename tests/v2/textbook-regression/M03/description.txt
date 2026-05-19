@@ -1,0 +1,2 @@
+A volcanogenic massive sulphide (VMS) deposit at the paleo-seafloor.
+Expected: 1 mineralisation entry, subtype vms, metals [Cu, Zn].

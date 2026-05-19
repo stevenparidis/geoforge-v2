@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Plunging Anticline", "description": "A plunging anticline with the oldest rocks in the core, plunging 10 degrees north, interlimb angle 120 degrees." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fold", "subtype": "anticline", "axis_strike": 90, "plunge": 10, "plunge_direction": 0, "interlimb_angle": 120, "order": 0, "description_source": "A plunging anticline with the oldest rocks in the core, plunging 10 degrees north, interlimb angle 120 degrees.", "field_origin": { "axis_strike": "inferred", "plunge": "stated", "plunge_direction": "stated", "interlimb_angle": "stated" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

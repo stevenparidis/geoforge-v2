@@ -1,0 +1,2 @@
+An epithermal gold-silver deposit with low-sulphidation quartz veins.
+Expected: 1 mineralisation entry, subtype epithermal, metals [Au, Ag].

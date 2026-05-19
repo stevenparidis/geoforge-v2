@@ -1,0 +1,2 @@
+A laccolith of granite doming the overlying sedimentary layers.
+Expected: 1 intrusion, subtype laccolith, lithology granite, depth 1.5.

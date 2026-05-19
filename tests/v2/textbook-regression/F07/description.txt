@@ -1,0 +1,2 @@
+A listric fault that flattens at depth.
+Expected: 1 fault event, subtype listric, dip 60 at surface, dip_direction 90.

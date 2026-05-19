@@ -1,0 +1,13 @@
+{
+  "meta": { "name": "Basalt Sill", "description": "A basalt sill intruded concordantly between sandstone layers." },
+  "layers": [
+    { "id": "L1", "name": "Lower Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 0, "description_source": "lower sandstone", "field_origin": { "thickness": "inferred", "lithology": "stated" } },
+    { "id": "L2", "name": "Upper Sandstone", "lithology": "sandstone", "thickness": 1.0, "order": 1, "description_source": "upper sandstone", "field_origin": { "thickness": "inferred", "lithology": "stated" } }
+  ],
+  "events": [],
+  "intrusions": [
+    { "id": "I1", "subtype": "sill", "rock_type": "basalt", "strike": 0, "dip": 0, "thickness": 0.3, "order": 2, "description_source": "A basalt sill intruded concordantly between sandstone layers.", "field_origin": { "rock_type": "stated", "dip": "inferred" } }
+  ],
+  "unconformities": [],
+  "mineralisation": []
+}

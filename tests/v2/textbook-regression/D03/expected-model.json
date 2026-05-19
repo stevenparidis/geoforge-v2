@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Monocline", "description": "A monocline - a one-limbed fold where strata step down to one side." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fold", "subtype": "monocline", "axis_strike": 0, "flexure_dip": 35, "flexure_width": 1.2, "order": 0, "description_source": "A monocline - a one-limbed fold where strata step down to one side.", "field_origin": { "axis_strike": "inferred", "flexure_dip": "inferred", "flexure_width": "inferred" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

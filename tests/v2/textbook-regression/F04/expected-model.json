@@ -1,0 +1,10 @@
+{
+  "meta": { "name": "Dextral Strike-Slip Fault", "description": "A right-lateral (dextral) strike-slip fault." },
+  "layers": [],
+  "events": [
+    { "id": "E1", "type": "fault", "subtype": "strike_slip_dextral", "strike": 0, "dip": 90, "dip_direction": 90, "order": 0, "description_source": "A right-lateral (dextral) strike-slip fault.", "field_origin": { "strike": "inferred", "dip": "inferred", "dip_direction": "inferred" } }
+  ],
+  "intrusions": [],
+  "unconformities": [],
+  "mineralisation": []
+}

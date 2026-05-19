@@ -1,0 +1,2 @@
+A syncline with the youngest rocks in the core, non-plunging.
+Expected: 1 fold event, subtype syncline, plunge 0.

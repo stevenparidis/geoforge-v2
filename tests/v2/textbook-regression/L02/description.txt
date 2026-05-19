@@ -1,0 +1,2 @@
+A sandstone layer dipping 35 degrees east, 2m thick.
+Expected: 1 layer with tilt strike 0, dip 35, dip_direction 90.

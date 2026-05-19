@@ -1,0 +1,2 @@
+An orogenic gold deposit hosted in a shear zone with quartz veins.
+Expected: 1 mineralisation entry, subtype orogenic_gold, metals [Au].
