@@ -244,3 +244,10 @@ Audit work list closed:
 - §5.8 mineralisation (audit subset) ✓
 
 Phase I unblocked.
+
+---
+
+## Phase I.7 — v1 Regression Check (code-level)
+- [x] AC1–AC14 verified by source-code inspection (2026-05-19)
+- [x] `tests/v2/v1-regression-check.md` written
+- Result: 14 PASS / 0 RISK / 0 FAIL
