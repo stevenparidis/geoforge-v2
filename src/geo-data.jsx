@@ -721,9 +721,26 @@ const AGE_RAMP = {
   youngHW: '#7d8da6',
 };
 
+// ---- ICS chronostratigraphic periods for H.3 time-scale strip ----
+const ICS_PERIODS = [
+  { name: 'Cambrian',      start: 541,  end: 485,  colour: '#7FA056' },
+  { name: 'Ordovician',    start: 485,  end: 444,  colour: '#009270' },
+  { name: 'Silurian',      start: 444,  end: 419,  colour: '#B3E1B6' },
+  { name: 'Devonian',      start: 419,  end: 359,  colour: '#CB8C37' },
+  { name: 'Carboniferous', start: 359,  end: 299,  colour: '#67A599' },
+  { name: 'Permian',       start: 299,  end: 252,  colour: '#F04028' },
+  { name: 'Triassic',      start: 252,  end: 201,  colour: '#812B92' },
+  { name: 'Jurassic',      start: 201,  end: 145,  colour: '#34B2C9' },
+  { name: 'Cretaceous',    start: 145,  end: 66,   colour: '#7DC97F' },
+  { name: 'Paleogene',     start: 66,   end: 23,   colour: '#FD9A52' },
+  { name: 'Neogene',       start: 23,   end: 2.6,  colour: '#FFFF00' },
+  { name: 'Quaternary',    start: 2.6,  end: 0,    colour: '#F9F97F' },
+];
+
 window.GD = {
   LITHOLOGY,
   PERIODS,
+  ICS_PERIODS,
   DEFAULTS,
   REFERENCE_FORMATIONS,
   REFERENCE_SECTIONS,
